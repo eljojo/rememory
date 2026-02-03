@@ -7,7 +7,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"regexp"
@@ -131,7 +134,8 @@ func parseShare(content string) (*ShareInfo, error) {
 	dataStr := strings.Join(dataLines, "")
 
 	// Validate it's valid base64
-	if _, err := base64.StdEncoding.DecodeString(dataStr); err != nil {
+	rawData, err := base64.StdEncoding.DecodeString(dataStr)
+	if err != nil {
 		return nil, fmt.Errorf("invalid base64 data: %w", err)
 	}
 	share.DataB64 = dataStr
@@ -153,7 +157,28 @@ func parseShare(content string) (*ShareInfo, error) {
 		return nil, fmt.Errorf("missing share data")
 	}
 
+	// Verify checksum if present (security: detect corrupted shares early)
+	if share.Checksum != "" {
+		if err := verifyShareChecksum(rawData, share.Checksum); err != nil {
+			return nil, fmt.Errorf("share checksum verification failed: %w", err)
+		}
+	}
+
 	return share, nil
+}
+
+// verifyShareChecksum verifies that the share data matches its checksum.
+// Uses constant-time comparison to prevent timing attacks.
+func verifyShareChecksum(data []byte, expectedChecksum string) error {
+	// Compute SHA-256 hash of the data
+	h := sha256.Sum256(data)
+	computed := "sha256:" + hex.EncodeToString(h[:])
+
+	// Constant-time comparison to prevent timing attacks
+	if subtle.ConstantTimeCompare([]byte(computed), []byte(expectedChecksum)) != 1 {
+		return fmt.Errorf("checksum mismatch (expected %s, got %s)", expectedChecksum, computed)
+	}
+	return nil
 }
 
 // combineShares combines multiple shares to recover the passphrase.

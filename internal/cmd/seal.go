@@ -132,7 +132,8 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
 
-		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0644); err != nil {
+		// Use restrictive permissions (0600) for share files since they contain partial secrets
+		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0600); err != nil {
 			return fmt.Errorf("writing share for %s: %w", friend.Name, err)
 		}
 
