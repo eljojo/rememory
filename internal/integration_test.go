@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/eljojo/rememory/internal/bundle"
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/crypto"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
-	"github.com/eljojo/rememory/internal/shamir"
 )
 
 // TestFullWorkflow tests the complete init -> seal -> recover pipeline
@@ -60,20 +60,20 @@ func TestFullWorkflow(t *testing.T) {
 
 	// Encrypt
 	var encryptedBuf bytes.Buffer
-	if err := crypto.Encrypt(&encryptedBuf, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
+	if err := core.Encrypt(&encryptedBuf, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
 		t.Fatalf("encrypting: %v", err)
 	}
 
 	// Split passphrase
-	shares, err := shamir.Split([]byte(passphrase), len(friends), threshold)
+	shares, err := core.Split([]byte(passphrase), len(friends), threshold)
 	if err != nil {
 		t.Fatalf("splitting: %v", err)
 	}
 
 	// Create share objects with metadata
-	shareObjects := make([]*shamir.Share, len(shares))
+	shareObjects := make([]*core.Share, len(shares))
 	for i, data := range shares {
-		shareObjects[i] = shamir.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		shareObjects[i] = core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
 	}
 
 	// Verify immediate reconstruction
@@ -81,7 +81,7 @@ func TestFullWorkflow(t *testing.T) {
 	for i := 0; i < threshold; i++ {
 		testShares[i] = shares[i]
 	}
-	recovered, err := shamir.Combine(testShares)
+	recovered, err := core.Combine(testShares)
 	if err != nil {
 		t.Fatalf("verification combine: %v", err)
 	}
@@ -102,10 +102,10 @@ func TestFullWorkflow(t *testing.T) {
 	for _, combo := range combinations {
 		t.Run("", func(t *testing.T) {
 			// Simulate encoding/decoding shares (as if read from files)
-			recoveryShares := make([]*shamir.Share, len(combo))
+			recoveryShares := make([]*core.Share, len(combo))
 			for i, idx := range combo {
 				encoded := shareObjects[idx].Encode()
-				parsed, err := shamir.ParseShare([]byte(encoded))
+				parsed, err := core.ParseShare([]byte(encoded))
 				if err != nil {
 					t.Fatalf("parsing share %d: %v", idx, err)
 				}
@@ -120,7 +120,7 @@ func TestFullWorkflow(t *testing.T) {
 			for i, s := range recoveryShares {
 				shareData[i] = s.Data
 			}
-			recoveredPass, err := shamir.Combine(shareData)
+			recoveredPass, err := core.Combine(shareData)
 			if err != nil {
 				t.Fatalf("combining: %v", err)
 			}
@@ -131,7 +131,7 @@ func TestFullWorkflow(t *testing.T) {
 
 			// Decrypt
 			var decryptedBuf bytes.Buffer
-			if err := crypto.Decrypt(&decryptedBuf, bytes.NewReader(encryptedBuf.Bytes()), string(recoveredPass)); err != nil {
+			if err := core.Decrypt(&decryptedBuf, bytes.NewReader(encryptedBuf.Bytes()), string(recoveredPass)); err != nil {
 				t.Fatalf("decrypting: %v", err)
 			}
 
@@ -159,14 +159,14 @@ func TestInsufficientShares(t *testing.T) {
 	passphrase := "test-passphrase"
 	n, k := 5, 3
 
-	shares, err := shamir.Split([]byte(passphrase), n, k)
+	shares, err := core.Split([]byte(passphrase), n, k)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Try with k-1 shares - should produce wrong result
 	insufficient := shares[:k-1]
-	recovered, err := shamir.Combine(insufficient)
+	recovered, err := core.Combine(insufficient)
 	if err != nil {
 		// Some implementations error, which is fine
 		return
@@ -180,11 +180,11 @@ func TestInsufficientShares(t *testing.T) {
 
 // TestCorruptedShare verifies that corrupted shares are detected
 func TestCorruptedShare(t *testing.T) {
-	share := shamir.NewShare(1, 5, 3, "Alice", []byte("test-data"))
+	share := core.NewShare(1, 5, 3, "Alice", []byte("test-data"))
 	encoded := share.Encode()
 
 	// Parse and verify - should work
-	parsed, err := shamir.ParseShare([]byte(encoded))
+	parsed, err := core.ParseShare([]byte(encoded))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,12 +208,12 @@ func TestWrongPassphrase(t *testing.T) {
 	wrongPass := "wrong-passphrase"
 
 	var encrypted bytes.Buffer
-	if err := crypto.Encrypt(&encrypted, bytes.NewReader(data), correctPass); err != nil {
+	if err := core.Encrypt(&encrypted, bytes.NewReader(data), correctPass); err != nil {
 		t.Fatal(err)
 	}
 
 	var decrypted bytes.Buffer
-	err := crypto.Decrypt(&decrypted, bytes.NewReader(encrypted.Bytes()), wrongPass)
+	err := core.Decrypt(&decrypted, bytes.NewReader(encrypted.Bytes()), wrongPass)
 	if err == nil {
 		t.Error("decryption should fail with wrong passphrase")
 	}
@@ -246,13 +246,13 @@ func TestLargeManifest(t *testing.T) {
 	// Encrypt
 	passphrase := "test-passphrase"
 	var encrypted bytes.Buffer
-	if err := crypto.Encrypt(&encrypted, &archiveBuf, passphrase); err != nil {
+	if err := core.Encrypt(&encrypted, &archiveBuf, passphrase); err != nil {
 		t.Fatal(err)
 	}
 
 	// Decrypt
 	var decrypted bytes.Buffer
-	if err := crypto.Decrypt(&decrypted, &encrypted, passphrase); err != nil {
+	if err := core.Decrypt(&decrypted, &encrypted, passphrase); err != nil {
 		t.Fatal(err)
 	}
 
@@ -280,17 +280,17 @@ func TestAllThresholdCombinations(t *testing.T) {
 		for k := 2; k <= n; k++ {
 			t.Run("", func(t *testing.T) {
 				// Split
-				shares, err := shamir.Split(secret, n, k)
+				shares, err := core.Split(secret, n, k)
 				if err != nil {
 					t.Fatalf("%d-of-%d split: %v", k, n, err)
 				}
 
 				// Create share objects and encode/decode them
-				shareObjs := make([]*shamir.Share, n)
+				shareObjs := make([]*core.Share, n)
 				for i, data := range shares {
-					shareObjs[i] = shamir.NewShare(i+1, n, k, "", data)
+					shareObjs[i] = core.NewShare(i+1, n, k, "", data)
 					encoded := shareObjs[i].Encode()
-					parsed, err := shamir.ParseShare([]byte(encoded))
+					parsed, err := core.ParseShare([]byte(encoded))
 					if err != nil {
 						t.Fatalf("parse share %d: %v", i, err)
 					}
@@ -305,7 +305,7 @@ func TestAllThresholdCombinations(t *testing.T) {
 				for i := 0; i < k; i++ {
 					recoverData[i] = shareObjs[i].Data
 				}
-				recovered, err := shamir.Combine(recoverData)
+				recovered, err := core.Combine(recoverData)
 				if err != nil {
 					t.Fatalf("%d-of-%d combine: %v", k, n, err)
 				}
@@ -366,21 +366,21 @@ func TestBundleGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("creating manifest file: %v", err)
 	}
-	if err := crypto.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
+	if err := core.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
 		manifestFile.Close()
 		t.Fatalf("encrypting: %v", err)
 	}
 	manifestFile.Close()
 
 	// Split passphrase and write shares
-	shares, err := shamir.Split([]byte(passphrase), len(friends), threshold)
+	shares, err := core.Split([]byte(passphrase), len(friends), threshold)
 	if err != nil {
 		t.Fatalf("splitting: %v", err)
 	}
 
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := shamir.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0644); err != nil {
 			t.Fatalf("writing share: %v", err)
@@ -394,13 +394,13 @@ func TestBundleGeneration(t *testing.T) {
 
 	// Read manifest for checksum
 	manifestData, _ := os.ReadFile(p.ManifestAgePath())
-	manifestChecksum := crypto.HashBytes(manifestData)
+	manifestChecksum := core.HashBytes(manifestData)
 
 	// Mark project as sealed
 	p.Sealed = &project.Sealed{
 		At:               time.Now(),
 		ManifestChecksum: manifestChecksum,
-		VerificationHash: crypto.HashString(passphrase),
+		VerificationHash: core.HashString(passphrase),
 		Shares:           shareInfos,
 	}
 	if err := p.Save(); err != nil {
@@ -500,7 +500,7 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	}
 
 	// Verify share can be parsed from README
-	share, err := shamir.ParseShare([]byte(readmeContent))
+	share, err := core.ParseShare([]byte(readmeContent))
 	if err != nil {
 		t.Fatalf("parsing share from README: %v", err)
 	}
@@ -591,13 +591,13 @@ func TestBundleRecovery(t *testing.T) {
 	os.MkdirAll(p.SharesPath(), 0755)
 
 	manifestFile, _ := os.Create(p.ManifestAgePath())
-	crypto.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
+	core.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
 	manifestFile.Close()
 
-	shares, _ := shamir.Split([]byte(passphrase), len(friends), threshold)
+	shares, _ := core.Split([]byte(passphrase), len(friends), threshold)
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := shamir.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{
@@ -611,8 +611,8 @@ func TestBundleRecovery(t *testing.T) {
 	manifestData, _ := os.ReadFile(p.ManifestAgePath())
 	p.Sealed = &project.Sealed{
 		At:               time.Now(),
-		ManifestChecksum: crypto.HashBytes(manifestData),
-		VerificationHash: crypto.HashString(passphrase),
+		ManifestChecksum: core.HashBytes(manifestData),
+		VerificationHash: core.HashString(passphrase),
 		Shares:           shareInfos,
 	}
 	p.Save()
@@ -638,14 +638,14 @@ func TestBundleRecovery(t *testing.T) {
 	bundleManifestData := extractManifestFromBundle(t, aliceBundle) // Same in all bundles
 
 	// Combine shares
-	recoveredPass, err := shamir.Combine([][]byte{aliceShare.Data, bobShare.Data})
+	recoveredPass, err := core.Combine([][]byte{aliceShare.Data, bobShare.Data})
 	if err != nil {
 		t.Fatalf("combining shares: %v", err)
 	}
 
 	// Decrypt manifest
 	var decrypted bytes.Buffer
-	if err := crypto.Decrypt(&decrypted, bytes.NewReader(bundleManifestData), string(recoveredPass)); err != nil {
+	if err := core.Decrypt(&decrypted, bytes.NewReader(bundleManifestData), string(recoveredPass)); err != nil {
 		t.Fatalf("decrypting: %v", err)
 	}
 
@@ -666,7 +666,7 @@ func TestBundleRecovery(t *testing.T) {
 	}
 }
 
-func extractShareFromBundle(t *testing.T, bundlePath string) *shamir.Share {
+func extractShareFromBundle(t *testing.T, bundlePath string) *core.Share {
 	t.Helper()
 
 	r, err := zip.OpenReader(bundlePath)
@@ -682,7 +682,7 @@ func extractShareFromBundle(t *testing.T, bundlePath string) *shamir.Share {
 			rc.Read(data)
 			rc.Close()
 
-			share, err := shamir.ParseShare(data)
+			share, err := core.ParseShare(data)
 			if err != nil {
 				t.Fatalf("parsing share: %v", err)
 			}

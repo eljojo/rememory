@@ -1,4 +1,4 @@
-package shamir
+package core
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 //   - n: total number of shares to create (2-255)
 //   - k: minimum shares needed to reconstruct (2-n)
 func Split(secret []byte, n, k int) ([][]byte, error) {
-	if err := validateParams(n, k); err != nil {
+	if err := ValidateShamirParams(n, k); err != nil {
 		return nil, err
 	}
 
@@ -41,7 +41,8 @@ func Combine(shares [][]byte) ([]byte, error) {
 	return secret, nil
 }
 
-func validateParams(n, k int) error {
+// ValidateShamirParams validates the parameters for Shamir's Secret Sharing.
+func ValidateShamirParams(n, k int) error {
 	if k < 2 {
 		return fmt.Errorf("threshold must be at least 2, got %d", k)
 	}

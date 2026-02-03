@@ -1,6 +1,7 @@
-package crypto
+package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -58,4 +59,27 @@ func Decrypt(dst io.Writer, src io.Reader, passphrase string) error {
 	}
 
 	return nil
+}
+
+// DecryptBytes is a convenience function that decrypts data and returns bytes.
+func DecryptBytes(encryptedData []byte, passphrase string) ([]byte, error) {
+	if passphrase == "" {
+		return nil, ErrEmptyPassphrase
+	}
+	identity, err := age.NewScryptIdentity(passphrase)
+	if err != nil {
+		return nil, fmt.Errorf("creating identity: %w", err)
+	}
+
+	reader, err := age.Decrypt(bytes.NewReader(encryptedData), identity)
+	if err != nil {
+		return nil, fmt.Errorf("decrypting: %w", err)
+	}
+
+	decrypted, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, fmt.Errorf("reading decrypted data: %w", err)
+	}
+
+	return decrypted, nil
 }

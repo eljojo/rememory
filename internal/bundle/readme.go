@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
-	"github.com/eljojo/rememory/internal/shamir"
 )
 
 // ReadmeData contains all data needed to generate README.txt
 type ReadmeData struct {
 	ProjectName      string
 	Holder           string
-	Share            *shamir.Share
+	Share            *core.Share
 	OtherFriends     []project.Friend
 	Threshold        int
 	Total            int

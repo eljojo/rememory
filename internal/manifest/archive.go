@@ -8,13 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-const (
-	// MaxFileSize is the maximum size of a single file during extraction (100 MB).
-	MaxFileSize = 100 * 1024 * 1024
-	// MaxTotalSize is the maximum total size of all extracted files (1 GB).
-	MaxTotalSize = 1024 * 1024 * 1024
+	"github.com/eljojo/rememory/internal/core"
 )
 
 // ArchiveResult contains the result of an archive operation.
@@ -197,12 +192,12 @@ func Extract(r io.Reader, destDir string) (*ExtractResult, error) {
 
 		case tar.TypeReg:
 			// Security: enforce file size limit
-			if header.Size > MaxFileSize {
-				return nil, fmt.Errorf("file exceeds maximum size of %d bytes", MaxFileSize)
+			if header.Size > core.MaxFileSize {
+				return nil, fmt.Errorf("file exceeds maximum size of %d bytes", core.MaxFileSize)
 			}
 			totalSize += header.Size
-			if totalSize > MaxTotalSize {
-				return nil, fmt.Errorf("archive exceeds maximum total size of %d bytes", MaxTotalSize)
+			if totalSize > core.MaxTotalSize {
+				return nil, fmt.Errorf("archive exceeds maximum total size of %d bytes", core.MaxTotalSize)
 			}
 
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
@@ -215,13 +210,13 @@ func Extract(r io.Reader, destDir string) (*ExtractResult, error) {
 			}
 
 			// Use LimitReader to enforce size limit during actual copy
-			limitedReader := io.LimitReader(tr, MaxFileSize+1)
+			limitedReader := io.LimitReader(tr, core.MaxFileSize+1)
 			written, err := io.Copy(f, limitedReader)
 			f.Close()
 			if err != nil {
 				return nil, fmt.Errorf("writing file %s: %w", target, err)
 			}
-			if written > MaxFileSize {
+			if written > core.MaxFileSize {
 				return nil, fmt.Errorf("file exceeds maximum size during extraction")
 			}
 

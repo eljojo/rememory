@@ -7,9 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/eljojo/rememory/internal/crypto"
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/manifest"
-	"github.com/eljojo/rememory/internal/shamir"
 	"github.com/spf13/cobra"
 )
 
@@ -44,14 +43,14 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	// Parse all share files
 	fmt.Printf("Reading %d share files...\n", len(args))
 
-	shares := make([]*shamir.Share, len(args))
+	shares := make([]*core.Share, len(args))
 	for i, path := range args {
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("reading share %s: %w", path, err)
 		}
 
-		share, err := shamir.ParseShare(content)
+		share, err := core.ParseShare(content)
 		if err != nil {
 			return fmt.Errorf("parsing share %s: %w", path, err)
 		}
@@ -102,7 +101,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	// Reconstruct passphrase
-	passphrase, err := shamir.Combine(shareData)
+	passphrase, err := core.Combine(shareData)
 	if err != nil {
 		return fmt.Errorf("combining shares: %w", err)
 	}
@@ -133,7 +132,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	var decryptedBuf bytes.Buffer
-	if err := crypto.Decrypt(&decryptedBuf, bytes.NewReader(encryptedData), string(passphrase)); err != nil {
+	if err := core.Decrypt(&decryptedBuf, bytes.NewReader(encryptedData), string(passphrase)); err != nil {
 		return fmt.Errorf("decryption failed (shares may be corrupted or from different operation): %w", err)
 	}
 

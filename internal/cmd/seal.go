@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/eljojo/rememory/internal/bundle"
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/crypto"
 	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
-	"github.com/eljojo/rememory/internal/shamir"
 	"github.com/spf13/cobra"
 )
 
@@ -99,7 +99,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	// Encrypt the archive
 	var encryptedBuf bytes.Buffer
 	archiveReader := bytes.NewReader(archiveBuf.Bytes())
-	if err := crypto.Encrypt(&encryptedBuf, archiveReader, passphrase); err != nil {
+	if err := core.Encrypt(&encryptedBuf, archiveReader, passphrase); err != nil {
 		return fmt.Errorf("encrypting: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Splitting into %d shares (threshold: %d)...\n", len(p.Friends), p.Threshold)
 
 	// Split the passphrase
-	shares, err := shamir.Split([]byte(passphrase), len(p.Friends), p.Threshold)
+	shares, err := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
 	if err != nil {
 		return fmt.Errorf("splitting passphrase: %w", err)
 	}
@@ -127,7 +127,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	shareInfos := make([]project.ShareInfo, len(shares))
 	for i, shareData := range shares {
 		friend := p.Friends[i]
-		share := shamir.NewShare(i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
+		share := core.NewShare(i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
 
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
@@ -157,7 +157,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	for i := 0; i < p.Threshold; i++ {
 		testShares[i] = shares[i]
 	}
-	recovered, err := shamir.Combine(testShares)
+	recovered, err := core.Combine(testShares)
 	if err != nil {
 		fmt.Println("FAILED")
 		return fmt.Errorf("verification failed: %w", err)
@@ -177,7 +177,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	p.Sealed = &project.Sealed{
 		At:               time.Now().UTC(),
 		ManifestChecksum: manifestChecksum,
-		VerificationHash: crypto.HashString(passphrase),
+		VerificationHash: core.HashString(passphrase),
 		Shares:           shareInfos,
 	}
 

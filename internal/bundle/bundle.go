@@ -10,11 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eljojo/rememory/internal/crypto"
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/pdf"
 	"github.com/eljojo/rememory/internal/project"
-	"github.com/eljojo/rememory/internal/shamir"
 )
 
 // Config holds configuration for bundle generation.
@@ -47,11 +46,11 @@ func GenerateAll(p *project.Project, cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("reading manifest: %w", err)
 	}
-	manifestChecksum := crypto.HashBytes(manifestData)
+	manifestChecksum := core.HashBytes(manifestData)
 
 	// Generate recover.html
 	recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL)
-	recoverChecksum := crypto.HashString(recoverHTML)
+	recoverChecksum := core.HashString(recoverHTML)
 
 	// Generate bundle for each friend
 	for i, friend := range p.Friends {
@@ -100,7 +99,7 @@ type BundleParams struct {
 	OutputPath       string
 	ProjectName      string
 	Friend           project.Friend
-	Share            *shamir.Share
+	Share            *core.Share
 	OtherFriends     []project.Friend
 	Threshold        int
 	ManifestData     []byte
@@ -162,10 +161,10 @@ func GenerateBundle(params BundleParams) error {
 }
 
 // loadShares reads all share files from the project's shares directory.
-func loadShares(p *project.Project) ([]*shamir.Share, error) {
+func loadShares(p *project.Project) ([]*core.Share, error) {
 	sharesDir := p.SharesPath()
 
-	shares := make([]*shamir.Share, len(p.Friends))
+	shares := make([]*core.Share, len(p.Friends))
 	for i, friend := range p.Friends {
 		// Try to find share file for this friend
 		filename := fmt.Sprintf("SHARE-%s.txt", sanitizeName(friend.Name))
@@ -176,7 +175,7 @@ func loadShares(p *project.Project) ([]*shamir.Share, error) {
 			return nil, fmt.Errorf("reading share for %s: %w", friend.Name, err)
 		}
 
-		share, err := shamir.ParseShare(data)
+		share, err := core.ParseShare(data)
 		if err != nil {
 			return nil, fmt.Errorf("parsing share for %s: %w", friend.Name, err)
 		}
@@ -256,7 +255,7 @@ func VerifyBundle(bundlePath string) error {
 	metadata := parseMetadataFooter(readmeContent)
 
 	// Verify manifest checksum
-	actualManifestChecksum := crypto.HashBytes(manifestData)
+	actualManifestChecksum := core.HashBytes(manifestData)
 	expectedManifestChecksum := metadata["checksum-manifest"]
 	if expectedManifestChecksum == "" {
 		return fmt.Errorf("manifest checksum not found in README metadata")
@@ -266,7 +265,7 @@ func VerifyBundle(bundlePath string) error {
 	}
 
 	// Verify recover.html checksum
-	actualRecoverChecksum := crypto.HashString(string(recoverData))
+	actualRecoverChecksum := core.HashString(string(recoverData))
 	expectedRecoverChecksum := metadata["checksum-recover-html"]
 	if expectedRecoverChecksum == "" {
 		return fmt.Errorf("recover.html checksum not found in README metadata")
@@ -276,7 +275,7 @@ func VerifyBundle(bundlePath string) error {
 	}
 
 	// Verify embedded share
-	share, err := shamir.ParseShare([]byte(readmeContent))
+	share, err := core.ParseShare([]byte(readmeContent))
 	if err != nil {
 		return fmt.Errorf("parsing share: %w", err)
 	}

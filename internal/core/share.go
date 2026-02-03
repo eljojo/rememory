@@ -1,4 +1,4 @@
-package shamir
+package core
 
 import (
 	"encoding/base64"
@@ -7,13 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/eljojo/rememory/internal/crypto"
 )
 
 const (
-	shareBegin = "-----BEGIN REMEMORY SHARE-----"
-	shareEnd   = "-----END REMEMORY SHARE-----"
+	ShareBegin = "-----BEGIN REMEMORY SHARE-----"
+	ShareEnd   = "-----END REMEMORY SHARE-----"
 )
 
 // Share represents a single Shamir share with metadata.
@@ -38,7 +36,7 @@ func NewShare(index, total, threshold int, holder string, data []byte) *Share {
 		Holder:    holder,
 		Created:   time.Now().UTC(),
 		Data:      data,
-		Checksum:  crypto.HashBytes(data),
+		Checksum:  HashBytes(data),
 	}
 }
 
@@ -46,7 +44,7 @@ func NewShare(index, total, threshold int, holder string, data []byte) *Share {
 func (s *Share) Encode() string {
 	var sb strings.Builder
 
-	sb.WriteString(shareBegin + "\n")
+	sb.WriteString(ShareBegin + "\n")
 	sb.WriteString(fmt.Sprintf("Version: %d\n", s.Version))
 	sb.WriteString(fmt.Sprintf("Index: %d\n", s.Index))
 	sb.WriteString(fmt.Sprintf("Total: %d\n", s.Total))
@@ -59,24 +57,25 @@ func (s *Share) Encode() string {
 	sb.WriteString("\n")
 	sb.WriteString(base64.StdEncoding.EncodeToString(s.Data))
 	sb.WriteString("\n")
-	sb.WriteString(shareEnd + "\n")
+	sb.WriteString(ShareEnd + "\n")
 
 	return sb.String()
 }
 
 // ParseShare parses a share from its encoded format.
+// The content can be a full README.txt file - it will find the share block.
 func ParseShare(content []byte) (*Share, error) {
 	text := string(content)
 
 	// Find the PEM block
-	beginIdx := strings.Index(text, shareBegin)
-	endIdx := strings.Index(text, shareEnd)
+	beginIdx := strings.Index(text, ShareBegin)
+	endIdx := strings.Index(text, ShareEnd)
 	if beginIdx == -1 || endIdx == -1 || endIdx <= beginIdx {
 		return nil, fmt.Errorf("invalid share format: missing BEGIN/END markers")
 	}
 
 	// Extract content between markers
-	inner := text[beginIdx+len(shareBegin) : endIdx]
+	inner := text[beginIdx+len(ShareBegin) : endIdx]
 	lines := strings.Split(strings.TrimSpace(inner), "\n")
 
 	share := &Share{}
@@ -171,8 +170,11 @@ func ParseShare(content []byte) (*Share, error) {
 // Verify checks that the share's checksum matches its data.
 // Uses constant-time comparison to prevent timing attacks.
 func (s *Share) Verify() error {
-	computed := crypto.HashBytes(s.Data)
-	if !crypto.VerifyHash(computed, s.Checksum) {
+	if s.Checksum == "" {
+		return nil // No checksum to verify
+	}
+	computed := HashBytes(s.Data)
+	if !VerifyHash(computed, s.Checksum) {
 		return fmt.Errorf("share checksum verification failed")
 	}
 	return nil
@@ -185,12 +187,12 @@ func (s *Share) Filename() string {
 		name = fmt.Sprintf("%d", s.Index)
 	}
 	// Sanitize the name for filesystem use
-	name = sanitizeFilename(name)
+	name = SanitizeFilename(name)
 	return fmt.Sprintf("SHARE-%s.txt", strings.ToLower(name))
 }
 
-// sanitizeFilename removes characters that are problematic in filenames.
-func sanitizeFilename(name string) string {
+// SanitizeFilename removes characters that are problematic in filenames.
+func SanitizeFilename(name string) string {
 	// Replace spaces with hyphens, remove other problematic chars
 	name = strings.ReplaceAll(name, " ", "-")
 	reg := regexp.MustCompile(`[^a-zA-Z0-9\-_]`)
