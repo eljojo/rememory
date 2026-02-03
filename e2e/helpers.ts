@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import AdmZip from 'adm-zip';
 
 // Get absolute path to rememory binary
 export function getRememoryBin(): string {
@@ -34,11 +35,18 @@ export function createTestProject(): string {
 }
 
 // Extract a bundle ZIP and return the extracted directory path
+// Note: friendName is case-insensitive, bundle files are lowercase
 export function extractBundle(bundlesDir: string, friendName: string): string {
-  const bundleZip = path.join(bundlesDir, `bundle-${friendName}.zip`);
-  const extractDir = path.join(bundlesDir, `bundle-${friendName}`);
+  const lowerName = friendName.toLowerCase();
+  const bundleZip = path.join(bundlesDir, `bundle-${lowerName}.zip`);
+  const extractDir = path.join(bundlesDir, `bundle-${lowerName}`);
+
   fs.mkdirSync(extractDir, { recursive: true });
-  execSync(`unzip -o "${bundleZip}" -d "${extractDir}"`, { stdio: 'ignore' });
+
+  // Use adm-zip for cross-platform extraction
+  const zip = new AdmZip(bundleZip);
+  zip.extractAllTo(extractDir, true);
+
   return extractDir;
 }
 
