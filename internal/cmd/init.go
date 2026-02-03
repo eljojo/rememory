@@ -29,24 +29,36 @@ Example:
 }
 
 var (
-	initFrom string
+	initFrom      string
+	initName      string
+	initThreshold int
+	initFriends   []string
 )
 
 func init() {
 	rootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringVar(&initFrom, "from", "", "Base new project on existing project (copies friends)")
+	initCmd.Flags().StringVar(&initName, "name", "", "Project name (defaults to directory name)")
+	initCmd.Flags().IntVar(&initThreshold, "threshold", 0, "Number of shares needed to recover")
+	initCmd.Flags().StringArrayVar(&initFriends, "friend", nil, "Friend in format 'Name,email' or 'Name,email,phone' (repeatable)")
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
-	// Determine project name and path
-	name := "recovery"
+	// Determine project directory from args
+	dirName := "recovery"
 	if len(args) > 0 {
-		name = args[0]
+		dirName = args[0]
 	}
 
-	dir, err := filepath.Abs(name)
+	dir, err := filepath.Abs(dirName)
 	if err != nil {
 		return fmt.Errorf("resolving path: %w", err)
+	}
+
+	// Determine project name
+	name := initName
+	if name == "" {
+		name = filepath.Base(dir)
 	}
 
 	// Check if directory already exists
@@ -54,13 +66,33 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("directory already exists: %s", dir)
 	}
 
-	fmt.Printf("Creating new rememory project: %s/\n\n", name)
+	fmt.Printf("Creating new rememory project: %s/\n\n", dirName)
 
 	var friends []project.Friend
 	var threshold int
 
-	// If --from is specified, copy friends from existing project
-	if initFrom != "" {
+	// Non-interactive mode: use flags
+	if len(initFriends) > 0 {
+		friends, err = parseFriendFlags(initFriends)
+		if err != nil {
+			return err
+		}
+
+		threshold = initThreshold
+		if threshold == 0 {
+			threshold = (len(friends) + 1) / 2 // Default to majority
+			if threshold < 2 {
+				threshold = 2
+			}
+		}
+
+		if threshold < 2 || threshold > len(friends) {
+			return fmt.Errorf("invalid threshold: must be between 2 and %d", len(friends))
+		}
+
+		fmt.Printf("Friends: %s\n", friendNames(friends))
+		fmt.Printf("Threshold: %d of %d\n\n", threshold, len(friends))
+	} else if initFrom != "" {
 		fromDir, err := filepath.Abs(initFrom)
 		if err != nil {
 			return fmt.Errorf("resolving --from path: %w", err)
@@ -172,4 +204,31 @@ func friendNames(friends []project.Friend) string {
 		names[i] = f.Name
 	}
 	return strings.Join(names, ", ")
+}
+
+// parseFriendFlags parses --friend flags in format "Name,email" or "Name,email,phone"
+func parseFriendFlags(flags []string) ([]project.Friend, error) {
+	friends := make([]project.Friend, len(flags))
+	for i, f := range flags {
+		parts := strings.Split(f, ",")
+		if len(parts) < 2 {
+			return nil, fmt.Errorf("invalid friend format: %q (expected 'Name,email' or 'Name,email,phone')", f)
+		}
+
+		friends[i] = project.Friend{
+			Name:  strings.TrimSpace(parts[0]),
+			Email: strings.TrimSpace(parts[1]),
+		}
+		if len(parts) >= 3 {
+			friends[i].Phone = strings.TrimSpace(parts[2])
+		}
+
+		if friends[i].Name == "" {
+			return nil, fmt.Errorf("friend name cannot be empty")
+		}
+		if friends[i].Email == "" {
+			return nil, fmt.Errorf("friend email cannot be empty")
+		}
+	}
+	return friends, nil
 }

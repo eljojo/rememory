@@ -1,13 +1,24 @@
-.PHONY: build test lint clean install
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm build-all bump-patch bump-minor bump-major
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-LDFLAGS := -ldflags "-X main.version=$(VERSION)"
+LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION)"
 
-build:
+# Build WASM module first, then the main binary
+build: wasm
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/rememory
 
-install:
+# Build WASM recovery module
+wasm:
+	@mkdir -p internal/html/assets
+	GOOS=js GOARCH=wasm go build -o internal/html/assets/recover.wasm ./internal/wasm
+	@if [ ! -f internal/html/assets/wasm_exec.js ]; then \
+		cp "$$(go env GOROOT)/lib/wasm/wasm_exec.js" internal/html/assets/ 2>/dev/null || \
+		cp "$$(go env GOROOT)/misc/wasm/wasm_exec.js" internal/html/assets/ 2>/dev/null || \
+		echo "Warning: wasm_exec.js not found"; \
+	fi
+
+install: wasm
 	go install $(LDFLAGS) ./cmd/rememory
 
 test:
@@ -17,9 +28,55 @@ test-cover:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
+# Run Playwright e2e tests (requires npm install first)
+test-e2e: build
+	@if [ ! -d node_modules ]; then echo "Run 'npm install' first"; exit 1; fi
+	REMEMORY_BIN=./$(BINARY) npx playwright test
+
+# Run e2e tests with visible browser
+test-e2e-headed: build
+	@if [ ! -d node_modules ]; then echo "Run 'npm install' first"; exit 1; fi
+	REMEMORY_BIN=./$(BINARY) npx playwright test --headed
+
 lint:
 	go vet ./...
 	test -z "$$(gofmt -l .)"
 
 clean:
 	rm -f $(BINARY) coverage.out coverage.html
+	rm -f internal/html/assets/recover.wasm
+	rm -rf dist/
+
+# Cross-compile for all platforms (used by CI)
+build-all: wasm
+	@mkdir -p dist
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o dist/rememory-linux-amd64 ./cmd/rememory
+	GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o dist/rememory-linux-arm64 ./cmd/rememory
+	GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o dist/rememory-darwin-amd64 ./cmd/rememory
+	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o dist/rememory-darwin-arm64 ./cmd/rememory
+	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o dist/rememory-windows-amd64.exe ./cmd/rememory
+
+# Bump version tags (usage: make bump-patch, bump-minor, bump-major)
+bump-patch:
+	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
+	minor=$$(echo $$current | cut -d. -f2); \
+	patch=$$(echo $$current | cut -d. -f3); \
+	new="v$$major.$$minor.$$((patch + 1))"; \
+	echo "Bumping $$current -> $$new"; \
+	git tag -a $$new -m "Release $$new"
+
+bump-minor:
+	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
+	minor=$$(echo $$current | cut -d. -f2); \
+	new="v$$major.$$((minor + 1)).0"; \
+	echo "Bumping $$current -> $$new"; \
+	git tag -a $$new -m "Release $$new"
+
+bump-major:
+	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
+	new="v$$((major + 1)).0.0"; \
+	echo "Bumping $$current -> $$new"; \
+	git tag -a $$new -m "Release $$new"

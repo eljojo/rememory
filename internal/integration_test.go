@@ -1,11 +1,15 @@
 package integration_test
 
 import (
+	"archive/zip"
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/eljojo/rememory/internal/bundle"
 	"github.com/eljojo/rememory/internal/crypto"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
@@ -310,4 +314,399 @@ func TestAllThresholdCombinations(t *testing.T) {
 			})
 		}
 	}
+}
+
+// TestBundleGeneration tests the complete bundle generation workflow
+func TestBundleGeneration(t *testing.T) {
+	// Setup: create a sealed project
+	baseDir := t.TempDir()
+	projectDir := filepath.Join(baseDir, "test-bundle-project")
+
+	friends := []project.Friend{
+		{Name: "Alice", Email: "alice@example.com", Phone: "555-1111"},
+		{Name: "Bob", Email: "bob@example.com"},
+		{Name: "Carol", Email: "carol@example.com"},
+	}
+	threshold := 2
+
+	p, err := project.New(projectDir, "test-bundle-project", threshold, friends)
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+
+	// Add secret content
+	secretContent := "My super secret: treasure is under the oak tree"
+	secretFile := filepath.Join(p.ManifestPath(), "secrets.txt")
+	if err := os.WriteFile(secretFile, []byte(secretContent), 0644); err != nil {
+		t.Fatalf("writing secret: %v", err)
+	}
+
+	// Seal the project
+	var archiveBuf bytes.Buffer
+	if err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+		t.Fatalf("archiving: %v", err)
+	}
+
+	passphrase, err := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+	if err != nil {
+		t.Fatalf("generating passphrase: %v", err)
+	}
+
+	// Create output directories
+	if err := os.MkdirAll(p.OutputPath(), 0755); err != nil {
+		t.Fatalf("creating output dir: %v", err)
+	}
+	if err := os.MkdirAll(p.SharesPath(), 0755); err != nil {
+		t.Fatalf("creating shares dir: %v", err)
+	}
+
+	// Encrypt manifest
+	manifestFile, err := os.Create(p.ManifestAgePath())
+	if err != nil {
+		t.Fatalf("creating manifest file: %v", err)
+	}
+	if err := crypto.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
+		manifestFile.Close()
+		t.Fatalf("encrypting: %v", err)
+	}
+	manifestFile.Close()
+
+	// Split passphrase and write shares
+	shares, err := shamir.Split([]byte(passphrase), len(friends), threshold)
+	if err != nil {
+		t.Fatalf("splitting: %v", err)
+	}
+
+	shareInfos := make([]project.ShareInfo, len(friends))
+	for i, data := range shares {
+		share := shamir.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		sharePath := filepath.Join(p.SharesPath(), share.Filename())
+		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0644); err != nil {
+			t.Fatalf("writing share: %v", err)
+		}
+		shareInfos[i] = project.ShareInfo{
+			Friend:   friends[i].Name,
+			File:     share.Filename(),
+			Checksum: share.Checksum,
+		}
+	}
+
+	// Read manifest for checksum
+	manifestData, _ := os.ReadFile(p.ManifestAgePath())
+	manifestChecksum := crypto.HashBytes(manifestData)
+
+	// Mark project as sealed
+	p.Sealed = &project.Sealed{
+		At:               time.Now(),
+		ManifestChecksum: manifestChecksum,
+		VerificationHash: crypto.HashString(passphrase),
+		Shares:           shareInfos,
+	}
+	if err := p.Save(); err != nil {
+		t.Fatalf("saving project: %v", err)
+	}
+
+	// Generate bundles
+	// Use minimal WASM bytes for testing (just needs to be non-empty)
+	fakeWASM := []byte("fake-wasm-for-testing")
+
+	cfg := bundle.Config{
+		Version:          "v1.0.0-test",
+		GitHubReleaseURL: "https://github.com/eljojo/rememory/releases/tag/v1.0.0-test",
+		WASMBytes:        fakeWASM,
+	}
+
+	if err := bundle.GenerateAll(p, cfg); err != nil {
+		t.Fatalf("generating bundles: %v", err)
+	}
+
+	// Verify bundles were created
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	entries, err := os.ReadDir(bundlesDir)
+	if err != nil {
+		t.Fatalf("reading bundles dir: %v", err)
+	}
+
+	if len(entries) != len(friends) {
+		t.Errorf("expected %d bundles, got %d", len(friends), len(entries))
+	}
+
+	// Verify each bundle
+	for _, friend := range friends {
+		bundlePath := filepath.Join(bundlesDir, "bundle-"+friend.Name+".zip")
+		t.Run("Bundle-"+friend.Name, func(t *testing.T) {
+			verifyBundle(t, bundlePath, friend, friends, threshold)
+		})
+	}
+}
+
+func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFriends []project.Friend, threshold int) {
+	t.Helper()
+
+	// Open ZIP
+	r, err := zip.OpenReader(bundlePath)
+	if err != nil {
+		t.Fatalf("opening bundle: %v", err)
+	}
+	defer r.Close()
+
+	// Check expected files exist
+	expectedFiles := map[string]bool{
+		"README.txt":   false,
+		"MANIFEST.age": false,
+		"recover.html": false,
+	}
+
+	var readmeContent string
+	var recoverContent string
+
+	for _, f := range r.File {
+		if _, ok := expectedFiles[f.Name]; ok {
+			expectedFiles[f.Name] = true
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			t.Fatalf("opening %s: %v", f.Name, err)
+		}
+		data := make([]byte, f.UncompressedSize64)
+		rc.Read(data)
+		rc.Close()
+
+		switch f.Name {
+		case "README.txt":
+			readmeContent = string(data)
+		case "recover.html":
+			recoverContent = string(data)
+		}
+	}
+
+	for name, found := range expectedFiles {
+		if !found {
+			t.Errorf("missing file: %s", name)
+		}
+	}
+
+	// Verify README.txt contains the share
+	if !strings.Contains(readmeContent, "-----BEGIN REMEMORY SHARE-----") {
+		t.Error("README.txt missing share block")
+	}
+	if !strings.Contains(readmeContent, "-----END REMEMORY SHARE-----") {
+		t.Error("README.txt missing share end block")
+	}
+
+	// Verify share can be parsed from README
+	share, err := shamir.ParseShare([]byte(readmeContent))
+	if err != nil {
+		t.Fatalf("parsing share from README: %v", err)
+	}
+	if share.Holder != friend.Name {
+		t.Errorf("share holder: got %q, want %q", share.Holder, friend.Name)
+	}
+	if share.Threshold != threshold {
+		t.Errorf("share threshold: got %d, want %d", share.Threshold, threshold)
+	}
+	if share.Total != len(allFriends) {
+		t.Errorf("share total: got %d, want %d", share.Total, len(allFriends))
+	}
+
+	// Verify share checksum
+	if err := share.Verify(); err != nil {
+		t.Errorf("share verification failed: %v", err)
+	}
+
+	// Verify README contains other friends (not this one)
+	for _, f := range allFriends {
+		if f.Name == friend.Name {
+			// Should NOT contain own email in contacts section
+			// (but will contain name in header, so just check email)
+			continue
+		}
+		if !strings.Contains(readmeContent, f.Email) {
+			t.Errorf("README missing contact for %s", f.Name)
+		}
+	}
+
+	// Verify README contains metadata footer
+	if !strings.Contains(readmeContent, "METADATA FOOTER") {
+		t.Error("README missing metadata footer")
+	}
+	if !strings.Contains(readmeContent, "rememory-version:") {
+		t.Error("README missing version in footer")
+	}
+	if !strings.Contains(readmeContent, "checksum-manifest:") {
+		t.Error("README missing manifest checksum in footer")
+	}
+
+	// Verify recover.html contains expected elements
+	if !strings.Contains(recoverContent, "ReMemory Recovery") {
+		t.Error("recover.html missing title")
+	}
+	if !strings.Contains(recoverContent, "v1.0.0-test") {
+		t.Error("recover.html missing version")
+	}
+	if !strings.Contains(recoverContent, "WASM_BINARY") {
+		t.Error("recover.html missing embedded WASM")
+	}
+}
+
+// TestBundleRecovery tests recovering from bundle contents
+func TestBundleRecovery(t *testing.T) {
+	// Setup: create and seal a project
+	baseDir := t.TempDir()
+	projectDir := filepath.Join(baseDir, "test-recovery-project")
+
+	friends := []project.Friend{
+		{Name: "Alice", Email: "alice@example.com"},
+		{Name: "Bob", Email: "bob@example.com"},
+		{Name: "Carol", Email: "carol@example.com"},
+	}
+	threshold := 2
+
+	p, err := project.New(projectDir, "test-recovery", threshold, friends)
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+
+	// Add secret content
+	secretContent := "Recovery test secret: the password is correct-horse-battery-staple"
+	secretFile := filepath.Join(p.ManifestPath(), "secret.txt")
+	if err := os.WriteFile(secretFile, []byte(secretContent), 0644); err != nil {
+		t.Fatalf("writing secret: %v", err)
+	}
+
+	// Seal
+	var archiveBuf bytes.Buffer
+	if err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+		t.Fatalf("archiving: %v", err)
+	}
+
+	passphrase, _ := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+
+	os.MkdirAll(p.OutputPath(), 0755)
+	os.MkdirAll(p.SharesPath(), 0755)
+
+	manifestFile, _ := os.Create(p.ManifestAgePath())
+	crypto.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
+	manifestFile.Close()
+
+	shares, _ := shamir.Split([]byte(passphrase), len(friends), threshold)
+	shareInfos := make([]project.ShareInfo, len(friends))
+	for i, data := range shares {
+		share := shamir.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		sharePath := filepath.Join(p.SharesPath(), share.Filename())
+		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
+		shareInfos[i] = project.ShareInfo{
+			Friend:   friends[i].Name,
+			File:     share.Filename(),
+			Checksum: share.Checksum,
+		}
+	}
+
+	// Mark project as sealed
+	manifestData, _ := os.ReadFile(p.ManifestAgePath())
+	p.Sealed = &project.Sealed{
+		At:               time.Now(),
+		ManifestChecksum: crypto.HashBytes(manifestData),
+		VerificationHash: crypto.HashString(passphrase),
+		Shares:           shareInfos,
+	}
+	p.Save()
+
+	// Generate bundles
+	fakeWASM := []byte("fake-wasm")
+	cfg := bundle.Config{
+		Version:          "v1.0.0",
+		GitHubReleaseURL: "https://example.com",
+		WASMBytes:        fakeWASM,
+	}
+	bundle.GenerateAll(p, cfg)
+
+	// Now simulate recovery using bundles
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+
+	// Extract shares from Alice's and Bob's bundles (threshold = 2)
+	aliceBundle := filepath.Join(bundlesDir, "bundle-Alice.zip")
+	bobBundle := filepath.Join(bundlesDir, "bundle-Bob.zip")
+
+	aliceShare := extractShareFromBundle(t, aliceBundle)
+	bobShare := extractShareFromBundle(t, bobBundle)
+	bundleManifestData := extractManifestFromBundle(t, aliceBundle) // Same in all bundles
+
+	// Combine shares
+	recoveredPass, err := shamir.Combine([][]byte{aliceShare.Data, bobShare.Data})
+	if err != nil {
+		t.Fatalf("combining shares: %v", err)
+	}
+
+	// Decrypt manifest
+	var decrypted bytes.Buffer
+	if err := crypto.Decrypt(&decrypted, bytes.NewReader(bundleManifestData), string(recoveredPass)); err != nil {
+		t.Fatalf("decrypting: %v", err)
+	}
+
+	// Extract
+	extractDir := t.TempDir()
+	extractedPath, err := manifest.Extract(&decrypted, extractDir)
+	if err != nil {
+		t.Fatalf("extracting: %v", err)
+	}
+
+	// Verify content
+	recovered, err := os.ReadFile(filepath.Join(extractedPath, "secret.txt"))
+	if err != nil {
+		t.Fatalf("reading recovered: %v", err)
+	}
+	if string(recovered) != secretContent {
+		t.Errorf("content mismatch: got %q, want %q", recovered, secretContent)
+	}
+}
+
+func extractShareFromBundle(t *testing.T, bundlePath string) *shamir.Share {
+	t.Helper()
+
+	r, err := zip.OpenReader(bundlePath)
+	if err != nil {
+		t.Fatalf("opening bundle: %v", err)
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		if f.Name == "README.txt" {
+			rc, _ := f.Open()
+			data := make([]byte, f.UncompressedSize64)
+			rc.Read(data)
+			rc.Close()
+
+			share, err := shamir.ParseShare(data)
+			if err != nil {
+				t.Fatalf("parsing share: %v", err)
+			}
+			return share
+		}
+	}
+	t.Fatal("README.txt not found in bundle")
+	return nil
+}
+
+func extractManifestFromBundle(t *testing.T, bundlePath string) []byte {
+	t.Helper()
+
+	r, err := zip.OpenReader(bundlePath)
+	if err != nil {
+		t.Fatalf("opening bundle: %v", err)
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		if f.Name == "MANIFEST.age" {
+			rc, _ := f.Open()
+			data := make([]byte, f.UncompressedSize64)
+			rc.Read(data)
+			rc.Close()
+			return data
+		}
+	}
+	t.Fatal("MANIFEST.age not found in bundle")
+	return nil
 }
