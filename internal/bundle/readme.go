@@ -34,7 +34,9 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("                              For: %s\n", data.Holder))
 	sb.WriteString("================================================================================\n\n")
 
-	// Warning
+	// Warnings
+	sb.WriteString("!!  YOU CANNOT USE THIS FILE ALONE\n")
+	sb.WriteString("    You will need help from other friends listed below.\n\n")
 	sb.WriteString("!!  CONFIDENTIAL - DO NOT SHARE THIS FILE\n")
 	sb.WriteString("    This document contains your secret share. Keep it safe.\n\n")
 

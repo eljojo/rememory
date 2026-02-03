@@ -40,7 +40,7 @@ test-e2e-headed: build
 
 lint:
 	go vet ./...
-	test -z "$$(gofmt -l .)"
+	test -z "$$(gofmt -w .)"
 
 clean:
 	rm -f $(BINARY) coverage.out coverage.html

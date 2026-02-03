@@ -52,9 +52,14 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	// Warning box
 	pdf.SetFillColor(255, 240, 240)
 	pdf.SetFont("Helvetica", "B", bodySize)
-	pdf.CellFormat(0, 8, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
+	pdf.CellFormat(0, 7, "  !! YOU CANNOT USE THIS FILE ALONE", "", 1, "L", true, 0, "")
 	pdf.SetFont("Helvetica", "", bodySize)
-	pdf.CellFormat(0, 6, "  This document contains your secret share. Keep it safe.", "", 1, "L", true, 0, "")
+	pdf.CellFormat(0, 5, "  You will need help from other friends listed below.", "", 1, "L", true, 0, "")
+	pdf.Ln(2)
+	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.CellFormat(0, 7, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
+	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.CellFormat(0, 5, "  This document contains your secret share. Keep it safe.", "", 1, "L", true, 0, "")
 	pdf.Ln(8)
 
 	// Section: What is this?

@@ -33,10 +33,10 @@ func TestTruncateHash(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"sha256:abc", "sha256:abc"},                                             // 10 chars
-		{"sha256:abcdefghij", "sha256:abcdefghij"},                               // 18 chars
-		{"sha256:abcdefghijklm", "sha256:abcdefghijklm"},                         // 21 chars > 20, but expected is first 20
-		{"sha256:abcdefghijklmnopqrstuvwxyz", "sha256:abcdefghijklm..."},         // 33 chars -> first 20 + ...
+		{"sha256:abc", "sha256:abc"},                                     // 10 chars
+		{"sha256:abcdefghij", "sha256:abcdefghij"},                       // 18 chars
+		{"sha256:abcdefghijklm", "sha256:abcdefghijklm"},                 // 21 chars > 20, but expected is first 20
+		{"sha256:abcdefghijklmnopqrstuvwxyz", "sha256:abcdefghijklm..."}, // 33 chars -> first 20 + ...
 		{"short", "short"},
 	}
 
