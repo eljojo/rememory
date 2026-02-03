@@ -48,7 +48,7 @@ func TestFullWorkflow(t *testing.T) {
 	// Step 2: Seal (simulating 'rememory seal')
 	// Archive manifest
 	var archiveBuf bytes.Buffer
-	if err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+	if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
 		t.Fatalf("archiving: %v", err)
 	}
 
@@ -137,13 +137,13 @@ func TestFullWorkflow(t *testing.T) {
 
 			// Extract
 			extractDir := t.TempDir()
-			extractedPath, err := manifest.Extract(&decryptedBuf, extractDir)
+			extractResult, err := manifest.Extract(&decryptedBuf, extractDir)
 			if err != nil {
 				t.Fatalf("extracting: %v", err)
 			}
 
 			// Verify content
-			recoveredSecret, err := os.ReadFile(filepath.Join(extractedPath, "secrets.txt"))
+			recoveredSecret, err := os.ReadFile(filepath.Join(extractResult.Path, "secrets.txt"))
 			if err != nil {
 				t.Fatalf("reading recovered secret: %v", err)
 			}
@@ -239,7 +239,7 @@ func TestLargeManifest(t *testing.T) {
 
 	// Archive
 	var archiveBuf bytes.Buffer
-	if err := manifest.Archive(&archiveBuf, manifestDir); err != nil {
+	if _, err := manifest.Archive(&archiveBuf, manifestDir); err != nil {
 		t.Fatal(err)
 	}
 
@@ -258,12 +258,12 @@ func TestLargeManifest(t *testing.T) {
 
 	// Extract and verify
 	extractDir := t.TempDir()
-	extractedPath, err := manifest.Extract(&decrypted, extractDir)
+	extractResult, err := manifest.Extract(&decrypted, extractDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	recovered, err := os.ReadFile(filepath.Join(extractedPath, "large.bin"))
+	recovered, err := os.ReadFile(filepath.Join(extractResult.Path, "large.bin"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -344,7 +344,7 @@ func TestBundleGeneration(t *testing.T) {
 
 	// Seal the project
 	var archiveBuf bytes.Buffer
-	if err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+	if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
 		t.Fatalf("archiving: %v", err)
 	}
 
@@ -581,7 +581,7 @@ func TestBundleRecovery(t *testing.T) {
 
 	// Seal
 	var archiveBuf bytes.Buffer
-	if err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+	if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
 		t.Fatalf("archiving: %v", err)
 	}
 
@@ -651,13 +651,13 @@ func TestBundleRecovery(t *testing.T) {
 
 	// Extract
 	extractDir := t.TempDir()
-	extractedPath, err := manifest.Extract(&decrypted, extractDir)
+	extractResult, err := manifest.Extract(&decrypted, extractDir)
 	if err != nil {
 		t.Fatalf("extracting: %v", err)
 	}
 
 	// Verify content
-	recovered, err := os.ReadFile(filepath.Join(extractedPath, "secret.txt"))
+	recovered, err := os.ReadFile(filepath.Join(extractResult.Path, "secret.txt"))
 	if err != nil {
 		t.Fatalf("reading recovered: %v", err)
 	}

@@ -144,23 +144,28 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	// Extract archive
-	extractedDir, err := manifest.Extract(&decryptedBuf, outputDir)
+	extractResult, err := manifest.Extract(&decryptedBuf, outputDir)
 	if err != nil {
 		return fmt.Errorf("extracting manifest: %w", err)
 	}
 
+	// Warn about any skipped files (symlinks, etc.)
+	for _, warning := range extractResult.Warnings {
+		fmt.Printf("  Warning: %s\n", warning)
+	}
+
 	// List recovered files
 	fmt.Println()
-	fmt.Printf("Recovered to: %s/\n", extractedDir)
+	fmt.Printf("Recovered to: %s/\n", extractResult.Path)
 
-	err = filepath.Walk(extractedDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(extractResult.Path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if path == extractedDir {
+		if path == extractResult.Path {
 			return nil
 		}
-		relPath, _ := filepath.Rel(extractedDir, path)
+		relPath, _ := filepath.Rel(extractResult.Path, path)
 		if info.IsDir() {
 			fmt.Printf("  %s/\n", relPath)
 		} else {

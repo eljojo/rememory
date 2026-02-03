@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -35,20 +36,24 @@ func TestArchiveExtract(t *testing.T) {
 
 	// Archive
 	var buf bytes.Buffer
-	if err := Archive(&buf, testDir); err != nil {
+	archiveResult, err := Archive(&buf, testDir)
+	if err != nil {
 		t.Fatalf("archive: %v", err)
+	}
+	if len(archiveResult.Warnings) > 0 {
+		t.Logf("archive warnings: %v", archiveResult.Warnings)
 	}
 
 	// Extract to new location
 	dstDir := t.TempDir()
-	extractedPath, err := Extract(&buf, dstDir)
+	extractResult, err := Extract(&buf, dstDir)
 	if err != nil {
 		t.Fatalf("extract: %v", err)
 	}
 
 	// Verify files
 	for path, expectedContent := range files {
-		fullPath := filepath.Join(extractedPath, path)
+		fullPath := filepath.Join(extractResult.Path, path)
 		content, err := os.ReadFile(fullPath)
 		if err != nil {
 			t.Errorf("reading %s: %v", path, err)
@@ -70,7 +75,7 @@ func TestArchiveNotDirectory(t *testing.T) {
 	defer os.Remove(f.Name())
 
 	var buf bytes.Buffer
-	err = Archive(&buf, f.Name())
+	_, err = Archive(&buf, f.Name())
 	if err == nil {
 		t.Error("expected error for non-directory")
 	}
@@ -89,7 +94,7 @@ func TestExtractPathTraversal(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	if err := Archive(&buf, testDir); err != nil {
+	if _, err := Archive(&buf, testDir); err != nil {
 		t.Fatal(err)
 	}
 
@@ -136,7 +141,7 @@ func TestDirSize(t *testing.T) {
 
 func TestArchiveNonexistent(t *testing.T) {
 	var buf bytes.Buffer
-	err := Archive(&buf, "/nonexistent/path")
+	_, err := Archive(&buf, "/nonexistent/path")
 	if err == nil {
 		t.Error("expected error for nonexistent directory")
 	}
@@ -177,13 +182,74 @@ func TestDirSizeNonexistent(t *testing.T) {
 	}
 }
 
+func TestArchiveSymlinkWarning(t *testing.T) {
+	// Create a temp directory with a symlink
+	srcDir := t.TempDir()
+	testDir := filepath.Join(srcDir, "manifest")
+	if err := os.MkdirAll(testDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a regular file
+	regularFile := filepath.Join(testDir, "regular.txt")
+	if err := os.WriteFile(regularFile, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink
+	symlinkPath := filepath.Join(testDir, "link.txt")
+	if err := os.Symlink(regularFile, symlinkPath); err != nil {
+		t.Skip("symlinks not supported on this platform")
+	}
+
+	// Archive should succeed but warn about symlink
+	var buf bytes.Buffer
+	result, err := Archive(&buf, testDir)
+	if err != nil {
+		t.Fatalf("archive: %v", err)
+	}
+
+	// Should have a warning about the symlink
+	if len(result.Warnings) == 0 {
+		t.Error("expected warning about symlink, got none")
+	}
+
+	foundSymlinkWarning := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "symlink") {
+			foundSymlinkWarning = true
+			break
+		}
+	}
+	if !foundSymlinkWarning {
+		t.Errorf("expected symlink warning, got: %v", result.Warnings)
+	}
+
+	// Extract and verify only regular file is present
+	dstDir := t.TempDir()
+	extractResult, err := Extract(&buf, dstDir)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+
+	// Regular file should exist
+	if _, err := os.Stat(filepath.Join(extractResult.Path, "regular.txt")); err != nil {
+		t.Errorf("regular file should exist: %v", err)
+	}
+
+	// Symlink should NOT exist (was skipped)
+	if _, err := os.Stat(filepath.Join(extractResult.Path, "link.txt")); err == nil {
+		t.Error("symlink should not have been archived")
+	}
+}
+
 func TestArchiveEmptyDir(t *testing.T) {
 	dir := t.TempDir()
 	emptyDir := filepath.Join(dir, "empty")
 	os.MkdirAll(emptyDir, 0755)
 
 	var buf bytes.Buffer
-	err := Archive(&buf, emptyDir)
+	_, err := Archive(&buf, emptyDir)
 	if err != nil {
 		t.Fatalf("Archive empty dir: %v", err)
 	}

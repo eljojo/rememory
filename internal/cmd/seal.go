@@ -78,8 +78,14 @@ func runSeal(cmd *cobra.Command, args []string) error {
 
 	// Archive the manifest directory
 	var archiveBuf bytes.Buffer
-	if err := manifest.Archive(&archiveBuf, manifestDir); err != nil {
+	archiveResult, err := manifest.Archive(&archiveBuf, manifestDir)
+	if err != nil {
 		return fmt.Errorf("archiving manifest: %w", err)
+	}
+
+	// Warn about any skipped files (symlinks, etc.)
+	for _, warning := range archiveResult.Warnings {
+		fmt.Printf("  Warning: %s\n", warning)
 	}
 
 	// Generate passphrase
