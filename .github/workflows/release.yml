@@ -31,6 +31,23 @@ jobs:
       - name: Build binaries
         run: make build-all
 
+      - name: Generate demo bundles
+        run: |
+          mkdir -p demo
+          cd demo
+          ../dist/rememory-linux-amd64 init --name "Demo Project" --threshold 2 \
+            --friend "Alice,alice@example.com" \
+            --friend "Bob,bob@example.com" \
+            --friend "Carol,carol@example.com"
+          cd recovery
+          echo "This is a demo secret file." > manifest/demo-secret.txt
+          echo "Another example file with sensitive data." > manifest/passwords.txt
+          ../../dist/rememory-linux-amd64 seal
+          ../../dist/rememory-linux-amd64 bundle
+          # Create a zip of all demo bundles
+          cd output/bundles
+          zip -r ../../../../dist/demo-bundles.zip *.zip
+
       - name: Create checksums
         run: |
           cd dist
@@ -45,5 +62,6 @@ jobs:
             dist/rememory-darwin-amd64
             dist/rememory-darwin-arm64
             dist/rememory-windows-amd64.exe
+            dist/demo-bundles.zip
             dist/checksums.txt
           generate_release_notes: true
