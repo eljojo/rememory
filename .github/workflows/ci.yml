@@ -18,6 +18,17 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          go mod download
+          npm ci
+
       - name: Build WASM
         run: make wasm
 
@@ -53,19 +64,3 @@ jobs:
 
       - name: Run Playwright E2E tests
         run: make test-e2e
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: e2e/tmp/playwright-report/
-          retention-days: 30
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: screenshots
-          path: e2e/tmp/screenshots/
-          retention-days: 30
