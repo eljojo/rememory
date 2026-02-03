@@ -1,15 +1,22 @@
 package crypto
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"filippo.io/age"
 )
 
+// ErrEmptyPassphrase is returned when an empty passphrase is provided.
+var ErrEmptyPassphrase = errors.New("passphrase cannot be empty")
+
 // Encrypt encrypts data using age with a passphrase (scrypt mode).
 // The passphrase is used to derive an encryption key using scrypt.
 func Encrypt(dst io.Writer, src io.Reader, passphrase string) error {
+	if passphrase == "" {
+		return ErrEmptyPassphrase
+	}
 	recipient, err := age.NewScryptRecipient(passphrase)
 	if err != nil {
 		return fmt.Errorf("creating recipient: %w", err)
@@ -33,6 +40,9 @@ func Encrypt(dst io.Writer, src io.Reader, passphrase string) error {
 
 // Decrypt decrypts age-encrypted data using a passphrase.
 func Decrypt(dst io.Writer, src io.Reader, passphrase string) error {
+	if passphrase == "" {
+		return ErrEmptyPassphrase
+	}
 	identity, err := age.NewScryptIdentity(passphrase)
 	if err != nil {
 		return fmt.Errorf("creating identity: %w", err)

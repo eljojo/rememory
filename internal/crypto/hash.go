@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -37,6 +38,7 @@ func HashFile(path string) (string, error) {
 }
 
 // VerifyHash checks if the given hash matches the expected value.
+// Uses constant-time comparison to prevent timing attacks.
 func VerifyHash(got, expected string) bool {
-	return got == expected
+	return subtle.ConstantTimeCompare([]byte(got), []byte(expected)) == 1
 }

@@ -46,6 +46,11 @@ type ExtractedFile struct {
 const (
 	shareBegin = "-----BEGIN REMEMORY SHARE-----"
 	shareEnd   = "-----END REMEMORY SHARE-----"
+
+	// MaxFileSize is the maximum size of a single file during extraction (100 MB).
+	MaxFileSize = 100 * 1024 * 1024
+	// MaxTotalSize is the maximum total size of all extracted files (1 GB).
+	MaxTotalSize = 1024 * 1024 * 1024
 )
 
 // parseShare extracts a share from text content (which might be a full README.txt).
@@ -206,6 +211,7 @@ func extractTarGz(tarGzData []byte) ([]ExtractedFile, error) {
 
 	tr := tar.NewReader(gzr)
 	var files []ExtractedFile
+	var totalSize int64
 
 	// Regex to detect path traversal
 	pathTraversal := regexp.MustCompile(`(^|/)\.\.(/|$)`)
@@ -221,7 +227,7 @@ func extractTarGz(tarGzData []byte) ([]ExtractedFile, error) {
 
 		// Security: reject path traversal
 		if pathTraversal.MatchString(header.Name) {
-			return nil, fmt.Errorf("invalid path in archive: %s", header.Name)
+			return nil, fmt.Errorf("archive contains invalid path")
 		}
 
 		// Skip directories, only extract regular files
@@ -229,9 +235,20 @@ func extractTarGz(tarGzData []byte) ([]ExtractedFile, error) {
 			continue
 		}
 
-		data, err := io.ReadAll(tr)
+		// Security: enforce file size limits
+		if header.Size > MaxFileSize {
+			return nil, fmt.Errorf("file exceeds maximum allowed size")
+		}
+		totalSize += header.Size
+		if totalSize > MaxTotalSize {
+			return nil, fmt.Errorf("archive exceeds maximum total size")
+		}
+
+		// Use LimitReader for additional safety
+		limitedReader := io.LimitReader(tr, MaxFileSize)
+		data, err := io.ReadAll(limitedReader)
 		if err != nil {
-			return nil, fmt.Errorf("reading file %s: %w", header.Name, err)
+			return nil, fmt.Errorf("failed to read file from archive")
 		}
 
 		files = append(files, ExtractedFile{

@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+const (
+	// MaxFileSize is the maximum size of a single file during extraction (100 MB).
+	MaxFileSize = 100 * 1024 * 1024
+	// MaxTotalSize is the maximum total size of all extracted files (1 GB).
+	MaxTotalSize = 1024 * 1024 * 1024
+)
+
 // Archive creates a tar.gz archive of the given directory.
 // The archive preserves the directory structure relative to the source.
 func Archive(w io.Writer, sourceDir string) error {
@@ -104,6 +111,7 @@ func Extract(r io.Reader, destDir string) (string, error) {
 
 	tr := tar.NewReader(gzr)
 	var rootDir string
+	var totalSize int64
 
 	for {
 		header, err := tr.Next()
@@ -134,6 +142,15 @@ func Extract(r io.Reader, destDir string) (string, error) {
 			}
 
 		case tar.TypeReg:
+			// Security: enforce file size limit
+			if header.Size > MaxFileSize {
+				return "", fmt.Errorf("file exceeds maximum size of %d bytes", MaxFileSize)
+			}
+			totalSize += header.Size
+			if totalSize > MaxTotalSize {
+				return "", fmt.Errorf("archive exceeds maximum total size of %d bytes", MaxTotalSize)
+			}
+
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return "", fmt.Errorf("creating parent directory: %w", err)
 			}
@@ -143,11 +160,16 @@ func Extract(r io.Reader, destDir string) (string, error) {
 				return "", fmt.Errorf("creating file %s: %w", target, err)
 			}
 
-			if _, err := io.Copy(f, tr); err != nil {
-				f.Close()
+			// Use LimitReader to enforce size limit during actual copy
+			limitedReader := io.LimitReader(tr, MaxFileSize+1)
+			written, err := io.Copy(f, limitedReader)
+			f.Close()
+			if err != nil {
 				return "", fmt.Errorf("writing file %s: %w", target, err)
 			}
-			f.Close()
+			if written > MaxFileSize {
+				return "", fmt.Errorf("file exceeds maximum size during extraction")
+			}
 
 		default:
 			// Skip other types (symlinks, etc.) for security

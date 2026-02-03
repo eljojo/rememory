@@ -71,7 +71,7 @@
           elements.loadingOverlay.classList.add('hidden');
           return;
         } catch (e) {
-          console.error('Embedded WASM failed:', e);
+          // WASM initialization failed - will show error to user below
         }
       }
       showError(t('error', err.message));
@@ -146,7 +146,7 @@
           await parseAndAddShare(content, file.name);
         }
       } catch (err) {
-        console.error('Error reading file:', err);
+        showError(t('error', 'Failed to read file'));
       }
     }
   }
@@ -424,6 +424,16 @@
     a.download = 'manifest.tar.gz';
     a.click();
     URL.revokeObjectURL(url);
+
+    // Security: Clear sensitive data from memory after download
+    clearSensitiveState();
+  }
+
+  // Clear sensitive data from state to minimize memory exposure
+  function clearSensitiveState() {
+    state.decryptedArchive = null;
+    state.manifest = null;
+    // Note: shares contain metadata but not the actual secret
   }
 
   // Utility functions
@@ -459,7 +469,7 @@
 
   function showError(msg) {
     alert(msg); // Simple for now, could be a toast
-    console.error(msg);
+    // Note: Removed console.error to avoid logging sensitive information
   }
 
   // Start

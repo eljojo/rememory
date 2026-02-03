@@ -169,10 +169,11 @@ func ParseShare(content []byte) (*Share, error) {
 }
 
 // Verify checks that the share's checksum matches its data.
+// Uses constant-time comparison to prevent timing attacks.
 func (s *Share) Verify() error {
 	computed := crypto.HashBytes(s.Data)
-	if computed != s.Checksum {
-		return fmt.Errorf("checksum mismatch: expected %s, got %s", s.Checksum, computed)
+	if !crypto.VerifyHash(computed, s.Checksum) {
+		return fmt.Errorf("share checksum verification failed")
 	}
 	return nil
 }

@@ -35,6 +35,15 @@ var (
 	initFriends   []string
 )
 
+const (
+	// MaxNameLength is the maximum allowed length for friend names
+	MaxNameLength = 200
+	// MaxEmailLength is the maximum allowed length for email addresses
+	MaxEmailLength = 320 // RFC 5321 maximum
+	// MaxPhoneLength is the maximum allowed length for phone numbers
+	MaxPhoneLength = 50
+)
+
 func init() {
 	rootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringVar(&initFrom, "from", "", "Base new project on existing project (copies friends)")
@@ -155,6 +164,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 			if nameStr == "" {
 				return fmt.Errorf("name is required")
 			}
+			if len(nameStr) > MaxNameLength {
+				return fmt.Errorf("name too long (max %d characters)", MaxNameLength)
+			}
 			friends[i].Name = nameStr
 
 			fmt.Print("  Email: ")
@@ -163,11 +175,18 @@ func runInit(cmd *cobra.Command, args []string) error {
 			if emailStr == "" {
 				return fmt.Errorf("email is required")
 			}
+			if len(emailStr) > MaxEmailLength {
+				return fmt.Errorf("email too long (max %d characters)", MaxEmailLength)
+			}
 			friends[i].Email = emailStr
 
 			fmt.Print("  Phone (optional): ")
 			phoneStr, _ := reader.ReadString('\n')
-			friends[i].Phone = strings.TrimSpace(phoneStr)
+			phoneStr = strings.TrimSpace(phoneStr)
+			if len(phoneStr) > MaxPhoneLength {
+				return fmt.Errorf("phone too long (max %d characters)", MaxPhoneLength)
+			}
+			friends[i].Phone = phoneStr
 
 			fmt.Println()
 		}
@@ -226,8 +245,17 @@ func parseFriendFlags(flags []string) ([]project.Friend, error) {
 		if friends[i].Name == "" {
 			return nil, fmt.Errorf("friend name cannot be empty")
 		}
+		if len(friends[i].Name) > MaxNameLength {
+			return nil, fmt.Errorf("friend name too long (max %d characters)", MaxNameLength)
+		}
 		if friends[i].Email == "" {
 			return nil, fmt.Errorf("friend email cannot be empty")
+		}
+		if len(friends[i].Email) > MaxEmailLength {
+			return nil, fmt.Errorf("friend email too long (max %d characters)", MaxEmailLength)
+		}
+		if len(friends[i].Phone) > MaxPhoneLength {
+			return nil, fmt.Errorf("friend phone too long (max %d characters)", MaxPhoneLength)
 		}
 	}
 	return friends, nil
