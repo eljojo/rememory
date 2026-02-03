@@ -64,7 +64,14 @@ bump-patch:
 	patch=$$(echo $$current | cut -d. -f3); \
 	new="v$$major.$$minor.$$((patch + 1))"; \
 	echo "Bumping $$current -> $$new"; \
-	git tag -a $$new -m "Release $$new"
+	git tag -a $$new -m "Release $$new"; \
+	echo ""; \
+	read -p "Push tag $$new to origin? [y/N] " answer; \
+	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+		git push origin $$new; \
+	else \
+		echo "Tag created locally. Push with: git push origin $$new"; \
+	fi
 
 bump-minor:
 	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
@@ -72,11 +79,25 @@ bump-minor:
 	minor=$$(echo $$current | cut -d. -f2); \
 	new="v$$major.$$((minor + 1)).0"; \
 	echo "Bumping $$current -> $$new"; \
-	git tag -a $$new -m "Release $$new"
+	git tag -a $$new -m "Release $$new"; \
+	echo ""; \
+	read -p "Push tag $$new to origin? [y/N] " answer; \
+	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+		git push origin $$new; \
+	else \
+		echo "Tag created locally. Push with: git push origin $$new"; \
+	fi
 
 bump-major:
 	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
 	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
 	new="v$$((major + 1)).0.0"; \
 	echo "Bumping $$current -> $$new"; \
-	git tag -a $$new -m "Release $$new"
+	git tag -a $$new -m "Release $$new"; \
+	echo ""; \
+	read -p "Push tag $$new to origin? [y/N] " answer; \
+	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
+		git push origin $$new; \
+	else \
+		echo "Tag created locally. Push with: git push origin $$new"; \
+	fi
