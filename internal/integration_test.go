@@ -433,7 +433,7 @@ func TestBundleGeneration(t *testing.T) {
 
 	// Verify each bundle
 	for _, friend := range friends {
-		bundlePath := filepath.Join(bundlesDir, "bundle-"+friend.Name+".zip")
+		bundlePath := filepath.Join(bundlesDir, "bundle-"+strings.ToLower(friend.Name)+".zip")
 		t.Run("Bundle-"+friend.Name, func(t *testing.T) {
 			verifyBundle(t, bundlePath, friend, friends, threshold)
 		})
@@ -627,8 +627,8 @@ func TestBundleRecovery(t *testing.T) {
 	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
 
 	// Extract shares from Alice's and Bob's bundles (threshold = 2)
-	aliceBundle := filepath.Join(bundlesDir, "bundle-Alice.zip")
-	bobBundle := filepath.Join(bundlesDir, "bundle-Bob.zip")
+	aliceBundle := filepath.Join(bundlesDir, "bundle-alice.zip")
+	bobBundle := filepath.Join(bundlesDir, "bundle-bob.zip")
 
 	aliceShare := extractShareFromBundle(t, aliceBundle)
 	bobShare := extractShareFromBundle(t, bobBundle)
