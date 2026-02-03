@@ -1,0 +1,156 @@
+package pdf
+
+import (
+	"bytes"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/go-pdf/fpdf"
+
+	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/shamir"
+)
+
+// ReadmeData contains all data needed to generate README.pdf
+type ReadmeData struct {
+	ProjectName      string
+	Holder           string
+	Share            *shamir.Share
+	OtherFriends     []project.Friend
+	Threshold        int
+	Total            int
+	Version          string
+	GitHubReleaseURL string
+	ManifestChecksum string
+	RecoverChecksum  string
+	Created          time.Time
+}
+
+// Font sizes
+const (
+	titleSize   = 16.0
+	headingSize = 12.0
+	bodySize    = 10.0
+	monoSize    = 8.0
+)
+
+// GenerateReadme creates the README.pdf content.
+func GenerateReadme(data ReadmeData) ([]byte, error) {
+	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf.SetMargins(20, 20, 20)
+	pdf.SetAutoPageBreak(true, 20)
+	pdf.AddPage()
+
+	// Title
+	pdf.SetFont("Helvetica", "B", titleSize)
+	pdf.CellFormat(0, 10, "REMEMORY RECOVERY BUNDLE", "", 1, "C", false, 0, "")
+	pdf.SetFont("Helvetica", "", headingSize)
+	pdf.CellFormat(0, 8, fmt.Sprintf("For: %s", data.Holder), "", 1, "C", false, 0, "")
+	pdf.Ln(5)
+
+	// Warning box
+	pdf.SetFillColor(255, 240, 240)
+	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.CellFormat(0, 8, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
+	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.CellFormat(0, 6, "  This document contains your secret share. Keep it safe.", "", 1, "L", true, 0, "")
+	pdf.Ln(8)
+
+	// Section: What is this?
+	addSection(pdf, "WHAT IS THIS?")
+	addBody(pdf, fmt.Sprintf("This bundle allows you to help recover encrypted secrets for: %s", data.ProjectName))
+	addBody(pdf, fmt.Sprintf("You are one of %d trusted friends who hold pieces of the recovery key.", data.Total))
+	addBody(pdf, fmt.Sprintf("At least %d of you must cooperate to decrypt the contents.", data.Threshold))
+	pdf.Ln(5)
+
+	// Section: Browser recovery
+	addSection(pdf, "HOW TO RECOVER (PRIMARY METHOD - Browser)")
+	addBody(pdf, "1. Open recover.html in any modern browser (Chrome, Firefox, Safari, Edge)")
+	addBody(pdf, "2. Drag and drop this README.txt file (or paste your share from below)")
+	addBody(pdf, "3. Collect shares from other friends (they drag their README.txt too)")
+	addBody(pdf, "4. Once you have enough shares, the tool will decrypt automatically")
+	addBody(pdf, "5. Download the recovered files")
+	pdf.Ln(2)
+	pdf.SetFont("Helvetica", "I", bodySize)
+	pdf.MultiCell(0, 5, "Works completely offline - no internet required!", "", "L", false)
+	pdf.Ln(5)
+
+	// Section: CLI fallback
+	addSection(pdf, "HOW TO RECOVER (FALLBACK - Command Line)")
+	addBody(pdf, "If recover.html doesn't work, download the CLI tool from:")
+	pdf.SetFont("Courier", "", monoSize)
+	pdf.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
+	pdf.Ln(2)
+	addBody(pdf, "Usage: rememory recover --shares share1.txt,share2.txt,... --manifest MANIFEST.age")
+	pdf.Ln(5)
+
+	// Section: Share
+	addSection(pdf, "YOUR SHARE (upload this file or copy-paste this block)")
+	pdf.SetFont("Courier", "", monoSize)
+	pdf.SetFillColor(245, 245, 245)
+
+	// Draw share in a box
+	shareText := data.Share.Encode()
+	shareLines := strings.Split(shareText, "\n")
+	for _, line := range shareLines {
+		if line != "" {
+			pdf.CellFormat(0, 4, line, "", 1, "L", true, 0, "")
+		} else {
+			pdf.Ln(2)
+		}
+	}
+	pdf.Ln(5)
+
+	// Section: Other share holders
+	addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
+	for _, friend := range data.OtherFriends {
+		pdf.SetFont("Helvetica", "B", bodySize)
+		pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
+		pdf.SetFont("Helvetica", "", bodySize)
+		pdf.CellFormat(0, 5, fmt.Sprintf("    Email: %s", friend.Email), "", 1, "L", false, 0, "")
+		if friend.Phone != "" {
+			pdf.CellFormat(0, 5, fmt.Sprintf("    Phone: %s", friend.Phone), "", 1, "L", false, 0, "")
+		}
+		pdf.Ln(2)
+	}
+	pdf.Ln(5)
+
+	// Footer: Metadata
+	pdf.SetFont("Helvetica", "B", monoSize)
+	pdf.CellFormat(0, 5, "METADATA", "", 1, "L", false, 0, "")
+	pdf.SetFont("Courier", "", monoSize)
+	pdf.SetFillColor(245, 245, 245)
+	addMeta(pdf, "rememory-version", data.Version)
+	addMeta(pdf, "created", data.Created.Format(time.RFC3339))
+	addMeta(pdf, "project", data.ProjectName)
+	addMeta(pdf, "threshold", fmt.Sprintf("%d", data.Threshold))
+	addMeta(pdf, "total", fmt.Sprintf("%d", data.Total))
+	addMeta(pdf, "github-release", data.GitHubReleaseURL)
+	addMeta(pdf, "checksum-manifest", data.ManifestChecksum)
+	addMeta(pdf, "checksum-recover-html", data.RecoverChecksum)
+
+	// Write to buffer
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("writing PDF: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func addSection(pdf *fpdf.Fpdf, title string) {
+	pdf.SetFont("Helvetica", "B", headingSize)
+	pdf.SetFillColor(230, 230, 230)
+	pdf.CellFormat(0, 8, " "+title, "", 1, "L", true, 0, "")
+	pdf.Ln(2)
+}
+
+func addBody(pdf *fpdf.Fpdf, text string) {
+	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.MultiCell(0, 5, text, "", "L", false)
+}
+
+func addMeta(pdf *fpdf.Fpdf, key, value string) {
+	pdf.CellFormat(0, 4, fmt.Sprintf("%s: %s", key, value), "", 1, "L", true, 0, "")
+}

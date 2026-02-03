@@ -12,6 +12,7 @@ import (
 
 	"github.com/eljojo/rememory/internal/crypto"
 	"github.com/eljojo/rememory/internal/html"
+	"github.com/eljojo/rememory/internal/pdf"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/eljojo/rememory/internal/shamir"
 )
@@ -113,8 +114,8 @@ type BundleParams struct {
 
 // GenerateBundle creates a single bundle ZIP file for one friend.
 func GenerateBundle(params BundleParams) error {
-	// Generate README.txt
-	readmeContent := GenerateReadme(ReadmeData{
+	// Common data for both README formats
+	readmeData := ReadmeData{
 		ProjectName:      params.ProjectName,
 		Holder:           params.Friend.Name,
 		Share:            params.Share,
@@ -126,11 +127,33 @@ func GenerateBundle(params BundleParams) error {
 		ManifestChecksum: params.ManifestChecksum,
 		RecoverChecksum:  params.RecoverChecksum,
 		Created:          params.SealedAt,
+	}
+
+	// Generate README.txt
+	readmeContent := GenerateReadme(readmeData)
+
+	// Generate README.pdf
+	pdfContent, err := pdf.GenerateReadme(pdf.ReadmeData{
+		ProjectName:      readmeData.ProjectName,
+		Holder:           readmeData.Holder,
+		Share:            readmeData.Share,
+		OtherFriends:     readmeData.OtherFriends,
+		Threshold:        readmeData.Threshold,
+		Total:            readmeData.Total,
+		Version:          readmeData.Version,
+		GitHubReleaseURL: readmeData.GitHubReleaseURL,
+		ManifestChecksum: readmeData.ManifestChecksum,
+		RecoverChecksum:  readmeData.RecoverChecksum,
+		Created:          readmeData.Created,
 	})
+	if err != nil {
+		return fmt.Errorf("generating PDF: %w", err)
+	}
 
 	// Create ZIP with all files, using sealed date as modification time
 	files := []ZipFile{
 		{Name: "README.txt", Content: []byte(readmeContent), ModTime: params.SealedAt},
+		{Name: "README.pdf", Content: pdfContent, ModTime: params.SealedAt},
 		{Name: "MANIFEST.age", Content: params.ManifestData, ModTime: params.SealedAt},
 		{Name: "recover.html", Content: []byte(params.RecoverHTML), ModTime: params.SealedAt},
 	}
@@ -191,6 +214,7 @@ func VerifyBundle(bundlePath string) error {
 	var readmeContent string
 	var manifestData []byte
 	var recoverData []byte
+	var pdfData []byte
 
 	for _, f := range r.File {
 		rc, err := f.Open()
@@ -207,6 +231,8 @@ func VerifyBundle(bundlePath string) error {
 		switch f.Name {
 		case "README.txt":
 			readmeContent = string(data)
+		case "README.pdf":
+			pdfData = data
 		case "MANIFEST.age":
 			manifestData = data
 		case "recover.html":
@@ -216,6 +242,9 @@ func VerifyBundle(bundlePath string) error {
 
 	if readmeContent == "" {
 		return fmt.Errorf("README.txt not found in bundle")
+	}
+	if len(pdfData) == 0 {
+		return fmt.Errorf("README.pdf not found in bundle")
 	}
 	if len(manifestData) == 0 {
 		return fmt.Errorf("MANIFEST.age not found in bundle")
