@@ -183,6 +183,117 @@
     .bundle-item .download-btn:hover {
       background: #218838;
     }
+
+    /* Maker nav */
+    .maker-nav {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .maker-nav .logo {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2c3e50;
+      text-decoration: none;
+    }
+    .maker-nav .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .maker-nav .nav-links a {
+      color: #3498db;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .maker-nav .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .maker-nav .lang-toggle {
+      position: static;
+      margin-left: auto;
+    }
+
+    /* Maker intro */
+    .maker-intro {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+    .maker-intro h1 {
+      font-size: 1.5rem;
+      color: #2c3e50;
+      margin-bottom: 0.25rem;
+    }
+    .maker-intro .subtitle {
+      color: #7f8c8d;
+      margin-bottom: 1rem;
+    }
+    .maker-intro .summary {
+      color: #495057;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+    .maker-intro details {
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+    }
+    .maker-intro summary {
+      cursor: pointer;
+      color: #3498db;
+      font-size: 0.95rem;
+    }
+    .maker-intro summary:hover {
+      text-decoration: underline;
+    }
+    .maker-intro .details-content {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .maker-intro .details-content h3 {
+      font-size: 1rem;
+      color: #2c3e50;
+      margin: 1rem 0 0.5rem;
+    }
+    .maker-intro .details-content h3:first-child {
+      margin-top: 0;
+    }
+    .maker-intro .details-content ul {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: #6c757d;
+      font-size: 0.95rem;
+    }
+    .maker-intro .details-content li {
+      margin: 0.25rem 0;
+    }
+
+    footer .version {
+      font-size: 0.75rem;
+      color: #bdc3c7;
+      margin-top: 0.25rem;
+    }
+
+    @media (max-width: 600px) {
+      .maker-nav {
+        flex-direction: column;
+        text-align: center;
+      }
+      .maker-nav .lang-toggle {
+        margin-left: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -193,26 +304,31 @@
   </div>
 
   <div class="container">
-    <header>
+    <nav class="maker-nav">
+      <a href="index.html" class="logo">🧠 ReMemory</a>
+      <div class="nav-links">
+        <a href="index.html">About</a>
+        <a href="docs.html">Guide</a>
+        <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
+      </div>
       <div class="lang-toggle">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="es">ES</button>
         <button data-lang="de">DE</button>
         <button data-lang="fr">FR</button>
       </div>
-      <h1 data-i18n="title">🧠 ReMemory - Create Bundles</h1>
-      <p data-i18n="subtitle">Create encrypted recovery bundles for your trusted friends</p>
-    </header>
+    </nav>
 
-    <!-- About Section -->
-    <div class="about-section">
-      <h2>What is 🧠 ReMemory?</h2>
-      <p>
-        ReMemory helps you protect important files (passwords, crypto keys, documents) by splitting them among trusted friends using <strong>Shamir's Secret Sharing</strong>. No single friend can access your data alone—they must work together to recover it.
+    <div class="maker-intro">
+      <h1 data-i18n="page_title">Create Bundles</h1>
+      <p class="subtitle" data-i18n="subtitle">Make sure your important files are never lost.</p>
+      <p class="summary">
+        Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later.
+        Everything runs locally—your files never leave your browser.
       </p>
 
       <details>
-        <summary>How does it work? ▼</summary>
+        <summary>How does this work?</summary>
         <div class="details-content">
           <h3>Creating bundles (this page)</h3>
           <ul>
@@ -229,21 +345,15 @@
             <li>Files are decrypted and recovered—no server needed</li>
           </ul>
 
-          <h3>Security</h3>
+          <h3>Security notes</h3>
           <ul>
             <li>Everything runs locally in your browser—no data leaves your device</li>
-            <li>You can "Save As" this page to your computer and use it offline anytime</li>
-            <li>Files are encrypted with <strong>age</strong> (modern encryption)</li>
-            <li>Uses the same cryptography as the CLI tool</li>
-            <li>100% open source</li>
+            <li>You can save this page to your computer and use it offline</li>
+            <li>Files are encrypted with <a href="https://github.com/FiloSottile/age" target="_blank">age</a></li>
+            <li>Open source (Apache-2.0)</li>
           </ul>
         </div>
       </details>
-
-      <a href="https://github.com/eljojo/rememory" target="_blank" class="github-link">
-        <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        View on GitHub
-      </a>
     </div>
 
     <!-- Step 1: Friends -->
@@ -315,12 +425,8 @@
   </div>
 
   <footer>
-    <p>ReMemory {{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
-    <p>
-      <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
-      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI</a> ·
-      <a href="https://eljojo.github.io/rememory/docs.html">Docs</a>
-    </p>
+    <p><span data-i18n="works_offline">Works completely offline</span></p>
+    <p class="version">{{VERSION}}</p>
   </footer>
 
   <!-- Translations -->
@@ -329,6 +435,7 @@
       en: {
         loading: "Preparing the bundle creator...",
         title: "🧠 ReMemory - Create Bundles",
+        page_title: "Create Bundles",
         subtitle: "Make sure your important files are never lost.",
         step1_title: "Friends",
         friends_hint: "Add at least 2 friends who will each hold a piece of your recovery key",
@@ -372,6 +479,7 @@
       es: {
         loading: "Preparando el creador de sobres...",
         title: "🧠 ReMemory - Guarda lo Importante",
+        page_title: "Crear Sobres",
         subtitle: "Quien tiene un amigo, tiene un tesoro.",
 
         step1_title: "Amigos",
@@ -427,6 +535,7 @@
       de: {
         loading: "Umschläge werden vorbereitet...",
         title: "🧠 ReMemory — Bewahre das Wichtige",
+        page_title: "Umschläge erstellen",
         subtitle: "Wer einen Freund hat, hat einen Schatz.",
 
         step1_title: "Freunde",
@@ -481,7 +590,8 @@
 
       fr: {
         loading: "Préparation des enveloppes...",
-        title: "🧠 ReMemory — Gardez l’essentiel",
+        title: "🧠 ReMemory — Gardez l'essentiel",
+        page_title: "Créer des enveloppes",
         subtitle: "Qui a un ami a un trésor.",
 
         step1_title: "Amis",

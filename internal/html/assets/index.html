@@ -3,139 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧠 ReMemory - Split Your Secrets Among Trusted Friends</title>
-  <meta name="description" content="Protect your important files by splitting them among trusted friends. When you need help, they come together to recover what matters.">
+  <title>ReMemory - Split a recovery key among friends</title>
+  <meta name="description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="🧠 ReMemory - Split Your Secrets Among Trusted Friends">
-  <meta property="og:description" content="Protect your important files by splitting them among trusted friends. When you need help, they come together to recover what matters.">
+  <meta property="og:title" content="ReMemory - Split a recovery key among friends">
+  <meta property="og:description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
   <meta property="og:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="🧠 ReMemory - Split Your Secrets Among Trusted Friends">
-  <meta name="twitter:description" content="Protect your important files by splitting them among trusted friends. When you need help, they come together to recover what matters.">
+  <meta name="twitter:title" content="ReMemory - Split a recovery key among friends">
+  <meta name="twitter:description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
   <meta name="twitter:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <style>{{STYLES}}</style>
   <style>
-    /* Landing page specific styles */
-    .hero {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 4rem 2rem;
-      text-align: center;
+    /* Landing page specific styles - personal tool feel */
+    .intro {
+      background: white;
+      padding: 2rem;
       border-radius: 8px;
-      margin-bottom: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
     }
 
-    .hero h1 {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-      color: white;
+    .intro h1 {
+      font-size: 1.75rem;
+      color: #2c3e50;
+      margin-bottom: 0.75rem;
     }
 
-    .hero .tagline {
-      font-size: 1.5rem;
-      opacity: 0.95;
+    .intro .summary {
+      font-size: 1.05rem;
+      color: #495057;
+      line-height: 1.7;
       margin-bottom: 1rem;
     }
 
-    .hero .description {
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      line-height: 1.7;
-      opacity: 0.9;
-    }
-
-    .hero-buttons {
+    .intro .links {
       display: flex;
-      gap: 1rem;
-      justify-content: center;
+      gap: 1.5rem;
       flex-wrap: wrap;
+      font-size: 0.95rem;
     }
 
-    .hero-buttons .btn {
-      padding: 1rem 2rem;
-      font-size: 1.1rem;
+    .intro .links a {
+      color: #3498db;
       text-decoration: none;
     }
 
-    .hero-buttons .btn-primary {
-      background: white;
-      color: #667eea;
-    }
-
-    .hero-buttons .btn-primary:hover {
-      background: #f0f0f0;
-    }
-
-    .hero-buttons .btn-secondary {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: 2px solid rgba(255,255,255,0.5);
-    }
-
-    .hero-buttons .btn-secondary:hover {
-      background: rgba(255,255,255,0.3);
-    }
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .feature-card {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .feature-card .icon {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .feature-card h3 {
-      font-size: 1.25rem;
-      color: #2c3e50;
-      margin-bottom: 0.5rem;
-    }
-
-    .feature-card p {
-      color: #6c757d;
-      line-height: 1.6;
+    .intro .links a:hover {
+      text-decoration: underline;
     }
 
     /* How It Works - Animated Diagram */
     .how-it-works {
       background: white;
       border-radius: 8px;
-      padding: 2rem;
+      padding: 1.5rem 2rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .how-it-works h2 {
-      text-align: center;
+      font-size: 1.25rem;
       color: #2c3e50;
       margin-bottom: 0.5rem;
     }
 
     .how-it-works .subtitle {
-      text-align: center;
-      color: #7f8c8d;
-      margin-bottom: 1.5rem;
+      color: #6c757d;
+      margin-bottom: 1rem;
       font-size: 0.95rem;
+      line-height: 1.6;
     }
 
     .dataflow-container {
       position: relative;
       width: 100%;
       height: 280px;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     #dataflow-canvas {
@@ -147,7 +93,7 @@
     .dataflow-caption {
       text-align: center;
       color: #95a5a6;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-style: italic;
     }
 
@@ -169,45 +115,182 @@
     }
 
     .reduced-motion-fallback .flow-text {
-      font-size: 1.1rem;
+      font-size: 1rem;
       line-height: 2;
     }
 
-    .cta-section {
-      text-align: center;
-      padding: 2rem;
-      background: #f8f9fa;
+    /* What this is / isn't */
+    .what-is {
+      background: white;
       border-radius: 8px;
-      margin-bottom: 2rem;
-    }
-
-    .cta-section h2 {
-      color: #2c3e50;
-      margin-bottom: 0.5rem;
-    }
-
-    .cta-section p {
-      color: #6c757d;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 1.5rem;
     }
 
+    .what-is h2 {
+      font-size: 1.25rem;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    .what-is-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .what-is-col h3 {
+      font-size: 1rem;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+
+    .what-is-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: #6c757d;
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+
+    .what-is-col ul li::before {
+      margin-right: 0.5rem;
+    }
+
+    .what-is-col.is-col ul li::before {
+      content: "•";
+      color: #27ae60;
+    }
+
+    .what-is-col.isnt-col ul li::before {
+      content: "•";
+      color: #95a5a6;
+    }
+
+    /* Try it section */
+    .try-it {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .try-it h2 {
+      font-size: 1.25rem;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    .try-it ol {
+      padding-left: 1.25rem;
+      color: #495057;
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    .try-it ol li {
+      margin-bottom: 0.5rem;
+    }
+
+    .try-it .note {
+      color: #6c757d;
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    /* Trust section */
+    .trust {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .trust h2 {
+      font-size: 1.1rem;
+      color: #495057;
+      margin-bottom: 0.75rem;
+    }
+
+    .trust ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: #6c757d;
+      font-size: 0.9rem;
+      line-height: 1.8;
+    }
+
+    .trust ul li::before {
+      content: "→";
+      margin-right: 0.5rem;
+      color: #95a5a6;
+    }
+
+    .trust ul li a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .trust ul li a:hover {
+      text-decoration: underline;
+    }
+
+    /* Background note */
+    .background {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .background h2 {
+      font-size: 1.1rem;
+      color: #495057;
+      margin-bottom: 0.75rem;
+    }
+
+    .background p {
+      color: #6c757d;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #95a5a6;
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: #7f8c8d;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    footer .version {
+      font-size: 0.75rem;
+      color: #bdc3c7;
+      margin-top: 0.5rem;
+    }
+
     @media (max-width: 600px) {
-      .hero h1 {
-        font-size: 2rem;
+      .intro h1 {
+        font-size: 1.5rem;
       }
 
-      .hero .tagline {
-        font-size: 1.2rem;
-      }
-
-      .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .hero-buttons .btn {
-        width: 100%;
-        max-width: 280px;
+      .what-is-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
       }
 
       .dataflow-container {
@@ -218,79 +301,108 @@
 </head>
 <body>
   <div class="container">
-    <div class="hero">
-      <h1>ReMemory</h1>
-      <p class="tagline">Split your secrets among trusted friends</p>
-      <p class="description">
-        Protect your important files (passwords, crypto keys, recovery codes) by splitting them
-        among trusted friends using cryptographic secret sharing. No single friend can access
-        your data alone—they must work together to recover it.
+    <section class="intro">
+      <h1>🧠 ReMemory</h1>
+      <p class="summary">
+        This is a tool that encrypts files and splits the decryption key among trusted friends
+        using <a href="https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing" target="_blank">Shamir's Secret Sharing</a>.
+        For example, you can give pieces to 5 friends and require any 3 of them to cooperate to recover the key.
+        No single friend can access your data alone.
       </p>
-      <div class="hero-buttons">
-        <a href="maker.html" class="btn btn-primary">Create Bundles</a>
-        <a href="docs.html" class="btn btn-secondary">Read the Guide</a>
+      <p class="summary">
+        Each friend receives a self-contained bundle with <code>recover.html</code>—a browser-based tool that works
+        offline, with no servers or internet required. If this website disappears, recovery still works.
+      </p>
+      <div class="links">
+        <a href="maker.html">Create bundles</a>
+        <a href="docs.html">Read the guide</a>
+        <a href="https://github.com/eljojo/rememory" target="_blank">Source on GitHub</a>
       </div>
-    </div>
+    </section>
 
-    <div class="how-it-works">
-      <h2>How It Works</h2>
-      <p class="subtitle">Your file is encrypted, split into shares, and distributed to friends. Any 3 of 5 can recover it.</p>
+    <section class="how-it-works">
+      <h2>How it works</h2>
+      <p class="subtitle">Your file is encrypted, the key is split into shares, and friends combine shares to recover it.</p>
 
       <div class="dataflow-container">
         <canvas id="dataflow-canvas"></canvas>
       </div>
 
-      <p class="dataflow-caption">Watch as different combinations of friends recover the file each cycle</p>
+      <p class="dataflow-caption">Different friend combinations can recover the file (any 3 of 5)</p>
 
       <div class="reduced-motion-fallback">
         <p class="flow-text">
-          <strong>Your File</strong> → <strong>Encrypt</strong> → <strong>Split into 5 shares</strong> → <strong>Distribute to friends</strong><br>
+          <strong>Your File</strong> → <strong>Encrypt</strong> → <strong>Split key into 5 shares</strong> → <strong>Distribute to friends</strong><br>
           ↓<br>
-          <strong>Any 3 friends</strong> → <strong>Combine shares</strong> → <strong>Decrypt</strong> → <strong>File recovered!</strong>
+          <strong>Any 3 friends</strong> → <strong>Combine shares</strong> → <strong>Decrypt</strong> → <strong>File recovered</strong>
         </p>
       </div>
-    </div>
+    </section>
 
-    <div class="features">
-      <div class="feature-card">
-        <div class="icon">🔐</div>
-        <h3>No Servers Needed</h3>
-        <p>Everything runs locally in your browser. Your secrets never leave your device—not even encrypted.</p>
+    <section class="what-is">
+      <h2>What this is and isn't</h2>
+      <div class="what-is-grid">
+        <div class="what-is-col is-col">
+          <h3>It is:</h3>
+          <ul>
+            <li>An offline tool that runs in your browser</li>
+            <li>A way to split a recovery key among friends</li>
+            <li>Open source (Apache-2.0)</li>
+            <li>Self-contained—recovery works without this site</li>
+          </ul>
+        </div>
+        <div class="what-is-col isnt-col">
+          <h3>It isn't:</h3>
+          <ul>
+            <li>A service or a company</li>
+            <li>An account system or cloud product</li>
+            <li>Something that stores your data anywhere</li>
+            <li>A backup solution by itself</li>
+          </ul>
+        </div>
       </div>
+    </section>
 
-      <div class="feature-card">
-        <div class="icon">🧩</div>
-        <h3>Shamir's Secret Sharing</h3>
-        <p>Cryptographically split your encryption key so that a threshold of friends (e.g., 3 of 5) must cooperate to recover.</p>
-      </div>
+    <section class="try-it">
+      <h2>Try it in 2 minutes</h2>
+      <ol>
+        <li><a href="https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip">Download the demo bundles</a> (contains 3 sample bundles)</li>
+        <li>Open <code>bundle-alice/recover.html</code> in your browser</li>
+        <li>Add Bob's and Carol's shares (drag their README.txt files onto the page)</li>
+        <li>Watch the automatic decryption when threshold is met</li>
+      </ol>
+      <p class="note">This is the best way to understand what your friends would experience during a real recovery.</p>
+    </section>
 
-      <div class="feature-card">
-        <div class="icon">📴</div>
-        <h3>Works Offline</h3>
-        <p>The recovery bundles work completely offline. No internet required—even if this website disappears.</p>
-      </div>
+    <section class="trust">
+      <h2>On trust and verification</h2>
+      <ul>
+        <li>The code is open source—you can <a href="https://github.com/eljojo/rememory" target="_blank">read it on GitHub</a></li>
+        <li>There's a <a href="https://github.com/eljojo/rememory/blob/main/docs/security-audit.md" target="_blank">self-audit document</a> explaining the cryptographic choices</li>
+        <li>Everything runs locally in your browser; your files don't leave your device</li>
+        <li>Try the demo bundles first to see exactly how it works before using it with real secrets</li>
+        <li>Uses <a href="https://github.com/FiloSottile/age" target="_blank">age</a> for encryption—a well-regarded modern tool</li>
+      </ul>
+    </section>
 
-      <div class="feature-card">
-        <div class="icon">🔍</div>
-        <h3>Open Source</h3>
-        <p>100% open source and auditable. Uses age encryption—the same modern encryption used by security professionals.</p>
-      </div>
-    </div>
-
-    <div class="cta-section">
-      <h2>Ready to protect your secrets?</h2>
-      <p>Start by creating bundles for your trusted friends</p>
-      <a href="maker.html" class="btn btn-primary">Get Started</a>
-    </div>
+    <section class="background">
+      <h2>Why I built this</h2>
+      <p>
+        I wanted a way to ensure trusted friends could access important files if something happened to me—without
+        trusting any single person or service with everything. Shamir's Secret Sharing seemed like the right approach,
+        but I couldn't find a tool that gave friends a simple, self-contained way to recover files together.
+        So I built one. I'm sharing it in case it's useful to others.
+      </p>
+    </section>
   </div>
 
   <footer>
-    <p>ReMemory {{VERSION}}</p>
     <p>
       <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
       <a href="{{GITHUB_URL}}" target="_blank">Download CLI</a> ·
       <a href="docs.html">Documentation</a>
     </p>
+    <p class="version">{{VERSION}}</p>
   </footer>
 
   <script>{{DATAFLOW_JS}}</script>
