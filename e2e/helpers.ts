@@ -267,15 +267,15 @@ export class CreationPage {
   }
 
   // Files
-  createTestFiles(tmpDir: string): string[] {
-    const filesDir = path.join(tmpDir, 'test-files');
+  createTestFiles(tmpDir: string, prefix: string = 'default'): string[] {
+    const filesDir = path.join(tmpDir, `test-files-${prefix}`);
     fs.mkdirSync(filesDir, { recursive: true });
 
-    const file1 = path.join(filesDir, 'secret.txt');
-    const file2 = path.join(filesDir, 'notes.txt');
+    const file1 = path.join(filesDir, `${prefix}-secret.txt`);
+    const file2 = path.join(filesDir, `${prefix}-notes.txt`);
 
-    fs.writeFileSync(file1, 'This is a secret password: correct-horse-battery-staple');
-    fs.writeFileSync(file2, 'Remember to feed the cat!');
+    fs.writeFileSync(file1, `This is a secret password (${prefix}): correct-horse-battery-staple`);
+    fs.writeFileSync(file2, `Remember to feed the cat! (${prefix})`);
 
     return [file1, file2];
   }

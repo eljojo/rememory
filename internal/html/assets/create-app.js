@@ -324,13 +324,19 @@
     }
   }
 
-  // Load files into state
+  // Load files into state (appends to existing files)
   async function loadFiles(filesWithPaths) {
-    state.files = [];
+    // Get existing file paths to avoid duplicates
+    const existingPaths = new Set(state.files.map(f => f.name));
 
     for (const { file, path } of filesWithPaths) {
       // Skip hidden files and directories
       if (path.split('/').some(part => part.startsWith('.'))) {
+        continue;
+      }
+
+      // Skip if file with same path already exists
+      if (existingPaths.has(path)) {
         continue;
       }
 
@@ -339,6 +345,7 @@
         name: path,
         data: new Uint8Array(buffer)
       });
+      existingPaths.add(path);
     }
 
     renderFilesPreview();

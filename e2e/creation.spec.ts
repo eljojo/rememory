@@ -131,6 +131,29 @@ friends:
     await creation.expectFileCount(2);
   });
 
+  test('adding more files appends to existing files', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Create first batch of test files
+    const firstBatch = creation.createTestFiles(tmpDir, 'batch1');
+
+    // Add first batch
+    await creation.addFiles(firstBatch);
+    await creation.expectFilesPreviewVisible();
+    await creation.expectFileCount(2);
+
+    // Create second batch of test files
+    const secondBatch = creation.createTestFiles(tmpDir, 'batch2');
+
+    // Add second batch - should append, not replace
+    await creation.addFiles(secondBatch);
+
+    // Should now have all 4 files
+    await creation.expectFileCount(4);
+  });
+
   test('full bundle creation workflow', async ({ page }, testInfo) => {
     // Increase timeout for WASM-heavy operations (especially Firefox)
     testInfo.setTimeout(120000);
