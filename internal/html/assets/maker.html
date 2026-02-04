@@ -6,60 +6,7 @@
   <title>ReMemory - Create Recovery Bundles</title>
   <style>{{STYLES}}</style>
   <style>
-    .lang-toggle {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      display: flex;
-      gap: 0.5rem;
-    }
-    .lang-toggle button {
-      padding: 0.25rem 0.5rem;
-      border: 1px solid #ddd;
-      background: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.875rem;
-    }
-    .lang-toggle button.active {
-      background: #3498db;
-      color: white;
-      border-color: #3498db;
-    }
-    .lang-toggle button:hover:not(.active) {
-      background: #f0f0f0;
-    }
-    header {
-      position: relative;
-    }
-
-    /* Form styling */
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 0.25rem;
-      font-weight: 500;
-    }
-    .form-group input, .form-group textarea, .form-group select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-      outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-    }
-    .form-group small {
-      display: block;
-      color: #6c757d;
-      margin-top: 0.25rem;
-    }
+    /* Maker-specific styles */
 
     /* Friend list */
     .friend-entry {
@@ -135,7 +82,7 @@
       background: white;
     }
 
-    /* Files list */
+    /* Files preview */
     .files-preview {
       max-height: 200px;
       overflow-y: auto;
@@ -210,113 +157,6 @@
     }
     .bundle-item .download-btn:hover {
       background: #218838;
-    }
-
-    /* Import section */
-    .import-section {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px dashed #ddd;
-    }
-    .import-section summary {
-      cursor: pointer;
-      color: #6c757d;
-      font-size: 0.875rem;
-    }
-    .import-section summary:hover {
-      color: #495057;
-    }
-    .import-section textarea {
-      width: 100%;
-      height: 100px;
-      margin-top: 0.5rem;
-      font-family: monospace;
-      font-size: 0.75rem;
-    }
-
-    /* About/Intro section */
-    .about-section {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      margin-bottom: 2rem;
-    }
-    .about-section h2 {
-      margin-top: 0;
-      font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .about-section p {
-      line-height: 1.6;
-      margin: 0.75rem 0;
-    }
-    .about-section a {
-      color: #fff;
-      text-decoration: underline;
-    }
-    .about-section a:hover {
-      opacity: 0.9;
-    }
-    .about-section details {
-      margin-top: 1rem;
-    }
-    .about-section summary {
-      cursor: pointer;
-      font-weight: 500;
-      padding: 0.5rem 0;
-    }
-    .about-section summary:hover {
-      opacity: 0.9;
-    }
-    .about-section .details-content {
-      background: rgba(255,255,255,0.1);
-      padding: 1rem;
-      border-radius: 4px;
-      margin-top: 0.5rem;
-    }
-    .about-section .details-content h3 {
-      margin-top: 0;
-      font-size: 1rem;
-    }
-    .about-section ul {
-      margin: 0.5rem 0;
-      padding-left: 1.5rem;
-    }
-    .about-section li {
-      margin: 0.25rem 0;
-    }
-    .github-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(255,255,255,0.2);
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-      margin-top: 1rem;
-    }
-    .github-link:hover {
-      background: rgba(255,255,255,0.3);
-    }
-    .github-link svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-    }
-
-    /* Validation */
-    .validation-error {
-      color: #dc3545;
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
-    }
-    .field.error input {
-      border-color: #dc3545;
     }
   </style>
 </head>
