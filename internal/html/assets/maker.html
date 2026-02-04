@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReMemory - Create Recovery Bundles</title>
+  <title>🧠 ReMemory - Create Recovery Bundles</title>
   <style>{{STYLES}}</style>
   <style>
     /* Maker-specific styles */
@@ -11,7 +11,7 @@
     /* Friend list */
     .friend-entry {
       display: grid;
-      grid-template-columns: 1fr 1fr auto auto;
+      grid-template-columns: auto 1fr 1fr auto auto;
       gap: 0.5rem;
       align-items: end;
       padding: 0.75rem;
@@ -35,17 +35,20 @@
       font-size: 0.875rem;
     }
     .friend-entry .remove-btn {
-      padding: 0.375rem 0.75rem;
-      background: #dc3545;
-      color: white;
-      border: none;
+      padding: 0.375rem 0.5rem;
+      background: transparent;
+      color: #adb5bd;
+      border: 1px solid #ddd;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 1.1rem;
       line-height: 1;
+      transition: all 0.15s;
     }
     .friend-entry .remove-btn:hover {
-      background: #c82333;
+      background: #f8d7da;
+      color: #dc3545;
+      border-color: #dc3545;
     }
     .friend-entry .friend-number {
       font-weight: bold;
@@ -53,14 +56,19 @@
       display: flex;
       align-items: center;
       padding-bottom: 0.375rem;
+      min-width: 2rem;
     }
 
     @media (max-width: 768px) {
       .friend-entry {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: auto 1fr 1fr auto;
       }
-      .friend-entry .field:nth-child(3) {
-        grid-column: 1 / -1;
+      .friend-entry .field:nth-child(4) {
+        grid-column: 2 / 4;
+      }
+      .friend-entry .remove-btn {
+        grid-row: 1;
+        grid-column: 4;
       }
     }
 
@@ -111,6 +119,23 @@
     .files-preview .file-item .size {
       color: #6c757d;
       font-size: 0.75rem;
+    }
+    .files-preview .file-item .file-remove-btn {
+      padding: 0.25rem 0.5rem;
+      background: transparent;
+      color: #adb5bd;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      margin-left: 0.5rem;
+      transition: all 0.15s;
+    }
+    .files-preview .file-item .file-remove-btn:hover {
+      background: #f8d7da;
+      color: #dc3545;
+      border-color: #dc3545;
     }
     .files-summary {
       padding: 0.5rem 0.75rem;
@@ -175,13 +200,13 @@
         <button data-lang="de">DE</button>
         <button data-lang="fr">FR</button>
       </div>
-      <h1 data-i18n="title">ReMemory - Create Bundles</h1>
+      <h1 data-i18n="title">🧠 ReMemory - Create Bundles</h1>
       <p data-i18n="subtitle">Create encrypted recovery bundles for your trusted friends</p>
     </header>
 
     <!-- About Section -->
     <div class="about-section">
-      <h2>What is ReMemory?</h2>
+      <h2>What is 🧠 ReMemory?</h2>
       <p>
         ReMemory helps you protect important files (passwords, crypto keys, documents) by splitting them among trusted friends using <strong>Shamir's Secret Sharing</strong>. No single friend can access your data alone—they must work together to recover it.
       </p>
@@ -221,26 +246,9 @@
       </a>
     </div>
 
-    <!-- Step 1: Project Configuration -->
+    <!-- Step 1: Friends -->
     <div class="card">
-      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Project Details</span></h2>
-
-      <div class="form-group">
-        <label for="project-name" data-i18n="project_name_label">Project Name</label>
-        <input type="text" id="project-name" placeholder="my-recovery-2026" data-i18n-placeholder="project_name_placeholder">
-        <small data-i18n="project_name_hint">A name to identify this recovery project</small>
-      </div>
-
-      <details class="import-section">
-        <summary data-i18n="import_summary">Import contacts from existing project.yml</summary>
-        <textarea id="yaml-import" placeholder="Paste your project.yml content here..." data-i18n-placeholder="import_placeholder"></textarea>
-        <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Import Contacts</button>
-      </details>
-    </div>
-
-    <!-- Step 2: Friends -->
-    <div class="card">
-      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Friends</span></h2>
+      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Friends</span></h2>
       <p class="hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
 
       <div id="friends-list"></div>
@@ -255,12 +263,18 @@
         <span data-i18n="threshold_desc">friends needed to recover</span>
       </div>
 
+      <details class="import-section">
+        <summary data-i18n="import_summary">Import contacts from existing project.yml</summary>
+        <textarea id="yaml-import" placeholder="Paste your project.yml content here..." data-i18n-placeholder="import_placeholder"></textarea>
+        <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Import Contacts</button>
+      </details>
+
       <div id="friends-validation" class="validation-error hidden"></div>
     </div>
 
-    <!-- Step 3: Manifest Files -->
+    <!-- Step 2: Manifest Files -->
     <div class="card">
-      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Files to Protect</span></h2>
+      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Files to Protect</span></h2>
 
       <div id="files-drop-zone" class="drop-zone">
         <p data-i18n="files_drop">Drag & drop a folder here, or click to select files</p>
@@ -273,9 +287,9 @@
       <div id="files-summary" class="files-summary hidden"></div>
     </div>
 
-    <!-- Step 4: Generate -->
+    <!-- Step 3: Generate -->
     <div class="card">
-      <h2><span class="step-number">4</span> <span data-i18n="step4_title">Generate Bundles</span></h2>
+      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Generate Bundles</span></h2>
 
       <button id="generate-btn" class="btn btn-primary" disabled>
         <span data-i18n="generate_btn">Generate Bundles</span>
@@ -293,16 +307,18 @@
         <button id="download-all-btn" class="btn btn-success">
           <span data-i18n="download_all_btn">Download All Bundles</span>
         </button>
+        <button id="download-yaml-btn" class="btn btn-secondary">
+          <span data-i18n="download_yaml_btn">Save project.yml</span>
+        </button>
       </div>
     </div>
   </div>
 
   <footer>
-    <p>ReMemory v{{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
+    <p>ReMemory {{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
     <p>
       <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
-      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI</a> ·
-      <span data-i18n="footer_license">Open Source (Apache 2.0)</span>
+      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI</a>
     </p>
   </footer>
 
@@ -311,33 +327,30 @@
     const translations = {
       en: {
         loading: "Preparing the bundle creator...",
-        title: "ReMemory - Create Bundles",
-        subtitle: "Create encrypted recovery bundles for your trusted friends",
-        step1_title: "Project Details",
-        project_name_label: "Project Name",
-        project_name_placeholder: "my-recovery-2026",
-        project_name_hint: "A name to identify this recovery project",
-        import_summary: "Import contacts from existing project.yml",
-        import_placeholder: "Paste your project.yml content here...",
-        import_btn: "Import Contacts",
-        step2_title: "Friends",
-        friends_hint: "Add at least 2 friends who will hold pieces of your recovery key",
+        title: "🧠 ReMemory - Create Bundles",
+        subtitle: "Make sure your important files are never lost.",
+        step1_title: "Friends",
+        friends_hint: "Add at least 2 friends who will each hold a piece of your recovery key",
         add_friend: "Add Friend",
         threshold_label: "Threshold:",
-        threshold_desc: "friends needed to recover",
+        threshold_desc: "friends required to recover",
         name_label: "Name",
         email_label: "Email",
         phone_label: "Phone (optional)",
-        step3_title: "Files to Protect",
+        import_summary: "Import contacts from an existing project.yml",
+        import_placeholder: "Paste your project.yml content here...",
+        import_btn: "Import Contacts",
+        step2_title: "Files to Protect",
         files_drop: "Drag & drop a folder here, or click to select files",
-        files_hint: "These files will be encrypted and split among your friends",
+        files_hint: "These files will be encrypted and distributed among your friends",
         files_summary: "{0} file(s), {1} total",
-        step4_title: "Generate Bundles",
+        step3_title: "Generate Bundles",
         generate_btn: "Generate Bundles",
         download_all_btn: "Download All Bundles",
+        download_yaml_btn: "Save project.yml",
         works_offline: "Works completely offline",
         need_help: "Need help?",
-        download_cli: "Download CLI tool from GitHub",
+        download_cli: "Download the CLI tool from GitHub",
         generating: "Generating bundles...",
         archiving: "Archiving files...",
         encrypting: "Encrypting archive...",
@@ -349,7 +362,6 @@
         validation_friend_name: "Friend {0}: name is required",
         validation_friend_email: "Friend {0} ({1}): email is required",
         validation_no_files: "Please select at least one file",
-        validation_project_name: "Project name is required",
         download: "Download",
         bundle_for: "Bundle for {0}",
         import_success: "Imported {0} contacts",
@@ -357,144 +369,168 @@
       },
 
       es: {
-        loading: "Preparando el creador de paquetes...",
-        title: "ReMemory - Crear Paquetes",
-        subtitle: "Crea paquetes de recuperacion encriptados para tus amigos de confianza",
-        step1_title: "Detalles del Proyecto",
-        project_name_label: "Nombre del Proyecto",
-        project_name_placeholder: "mi-recuperacion-2026",
-        project_name_hint: "Un nombre para identificar este proyecto de recuperacion",
-        import_summary: "Importar contactos de un project.yml existente",
-        import_placeholder: "Pega el contenido de tu project.yml aqui...",
-        import_btn: "Importar Contactos",
-        step2_title: "Amigos",
-        friends_hint: "Agrega al menos 2 amigos que guardaran partes de tu clave de recuperacion",
-        add_friend: "Agregar Amigo",
+        loading: "Preparando el creador de sobres...",
+        title: "🧠 ReMemory - Guarda lo Importante",
+        subtitle: "Quien tiene un amigo, tiene un tesoro.",
+
+        step1_title: "Amigos",
+        friends_hint: "Agrega al menos 2 amigos que guardarán partes de tu clave de recuperación",
+        add_friend: "Agregar amigo",
+
         threshold_label: "Umbral:",
         threshold_desc: "amigos necesarios para recuperar",
+
         name_label: "Nombre",
         email_label: "Correo",
-        phone_label: "Telefono (opcional)",
-        step3_title: "Archivos a Proteger",
-        files_drop: "Arrastra una carpeta aqui, o haz clic para seleccionar archivos",
-        files_hint: "Estos archivos seran encriptados y divididos entre tus amigos",
+        phone_label: "Teléfono (opcional)",
+
+        import_summary: "Importar contactos desde un project.yml existente",
+        import_placeholder: "Pega aquí el contenido de tu project.yml...",
+        import_btn: "Importar contactos",
+
+        step2_title: "Archivos a proteger",
+        files_drop: "Arrastra una carpeta aquí o haz clic para seleccionar archivos",
+        files_hint: "Estos archivos serán cifrados y repartidos entre tus amigos",
         files_summary: "{0} archivo(s), {1} en total",
-        step4_title: "Generar Paquetes",
-        generate_btn: "Generar Paquetes",
-        download_all_btn: "Descargar Todos los Paquetes",
-        works_offline: "Funciona completamente sin internet",
-        need_help: "Necesitas ayuda?",
+
+        step3_title: "Generar sobres",
+        generate_btn: "Generar sobres",
+        download_all_btn: "Descargar todos los sobres",
+        download_yaml_btn: "Guardar project.yml",
+
+        works_offline: "Funciona completamente sin conexión",
+        need_help: "¿Necesitas ayuda?",
         download_cli: "Descarga la herramienta CLI desde GitHub",
-        generating: "Generando paquetes...",
-        archiving: "Archivando archivos...",
-        encrypting: "Encriptando archivo...",
-        splitting: "Dividiendo secreto...",
-        creating_bundle: "Creando paquete para {0}...",
-        complete: "Todos los paquetes creados exitosamente!",
+
+        generating: "Generando sobres...",
+        archiving: "Preparando archivos...",
+        encrypting: "Cifrando archivos...",
+        splitting: "Dividiendo la clave...",
+        creating_bundle: "Creando sobre para {0}...",
+
+        complete: "¡Todos los sobres fueron creados con éxito!",
         error: "Error: {0}",
+
         validation_min_friends: "Necesitas al menos 2 amigos",
-        validation_friend_name: "Amigo {0}: el nombre es requerido",
-        validation_friend_email: "Amigo {0} ({1}): el correo es requerido",
+        validation_friend_name: "Amigo {0}: el nombre es obligatorio",
+        validation_friend_email: "Amigo {0} ({1}): el correo es obligatorio",
         validation_no_files: "Por favor selecciona al menos un archivo",
-        validation_project_name: "El nombre del proyecto es requerido",
+
         download: "Descargar",
-        bundle_for: "Paquete para {0}",
-        import_success: "Importados {0} contactos",
-        import_error: "Error al parsear YAML: {0}"
+        bundle_for: "Sobre para {0}",
+
+        import_success: "Se importaron {0} contactos",
+        import_error: "Error al leer el YAML: {0}"
       },
 
       de: {
-        loading: "Bundle-Ersteller wird vorbereitet...",
-        title: "ReMemory - Bundles erstellen",
-        subtitle: "Erstelle verschlusselte Wiederherstellungs-Bundles fur deine vertrauten Freunde",
-        step1_title: "Projektdetails",
-        project_name_label: "Projektname",
-        project_name_placeholder: "meine-wiederherstellung-2026",
-        project_name_hint: "Ein Name zur Identifizierung dieses Wiederherstellungsprojekts",
-        import_summary: "Kontakte aus bestehender project.yml importieren",
-        import_placeholder: "Fuge hier den Inhalt deiner project.yml ein...",
-        import_btn: "Kontakte importieren",
-        step2_title: "Freunde",
-        friends_hint: "Fuge mindestens 2 Freunde hinzu, die Teile deines Wiederherstellungsschlussels aufbewahren",
-        add_friend: "Freund hinzufugen",
+        loading: "Umschläge werden vorbereitet...",
+        title: "🧠 ReMemory — Bewahre das Wichtige",
+        subtitle: "Wer einen Freund hat, hat einen Schatz.",
+
+        step1_title: "Freunde",
+        friends_hint: "Füge mindestens 2 Freunde hinzu, die Teile deines Wiederherstellungsschlüssels aufbewahren",
+        add_friend: "Freund hinzufügen",
+
         threshold_label: "Schwelle:",
-        threshold_desc: "Freunde zur Wiederherstellung benotigt",
+        threshold_desc: "Freunde, die zur Wiederherstellung benötigt werden",
+
         name_label: "Name",
         email_label: "E-Mail",
         phone_label: "Telefon (optional)",
-        step3_title: "Zu schutzende Dateien",
-        files_drop: "Ziehe einen Ordner hierher oder klicke um Dateien auszuwahlen",
-        files_hint: "Diese Dateien werden verschlusselt und unter deinen Freunden aufgeteilt",
+
+        import_summary: "Kontakte aus einer bestehenden project.yml importieren",
+        import_placeholder: "Füge hier den Inhalt deiner project.yml ein...",
+        import_btn: "Kontakte importieren",
+
+        step2_title: "Zu schützende Dateien",
+        files_drop: "Ziehe einen Ordner hierher oder klicke, um Dateien auszuwählen",
+        files_hint: "Diese Dateien werden verschlüsselt und unter deinen Freunden verteilt",
         files_summary: "{0} Datei(en), {1} insgesamt",
-        step4_title: "Bundles generieren",
-        generate_btn: "Bundles generieren",
-        download_all_btn: "Alle Bundles herunterladen",
-        works_offline: "Funktioniert komplett offline",
+
+        step3_title: "Umschläge erstellen",
+        generate_btn: "Umschläge erstellen",
+        download_all_btn: "Alle Umschläge herunterladen",
+        download_yaml_btn: "project.yml speichern",
+
+        works_offline: "Funktioniert vollständig offline",
         need_help: "Brauchst du Hilfe?",
         download_cli: "CLI-Tool von GitHub herunterladen",
-        generating: "Bundles werden generiert...",
-        archiving: "Dateien werden archiviert...",
-        encrypting: "Archiv wird verschlusselt...",
-        splitting: "Geheimnis wird aufgeteilt...",
-        creating_bundle: "Bundle fur {0} wird erstellt...",
-        complete: "Alle Bundles erfolgreich erstellt!",
+
+        generating: "Umschläge werden erstellt...",
+        archiving: "Dateien werden vorbereitet...",
+        encrypting: "Dateien werden verschlüsselt...",
+        splitting: "Schlüssel wird aufgeteilt...",
+        creating_bundle: "Umschlag für {0} wird erstellt...",
+
+        complete: "Alle Umschläge wurden erfolgreich erstellt!",
         error: "Fehler: {0}",
+
         validation_min_friends: "Du brauchst mindestens 2 Freunde",
         validation_friend_name: "Freund {0}: Name ist erforderlich",
         validation_friend_email: "Freund {0} ({1}): E-Mail ist erforderlich",
-        validation_no_files: "Bitte wahle mindestens eine Datei aus",
-        validation_project_name: "Projektname ist erforderlich",
+        validation_no_files: "Bitte wähle mindestens eine Datei aus",
+
         download: "Herunterladen",
-        bundle_for: "Bundle fur {0}",
+        bundle_for: "Umschlag für {0}",
+
         import_success: "{0} Kontakte importiert",
-        import_error: "YAML konnte nicht geparst werden: {0}"
+        import_error: "YAML konnte nicht verarbeitet werden: {0}"
       },
 
       fr: {
-        loading: "Preparation du createur de bundles...",
-        title: "ReMemory - Creer des Bundles",
-        subtitle: "Creez des bundles de recuperation chiffres pour vos amis de confiance",
-        step1_title: "Details du projet",
-        project_name_label: "Nom du projet",
-        project_name_placeholder: "ma-recuperation-2026",
-        project_name_hint: "Un nom pour identifier ce projet de recuperation",
+        loading: "Préparation des enveloppes...",
+        title: "🧠 ReMemory — Gardez l’essentiel",
+        subtitle: "Qui a un ami a un trésor.",
+
+        step1_title: "Amis",
+        friends_hint: "Ajoutez au moins 2 amis qui garderont des parties de votre clé de récupération",
+        add_friend: "Ajouter un ami",
+
+        threshold_label: "Seuil :",
+        threshold_desc: "amis nécessaires pour récupérer",
+
+        name_label: "Nom",
+        email_label: "E-mail",
+        phone_label: "Téléphone (optionnel)",
+
         import_summary: "Importer des contacts depuis un project.yml existant",
         import_placeholder: "Collez le contenu de votre project.yml ici...",
         import_btn: "Importer les contacts",
-        step2_title: "Amis",
-        friends_hint: "Ajoutez au moins 2 amis qui garderont des parties de votre cle de recuperation",
-        add_friend: "Ajouter un ami",
-        threshold_label: "Seuil:",
-        threshold_desc: "amis necessaires pour recuperer",
-        name_label: "Nom",
-        email_label: "E-mail",
-        phone_label: "Telephone (optionnel)",
-        step3_title: "Fichiers a proteger",
-        files_drop: "Deposez un dossier ici ou cliquez pour selectionner des fichiers",
-        files_hint: "Ces fichiers seront chiffres et repartis entre vos amis",
+
+        step2_title: "Fichiers à protéger",
+        files_drop: "Déposez un dossier ici ou cliquez pour sélectionner des fichiers",
+        files_hint: "Ces fichiers seront chiffrés et répartis entre vos amis",
         files_summary: "{0} fichier(s), {1} au total",
-        step4_title: "Generer les bundles",
-        generate_btn: "Generer les bundles",
-        download_all_btn: "Telecharger tous les bundles",
-        works_offline: "Fonctionne entierement hors ligne",
-        need_help: "Besoin d'aide?",
-        download_cli: "Telecharger l'outil CLI depuis GitHub",
-        generating: "Generation des bundles...",
-        archiving: "Archivage des fichiers...",
-        encrypting: "Chiffrement de l'archive...",
-        splitting: "Division du secret...",
-        creating_bundle: "Creation du bundle pour {0}...",
-        complete: "Tous les bundles ont ete crees avec succes!",
-        error: "Erreur: {0}",
+
+        step3_title: "Créer les enveloppes",
+        generate_btn: "Créer les enveloppes",
+        download_all_btn: "Télécharger toutes les enveloppes",
+        download_yaml_btn: "Enregistrer project.yml",
+
+        works_offline: "Fonctionne entièrement hors ligne",
+        need_help: "Besoin d'aide ?",
+        download_cli: "Télécharger l'outil CLI depuis GitHub",
+
+        generating: "Création des enveloppes...",
+        archiving: "Préparation des fichiers...",
+        encrypting: "Chiffrement des fichiers...",
+        splitting: "Division de la clé...",
+        creating_bundle: "Création de l’enveloppe pour {0}...",
+
+        complete: "Toutes les enveloppes ont été créées avec succès !",
+        error: "Erreur : {0}",
+
         validation_min_friends: "Vous avez besoin d'au moins 2 amis",
-        validation_friend_name: "Ami {0}: le nom est requis",
-        validation_friend_email: "Ami {0} ({1}): l'e-mail est requis",
-        validation_no_files: "Veuillez selectionner au moins un fichier",
-        validation_project_name: "Le nom du projet est requis",
-        download: "Telecharger",
-        bundle_for: "Bundle pour {0}",
-        import_success: "{0} contacts importes",
-        import_error: "Echec de l'analyse YAML: {0}"
+        validation_friend_name: "Ami {0} : le nom est requis",
+        validation_friend_email: "Ami {0} ({1}) : l'e-mail est requis",
+        validation_no_files: "Veuillez sélectionner au moins un fichier",
+
+        download: "Télécharger",
+        bundle_for: "Enveloppe pour {0}",
+
+        import_success: "{0} contacts importés",
+        import_error: "Impossible d’analyser le YAML : {0}"
       }
     };
 

@@ -3,9 +3,30 @@
 (function() {
   'use strict';
 
+  const sampleNames = [
+    'Catalina', 'Matthias', 'Sophie', 'Joaquín', 'Emma',
+    'Francisca', 'Liam', 'Hannah', 'Sebastián', 'Olivia'
+  ];
+  let nameIndex = Math.floor(Math.random() * sampleNames.length);
+
+  function getNextSampleName() {
+    const name = sampleNames[nameIndex];
+    nameIndex = (nameIndex + 1) % sampleNames.length;
+    return name;
+  }
+
+  // Generate project name from date
+  function generateProjectName() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `recovery-${year}-${month}-${day}`;
+  }
+
   // State
   const state = {
-    projectName: '',
+    projectName: generateProjectName(),
     friends: [],      // Array of {name, email, phone}
     threshold: 2,
     files: [],        // Array of {name, data: Uint8Array}
@@ -18,7 +39,6 @@
   // DOM elements
   const elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
-    projectName: document.getElementById('project-name'),
     yamlImport: document.getElementById('yaml-import'),
     importBtn: document.getElementById('import-btn'),
     friendsList: document.getElementById('friends-list'),
@@ -35,12 +55,12 @@
     statusMessage: document.getElementById('status-message'),
     bundlesList: document.getElementById('bundles-list'),
     downloadAllSection: document.getElementById('download-all-section'),
-    downloadAllBtn: document.getElementById('download-all-btn')
+    downloadAllBtn: document.getElementById('download-all-btn'),
+    downloadYamlBtn: document.getElementById('download-yaml-btn')
   };
 
   // Initialize
   async function init() {
-    setupProjectName();
     setupImport();
     setupFriends();
     setupFiles();
@@ -71,14 +91,6 @@
     });
   }
 
-  // Project name handling
-  function setupProjectName() {
-    elements.projectName.addEventListener('input', () => {
-      state.projectName = elements.projectName.value.trim();
-      checkGenerateReady();
-    });
-  }
-
   // YAML import handling
   function setupImport() {
     elements.importBtn.addEventListener('click', () => {
@@ -103,7 +115,6 @@
       // Import friends
       const project = result.project;
       if (project.name) {
-        elements.projectName.value = project.name;
         state.projectName = project.name;
       }
 
@@ -141,15 +152,18 @@
     entry.className = 'friend-entry';
     entry.dataset.index = index;
 
+    const sampleName = getNextSampleName();
+    const sampleEmail = sampleName.toLowerCase() + '@example.com';
+
     entry.innerHTML = `
       <div class="friend-number">#${index + 1}</div>
       <div class="field">
         <label>${t('name_label')}</label>
-        <input type="text" class="friend-name" value="${escapeHtml(name)}" placeholder="Alice">
+        <input type="text" class="friend-name" value="${escapeHtml(name)}" placeholder="${sampleName}">
       </div>
       <div class="field">
         <label>${t('email_label')}</label>
-        <input type="email" class="friend-email" value="${escapeHtml(email)}" placeholder="alice@example.com">
+        <input type="email" class="friend-email" value="${escapeHtml(email)}" placeholder="${sampleEmail}">
       </div>
       <div class="field">
         <label>${t('phone_label')}</label>
@@ -341,7 +355,7 @@
     elements.filesPreview.innerHTML = '';
     let totalSize = 0;
 
-    state.files.forEach(file => {
+    state.files.forEach((file, index) => {
       totalSize += file.data.length;
       const item = document.createElement('div');
       item.className = 'file-item';
@@ -349,7 +363,11 @@
         <span class="icon">&#128196;</span>
         <span class="name">${escapeHtml(file.name)}</span>
         <span class="size">${formatSize(file.data.length)}</span>
+        <button type="button" class="file-remove-btn" data-index="${index}" title="${t('remove')}">&times;</button>
       `;
+      item.querySelector('.file-remove-btn').addEventListener('click', () => {
+        removeFile(index);
+      });
       elements.filesPreview.appendChild(item);
     });
 
@@ -358,10 +376,17 @@
     elements.filesSummary.classList.remove('hidden');
   }
 
+  function removeFile(index) {
+    state.files.splice(index, 1);
+    renderFilesPreview();
+    checkGenerateReady();
+  }
+
   // Generate bundles
   function setupGenerate() {
     elements.generateBtn.addEventListener('click', generateBundles);
     elements.downloadAllBtn.addEventListener('click', downloadAllBundles);
+    elements.downloadYamlBtn.addEventListener('click', downloadProjectYaml);
   }
 
   function checkGenerateReady() {
@@ -372,12 +397,6 @@
   function validateInputs(silent = false) {
     let valid = true;
     let errors = [];
-
-    // Project name
-    if (!state.projectName) {
-      valid = false;
-      if (!silent) errors.push(t('validation_project_name'));
-    }
 
     // Friends
     if (state.friends.length < 2) {
@@ -534,6 +553,33 @@
     state.bundles.forEach((bundle, index) => {
       setTimeout(() => downloadBundle(bundle), index * 500);
     });
+  }
+
+  function downloadProjectYaml() {
+    // Generate YAML content
+    let yaml = `# ReMemory Project Configuration\n`;
+    yaml += `# Generated: ${new Date().toISOString()}\n`;
+    yaml += `# Import this file to quickly restore your friend list\n\n`;
+    yaml += `name: ${state.projectName}\n`;
+    yaml += `threshold: ${state.threshold}\n`;
+    yaml += `friends:\n`;
+
+    state.friends.forEach(f => {
+      yaml += `  - name: ${f.name}\n`;
+      yaml += `    email: ${f.email}\n`;
+      if (f.phone) {
+        yaml += `    phone: "${f.phone}"\n`;
+      }
+    });
+
+    // Download as file
+    const blob = new Blob([yaml], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'project.yml';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // UI helpers

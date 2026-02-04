@@ -217,15 +217,6 @@ export class CreationPage {
     );
   }
 
-  // Project name
-  async setProjectName(name: string): Promise<void> {
-    await this.page.locator('#project-name').fill(name);
-  }
-
-  async expectProjectName(name: string): Promise<void> {
-    await expect(this.page.locator('#project-name')).toHaveValue(name);
-  }
-
   // Friends management
   async addFriend(): Promise<void> {
     await this.page.locator('#add-friend-btn').click();
@@ -342,7 +333,6 @@ export class CreationPage {
   // UI assertions
   async expectUIElements(): Promise<void> {
     await expect(this.page.locator('h1')).toContainText('ReMemory');
-    await expect(this.page.locator('#project-name')).toBeVisible();
     await expect(this.page.locator('#friends-list')).toBeVisible();
     await expect(this.page.locator('#files-drop-zone')).toBeVisible();
     await expect(this.page.locator('#generate-btn')).toBeVisible();

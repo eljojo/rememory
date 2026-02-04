@@ -79,10 +79,6 @@ test.describe('Browser Bundle Creation Tool', () => {
     // Generate button should be disabled without required fields
     await creation.expectGenerateDisabled();
 
-    // Fill in project name
-    await creation.setProjectName('Test Project');
-    await creation.expectGenerateDisabled(); // Still disabled - no friends data
-
     // Fill in first friend
     await creation.setFriend(0, 'Alice', 'alice@test.com');
     await creation.expectGenerateDisabled(); // Still disabled - second friend empty
@@ -111,9 +107,6 @@ friends:
 `;
 
     await creation.importYAML(yamlContent);
-
-    // Project name should be imported
-    await creation.expectProjectName('imported-project');
 
     // Friends should be imported
     await creation.expectFriendCount(3);
@@ -144,9 +137,6 @@ friends:
     const creation = new CreationPage(page, htmlPath);
 
     await creation.open();
-
-    // Fill in project details
-    await creation.setProjectName('E2E Test Project');
 
     // Fill in friends
     await creation.setFriend(0, 'Alice', 'alice@test.com', '555-1111');
@@ -187,7 +177,6 @@ friends:
     await creation.open();
 
     // Quick setup
-    await creation.setProjectName('Validation Test');
     await creation.setFriend(0, 'Alice', 'alice@test.com');
     await creation.setFriend(1, 'Bob', 'bob@test.com');
 
@@ -214,11 +203,11 @@ friends:
 
     // Switch to Spanish
     await creation.setLanguage('es');
-    await creation.expectTitle('ReMemory - Crear Paquetes');
+    await creation.expectTitle('ReMemory - Guarda lo Importante');
 
     // Switch to German
     await creation.setLanguage('de');
-    await creation.expectTitle('ReMemory - Bundles erstellen');
+    await creation.expectTitle('ReMemory — Bewahre das Wichtige');
 
     // Switch back to English
     await creation.setLanguage('en');
