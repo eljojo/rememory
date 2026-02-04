@@ -128,7 +128,7 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf.SetFont("Courier", "", monoSize)
 	pdf.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
 	pdf.Ln(2)
-	addBody(pdf, "Usage: rememory recover --shares share1.txt,share2.txt,... --manifest MANIFEST.age")
+	addBody(pdf, "Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age")
 	pdf.Ln(5)
 
 	// Section: Share

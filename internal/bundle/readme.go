@@ -93,7 +93,7 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString("If recover.html doesn't work, download the CLI tool from:\n")
 	sb.WriteString(fmt.Sprintf("%s\n\n", data.GitHubReleaseURL))
-	sb.WriteString("Usage: rememory recover --shares share1.txt,share2.txt,... --manifest MANIFEST.age\n\n")
+	sb.WriteString("Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age\n\n")
 
 	// Share block
 	sb.WriteString("--------------------------------------------------------------------------------\n")
