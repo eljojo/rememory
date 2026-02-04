@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReMemory - Create Recovery Bundles</title>
+  <style>{{STYLES}}</style>
+  <style>
+    .lang-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .lang-toggle button {
+      padding: 0.25rem 0.5rem;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .lang-toggle button.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+    .lang-toggle button:hover:not(.active) {
+      background: #f0f0f0;
+    }
+    header {
+      position: relative;
+    }
+
+    /* Form styling */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 500;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    .form-group small {
+      display: block;
+      color: #6c757d;
+      margin-top: 0.25rem;
+    }
+
+    /* Friend list */
+    .friend-entry {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 0.5rem;
+      align-items: end;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .friend-entry .field {
+      display: flex;
+      flex-direction: column;
+    }
+    .friend-entry label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-bottom: 0.25rem;
+    }
+    .friend-entry input {
+      padding: 0.375rem 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .friend-entry .remove-btn {
+      padding: 0.375rem 0.75rem;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .friend-entry .remove-btn:hover {
+      background: #c82333;
+    }
+    .friend-entry .friend-number {
+      font-weight: bold;
+      color: #495057;
+      display: flex;
+      align-items: center;
+      padding-bottom: 0.375rem;
+    }
+
+    @media (max-width: 768px) {
+      .friend-entry {
+        grid-template-columns: 1fr 1fr;
+      }
+      .friend-entry .field:nth-child(3) {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* Threshold selector */
+    .threshold-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #e8f4fc;
+      border-radius: 4px;
+    }
+    .threshold-selector select {
+      padding: 0.375rem 0.5rem;
+      border: 1px solid #3498db;
+      border-radius: 4px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    /* Files list */
+    .files-preview {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #f8f9fa;
+    }
+    .files-preview .file-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #eee;
+    }
+    .files-preview .file-item:last-child {
+      border-bottom: none;
+    }
+    .files-preview .file-item .icon {
+      margin-right: 0.5rem;
+      color: #6c757d;
+    }
+    .files-preview .file-item .name {
+      flex: 1;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+    .files-preview .file-item .size {
+      color: #6c757d;
+      font-size: 0.75rem;
+    }
+    .files-summary {
+      padding: 0.5rem 0.75rem;
+      background: #e8f4fc;
+      border-radius: 0 0 4px 4px;
+      font-size: 0.875rem;
+      color: #495057;
+    }
+
+    /* Bundle list */
+    .bundle-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .bundle-item.ready {
+      background: #d4edda;
+    }
+    .bundle-item .icon {
+      margin-right: 0.75rem;
+      font-size: 1.5rem;
+    }
+    .bundle-item .details {
+      flex: 1;
+    }
+    .bundle-item .name {
+      font-weight: 500;
+    }
+    .bundle-item .meta {
+      font-size: 0.875rem;
+      color: #6c757d;
+    }
+    .bundle-item .download-btn {
+      padding: 0.375rem 0.75rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .bundle-item .download-btn:hover {
+      background: #218838;
+    }
+
+    /* Import section */
+    .import-section {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed #ddd;
+    }
+    .import-section summary {
+      cursor: pointer;
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+    .import-section summary:hover {
+      color: #495057;
+    }
+    .import-section textarea {
+      width: 100%;
+      height: 100px;
+      margin-top: 0.5rem;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Validation */
+    .validation-error {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    .field.error input {
+      border-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; color: #7f8c8d;" data-i18n="loading">Loading bundle creator...</p>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="lang-toggle">
+        <button data-lang="en" class="active">EN</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="de">DE</button>
+        <button data-lang="fr">FR</button>
+      </div>
+      <h1 data-i18n="title">ReMemory - Create Bundles</h1>
+      <p data-i18n="subtitle">Create encrypted recovery bundles for your trusted friends</p>
+    </header>
+
+    <!-- Step 1: Project Configuration -->
+    <div class="card">
+      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Project Details</span></h2>
+
+      <div class="form-group">
+        <label for="project-name" data-i18n="project_name_label">Project Name</label>
+        <input type="text" id="project-name" placeholder="my-recovery-2026" data-i18n-placeholder="project_name_placeholder">
+        <small data-i18n="project_name_hint">A name to identify this recovery project</small>
+      </div>
+
+      <details class="import-section">
+        <summary data-i18n="import_summary">Import contacts from existing project.yml</summary>
+        <textarea id="yaml-import" placeholder="Paste your project.yml content here..." data-i18n-placeholder="import_placeholder"></textarea>
+        <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Import Contacts</button>
+      </details>
+    </div>
+
+    <!-- Step 2: Friends -->
+    <div class="card">
+      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Friends</span></h2>
+      <p class="hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
+
+      <div id="friends-list"></div>
+
+      <button id="add-friend-btn" class="btn btn-secondary" type="button">
+        <span>+</span> <span data-i18n="add_friend">Add Friend</span>
+      </button>
+
+      <div class="threshold-selector">
+        <label for="threshold-select" data-i18n="threshold_label">Threshold:</label>
+        <select id="threshold-select"></select>
+        <span data-i18n="threshold_desc">friends needed to recover</span>
+      </div>
+
+      <div id="friends-validation" class="validation-error hidden"></div>
+    </div>
+
+    <!-- Step 3: Manifest Files -->
+    <div class="card">
+      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Files to Protect</span></h2>
+
+      <div id="files-drop-zone" class="drop-zone">
+        <p data-i18n="files_drop">Drag & drop a folder here, or click to select files</p>
+        <small data-i18n="files_hint">These files will be encrypted and split among your friends</small>
+      </div>
+      <input type="file" id="files-input" multiple>
+      <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+
+      <div id="files-preview" class="files-preview hidden"></div>
+      <div id="files-summary" class="files-summary hidden"></div>
+    </div>
+
+    <!-- Step 4: Generate -->
+    <div class="card">
+      <h2><span class="step-number">4</span> <span data-i18n="step4_title">Generate Bundles</span></h2>
+
+      <button id="generate-btn" class="btn btn-primary" disabled>
+        <span data-i18n="generate_btn">Generate Bundles</span>
+      </button>
+
+      <div id="progress-bar" class="progress-bar hidden">
+        <div class="fill" style="width: 0%"></div>
+      </div>
+
+      <p id="status-message" class="status-message"></p>
+
+      <div id="bundles-list" class="hidden"></div>
+
+      <div id="download-all-section" class="download-actions hidden">
+        <button id="download-all-btn" class="btn btn-success">
+          <span data-i18n="download_all_btn">Download All Bundles</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>ReMemory v{{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
+    <p>
+      <span data-i18n="need_help">Need help?</span> <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI tool from GitHub</a>
+    </p>
+  </footer>
+
+  <!-- Translations -->
+  <script>
+    const translations = {
+      en: {
+        loading: "Preparing the bundle creator...",
+        title: "ReMemory - Create Bundles",
+        subtitle: "Create encrypted recovery bundles for your trusted friends",
+        step1_title: "Project Details",
+        project_name_label: "Project Name",
+        project_name_placeholder: "my-recovery-2026",
+        project_name_hint: "A name to identify this recovery project",
+        import_summary: "Import contacts from existing project.yml",
+        import_placeholder: "Paste your project.yml content here...",
+        import_btn: "Import Contacts",
+        step2_title: "Friends",
+        friends_hint: "Add at least 2 friends who will hold pieces of your recovery key",
+        add_friend: "Add Friend",
+        threshold_label: "Threshold:",
+        threshold_desc: "friends needed to recover",
+        name_label: "Name",
+        email_label: "Email",
+        phone_label: "Phone (optional)",
+        step3_title: "Files to Protect",
+        files_drop: "Drag & drop a folder here, or click to select files",
+        files_hint: "These files will be encrypted and split among your friends",
+        files_summary: "{0} file(s), {1} total",
+        step4_title: "Generate Bundles",
+        generate_btn: "Generate Bundles",
+        download_all_btn: "Download All Bundles",
+        works_offline: "Works completely offline",
+        need_help: "Need help?",
+        download_cli: "Download CLI tool from GitHub",
+        generating: "Generating bundles...",
+        archiving: "Archiving files...",
+        encrypting: "Encrypting archive...",
+        splitting: "Splitting secret...",
+        creating_bundle: "Creating bundle for {0}...",
+        complete: "All bundles created successfully!",
+        error: "Error: {0}",
+        validation_min_friends: "You need at least 2 friends",
+        validation_friend_name: "Friend {0}: name is required",
+        validation_friend_email: "Friend {0} ({1}): email is required",
+        validation_no_files: "Please select at least one file",
+        validation_project_name: "Project name is required",
+        download: "Download",
+        bundle_for: "Bundle for {0}",
+        import_success: "Imported {0} contacts",
+        import_error: "Failed to parse YAML: {0}"
+      },
+
+      es: {
+        loading: "Preparando el creador de paquetes...",
+        title: "ReMemory - Crear Paquetes",
+        subtitle: "Crea paquetes de recuperacion encriptados para tus amigos de confianza",
+        step1_title: "Detalles del Proyecto",
+        project_name_label: "Nombre del Proyecto",
+        project_name_placeholder: "mi-recuperacion-2026",
+        project_name_hint: "Un nombre para identificar este proyecto de recuperacion",
+        import_summary: "Importar contactos de un project.yml existente",
+        import_placeholder: "Pega el contenido de tu project.yml aqui...",
+        import_btn: "Importar Contactos",
+        step2_title: "Amigos",
+        friends_hint: "Agrega al menos 2 amigos que guardaran partes de tu clave de recuperacion",
+        add_friend: "Agregar Amigo",
+        threshold_label: "Umbral:",
+        threshold_desc: "amigos necesarios para recuperar",
+        name_label: "Nombre",
+        email_label: "Correo",
+        phone_label: "Telefono (opcional)",
+        step3_title: "Archivos a Proteger",
+        files_drop: "Arrastra una carpeta aqui, o haz clic para seleccionar archivos",
+        files_hint: "Estos archivos seran encriptados y divididos entre tus amigos",
+        files_summary: "{0} archivo(s), {1} en total",
+        step4_title: "Generar Paquetes",
+        generate_btn: "Generar Paquetes",
+        download_all_btn: "Descargar Todos los Paquetes",
+        works_offline: "Funciona completamente sin internet",
+        need_help: "Necesitas ayuda?",
+        download_cli: "Descarga la herramienta CLI desde GitHub",
+        generating: "Generando paquetes...",
+        archiving: "Archivando archivos...",
+        encrypting: "Encriptando archivo...",
+        splitting: "Dividiendo secreto...",
+        creating_bundle: "Creando paquete para {0}...",
+        complete: "Todos los paquetes creados exitosamente!",
+        error: "Error: {0}",
+        validation_min_friends: "Necesitas al menos 2 amigos",
+        validation_friend_name: "Amigo {0}: el nombre es requerido",
+        validation_friend_email: "Amigo {0} ({1}): el correo es requerido",
+        validation_no_files: "Por favor selecciona al menos un archivo",
+        validation_project_name: "El nombre del proyecto es requerido",
+        download: "Descargar",
+        bundle_for: "Paquete para {0}",
+        import_success: "Importados {0} contactos",
+        import_error: "Error al parsear YAML: {0}"
+      },
+
+      de: {
+        loading: "Bundle-Ersteller wird vorbereitet...",
+        title: "ReMemory - Bundles erstellen",
+        subtitle: "Erstelle verschlusselte Wiederherstellungs-Bundles fur deine vertrauten Freunde",
+        step1_title: "Projektdetails",
+        project_name_label: "Projektname",
+        project_name_placeholder: "meine-wiederherstellung-2026",
+        project_name_hint: "Ein Name zur Identifizierung dieses Wiederherstellungsprojekts",
+        import_summary: "Kontakte aus bestehender project.yml importieren",
+        import_placeholder: "Fuge hier den Inhalt deiner project.yml ein...",
+        import_btn: "Kontakte importieren",
+        step2_title: "Freunde",
+        friends_hint: "Fuge mindestens 2 Freunde hinzu, die Teile deines Wiederherstellungsschlussels aufbewahren",
+        add_friend: "Freund hinzufugen",
+        threshold_label: "Schwelle:",
+        threshold_desc: "Freunde zur Wiederherstellung benotigt",
+        name_label: "Name",
+        email_label: "E-Mail",
+        phone_label: "Telefon (optional)",
+        step3_title: "Zu schutzende Dateien",
+        files_drop: "Ziehe einen Ordner hierher oder klicke um Dateien auszuwahlen",
+        files_hint: "Diese Dateien werden verschlusselt und unter deinen Freunden aufgeteilt",
+        files_summary: "{0} Datei(en), {1} insgesamt",
+        step4_title: "Bundles generieren",
+        generate_btn: "Bundles generieren",
+        download_all_btn: "Alle Bundles herunterladen",
+        works_offline: "Funktioniert komplett offline",
+        need_help: "Brauchst du Hilfe?",
+        download_cli: "CLI-Tool von GitHub herunterladen",
+        generating: "Bundles werden generiert...",
+        archiving: "Dateien werden archiviert...",
+        encrypting: "Archiv wird verschlusselt...",
+        splitting: "Geheimnis wird aufgeteilt...",
+        creating_bundle: "Bundle fur {0} wird erstellt...",
+        complete: "Alle Bundles erfolgreich erstellt!",
+        error: "Fehler: {0}",
+        validation_min_friends: "Du brauchst mindestens 2 Freunde",
+        validation_friend_name: "Freund {0}: Name ist erforderlich",
+        validation_friend_email: "Freund {0} ({1}): E-Mail ist erforderlich",
+        validation_no_files: "Bitte wahle mindestens eine Datei aus",
+        validation_project_name: "Projektname ist erforderlich",
+        download: "Herunterladen",
+        bundle_for: "Bundle fur {0}",
+        import_success: "{0} Kontakte importiert",
+        import_error: "YAML konnte nicht geparst werden: {0}"
+      },
+
+      fr: {
+        loading: "Preparation du createur de bundles...",
+        title: "ReMemory - Creer des Bundles",
+        subtitle: "Creez des bundles de recuperation chiffres pour vos amis de confiance",
+        step1_title: "Details du projet",
+        project_name_label: "Nom du projet",
+        project_name_placeholder: "ma-recuperation-2026",
+        project_name_hint: "Un nom pour identifier ce projet de recuperation",
+        import_summary: "Importer des contacts depuis un project.yml existant",
+        import_placeholder: "Collez le contenu de votre project.yml ici...",
+        import_btn: "Importer les contacts",
+        step2_title: "Amis",
+        friends_hint: "Ajoutez au moins 2 amis qui garderont des parties de votre cle de recuperation",
+        add_friend: "Ajouter un ami",
+        threshold_label: "Seuil:",
+        threshold_desc: "amis necessaires pour recuperer",
+        name_label: "Nom",
+        email_label: "E-mail",
+        phone_label: "Telephone (optionnel)",
+        step3_title: "Fichiers a proteger",
+        files_drop: "Deposez un dossier ici ou cliquez pour selectionner des fichiers",
+        files_hint: "Ces fichiers seront chiffres et repartis entre vos amis",
+        files_summary: "{0} fichier(s), {1} au total",
+        step4_title: "Generer les bundles",
+        generate_btn: "Generer les bundles",
+        download_all_btn: "Telecharger tous les bundles",
+        works_offline: "Fonctionne entierement hors ligne",
+        need_help: "Besoin d'aide?",
+        download_cli: "Telecharger l'outil CLI depuis GitHub",
+        generating: "Generation des bundles...",
+        archiving: "Archivage des fichiers...",
+        encrypting: "Chiffrement de l'archive...",
+        splitting: "Division du secret...",
+        creating_bundle: "Creation du bundle pour {0}...",
+        complete: "Tous les bundles ont ete crees avec succes!",
+        error: "Erreur: {0}",
+        validation_min_friends: "Vous avez besoin d'au moins 2 amis",
+        validation_friend_name: "Ami {0}: le nom est requis",
+        validation_friend_email: "Ami {0} ({1}): l'e-mail est requis",
+        validation_no_files: "Veuillez selectionner au moins un fichier",
+        validation_project_name: "Le nom du projet est requis",
+        download: "Telecharger",
+        bundle_for: "Bundle pour {0}",
+        import_success: "{0} contacts importes",
+        import_error: "Echec de l'analyse YAML: {0}"
+      }
+    };
+
+    let currentLang = 'en';
+
+    function t(key, ...args) {
+      let text = translations[currentLang][key] || translations['en'][key] || key;
+      args.forEach((arg, i) => {
+        text = text.replace(`{${i}}`, arg);
+      });
+      return text;
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('rememory-lang', lang);
+
+      // Update toggle buttons
+      document.querySelectorAll('.lang-toggle button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+
+      // Update all translatable elements
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        el.textContent = t(key);
+      });
+
+      // Update placeholder attributes
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        el.placeholder = t(key);
+      });
+
+      // Update page title
+      document.title = t('title');
+
+      // Re-render dynamic content
+      if (typeof window.rememoryUpdateUI === 'function') {
+        window.rememoryUpdateUI();
+      }
+    }
+
+    // Set initial language immediately
+    (function() {
+      const saved = localStorage.getItem('rememory-lang');
+      const browserLang = navigator.language.split('-')[0];
+      currentLang = saved || (['es', 'de', 'fr'].includes(browserLang) ? browserLang : 'en');
+    })();
+
+    // Initialize language toggle buttons after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      setLanguage(currentLang);
+
+      // Add click handlers
+      document.querySelectorAll('.lang-toggle button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setLanguage(btn.dataset.lang);
+        });
+      });
+    });
+  </script>
+
+  <!-- Go WASM runtime -->
+  <script>{{WASM_EXEC}}</script>
+
+  <!-- Embedded WASM binary (base64) -->
+  <script>
+    const WASM_BINARY = "{{WASM_BASE64}}";
+    const VERSION = "{{VERSION}}";
+    const GITHUB_URL = "{{GITHUB_URL}}";
+  </script>
+
+  <!-- Application logic -->
+  <script>{{CREATE_APP_JS}}</script>
+
+  <!-- Load WASM from embedded binary -->
+  <script>
+    (async function() {
+      const go = new Go();
+      try {
+        // Decode base64 WASM
+        const binary = atob(WASM_BINARY);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const result = await WebAssembly.instantiate(bytes.buffer, go.importObject);
+        go.run(result.instance);
+      } catch (err) {
+        console.error('Failed to load WASM:', err);
+        document.getElementById('loading-overlay').innerHTML =
+          '<p style="color: #dc3545;">Failed to load bundle creator.<br>Please use the CLI tool instead.</p>';
+      }
+    })();
+  </script>
+</body>
+</html>

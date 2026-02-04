@@ -22,6 +22,14 @@ var wasmExecJS string
 //go:embed assets/recover.wasm
 var recoverWASM []byte
 
+// Embedded assets for the bundle creation HTML
+
+//go:embed assets/rememory.html
+var rememoryHTMLTemplate string
+
+//go:embed assets/create-app.js
+var createAppJS string
+
 // GetWASMBytes returns the embedded WASM binary.
 func GetWASMBytes() []byte {
 	return recoverWASM

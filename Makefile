@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm build-all bump-patch bump-minor bump-major man
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm build-all bump-patch bump-minor bump-major man html
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -52,6 +52,13 @@ man: build
 	@mkdir -p man
 	./$(BINARY) doc man
 	@echo "View with: man ./man/rememory.1"
+
+# Generate standalone HTML files for static hosting
+html: build
+	@mkdir -p dist
+	./$(BINARY) html recover > dist/recover.html
+	./$(BINARY) html create > dist/rememory.html
+	@echo "Generated dist/recover.html and dist/rememory.html"
 
 # Cross-compile for all platforms (used by CI)
 build-all: wasm

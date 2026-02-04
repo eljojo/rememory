@@ -11,6 +11,16 @@ export function getRememoryBin(): string {
   return path.resolve(binEnv);
 }
 
+// Generate standalone HTML file for testing
+export function generateStandaloneHTML(tmpDir: string, type: 'recover' | 'create'): string {
+  const bin = getRememoryBin();
+  const htmlPath = path.join(tmpDir, type === 'create' ? 'rememory.html' : 'recover.html');
+
+  execSync(`${bin} html ${type} -o ${htmlPath}`, { stdio: 'inherit' });
+
+  return htmlPath;
+}
+
 // Create a sealed test project with bundles
 export function createTestProject(): string {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-e2e-'));
@@ -191,5 +201,164 @@ export class RecoveryPage {
 
   async expectStepsCollapsed(): Promise<void> {
     await expect(this.page.locator('.card.collapsed').first()).toBeAttached();
+  }
+}
+
+// Page helper class for bundle creation tool interactions
+export class CreationPage {
+  constructor(private page: Page, private htmlPath: string) {}
+
+  // Navigate to rememory.html and wait for WASM
+  async open(): Promise<void> {
+    await this.page.goto(`file://${this.htmlPath}`);
+    await this.page.waitForFunction(
+      () => (window as any).rememoryReady === true,
+      { timeout: 30000 }
+    );
+  }
+
+  // Project name
+  async setProjectName(name: string): Promise<void> {
+    await this.page.locator('#project-name').fill(name);
+  }
+
+  async expectProjectName(name: string): Promise<void> {
+    await expect(this.page.locator('#project-name')).toHaveValue(name);
+  }
+
+  // Friends management
+  async addFriend(): Promise<void> {
+    await this.page.locator('#add-friend-btn').click();
+  }
+
+  async removeFriend(index: number): Promise<void> {
+    const removeButtons = this.page.locator('.friend-entry .remove-btn');
+    await removeButtons.nth(index).click();
+  }
+
+  async setFriend(index: number, name: string, email: string, phone?: string): Promise<void> {
+    const entry = this.page.locator('.friend-entry').nth(index);
+    await entry.locator('.friend-name').fill(name);
+    await entry.locator('.friend-email').fill(email);
+    if (phone) {
+      await entry.locator('.friend-phone').fill(phone);
+    }
+  }
+
+  async expectFriendCount(count: number): Promise<void> {
+    await expect(this.page.locator('.friend-entry')).toHaveCount(count);
+  }
+
+  async expectFriendData(index: number, name: string, email: string): Promise<void> {
+    const entry = this.page.locator('.friend-entry').nth(index);
+    await expect(entry.locator('.friend-name')).toHaveValue(name);
+    await expect(entry.locator('.friend-email')).toHaveValue(email);
+  }
+
+  // Threshold
+  async setThreshold(value: number): Promise<void> {
+    await this.page.locator('#threshold-select').selectOption(String(value));
+  }
+
+  async expectThresholdOptions(options: string[]): Promise<void> {
+    const select = this.page.locator('#threshold-select');
+    for (const option of options) {
+      await expect(select.locator('option', { hasText: option })).toBeAttached();
+    }
+  }
+
+  // YAML import
+  async importYAML(content: string): Promise<void> {
+    // Open the details element
+    await this.page.locator('.import-section summary').click();
+    await this.page.locator('#yaml-import').fill(content);
+    await this.page.locator('#import-btn').click();
+  }
+
+  // Files
+  createTestFiles(tmpDir: string): string[] {
+    const filesDir = path.join(tmpDir, 'test-files');
+    fs.mkdirSync(filesDir, { recursive: true });
+
+    const file1 = path.join(filesDir, 'secret.txt');
+    const file2 = path.join(filesDir, 'notes.txt');
+
+    fs.writeFileSync(file1, 'This is a secret password: correct-horse-battery-staple');
+    fs.writeFileSync(file2, 'Remember to feed the cat!');
+
+    return [file1, file2];
+  }
+
+  async addFiles(filePaths: string[]): Promise<void> {
+    await this.page.locator('#files-input').setInputFiles(filePaths);
+  }
+
+  async expectFilesPreviewVisible(): Promise<void> {
+    await expect(this.page.locator('#files-preview')).toBeVisible();
+  }
+
+  async expectFileCount(count: number): Promise<void> {
+    await expect(this.page.locator('#files-preview .file-item')).toHaveCount(count);
+  }
+
+  // Generation
+  async expectGenerateEnabled(): Promise<void> {
+    await expect(this.page.locator('#generate-btn')).toBeEnabled();
+  }
+
+  async expectGenerateDisabled(): Promise<void> {
+    await expect(this.page.locator('#generate-btn')).toBeDisabled();
+  }
+
+  async generate(): Promise<void> {
+    await this.page.locator('#generate-btn').click();
+  }
+
+  async expectGenerationComplete(): Promise<void> {
+    await expect(this.page.locator('#status-message')).toContainText('successfully', { timeout: 120000 });
+  }
+
+  async expectBundleCount(count: number): Promise<void> {
+    await expect(this.page.locator('.bundle-item')).toHaveCount(count);
+  }
+
+  async expectBundleFor(name: string): Promise<void> {
+    await expect(this.page.locator('.bundle-item').filter({ hasText: name })).toBeVisible();
+  }
+
+  // Download bundle and return data
+  async downloadBundle(index: number): Promise<Uint8Array | null> {
+    // Get bundle data from the page's state
+    const data = await this.page.evaluate((idx) => {
+      const state = (window as any).rememoryBundles;
+      if (!state || !state[idx]) return null;
+      return Array.from(state[idx].data as Uint8Array);
+    }, index);
+
+    if (!data) return null;
+    return new Uint8Array(data);
+  }
+
+  // UI assertions
+  async expectUIElements(): Promise<void> {
+    await expect(this.page.locator('h1')).toContainText('ReMemory');
+    await expect(this.page.locator('#project-name')).toBeVisible();
+    await expect(this.page.locator('#friends-list')).toBeVisible();
+    await expect(this.page.locator('#files-drop-zone')).toBeVisible();
+    await expect(this.page.locator('#generate-btn')).toBeVisible();
+  }
+
+  async expectTitle(title: string): Promise<void> {
+    await expect(this.page.locator('h1')).toContainText(title);
+  }
+
+  // Language
+  async setLanguage(lang: string): Promise<void> {
+    await this.page.locator(`.lang-toggle button[data-lang="${lang}"]`).click();
+  }
+
+  // Dismiss dialogs (for validation error tests)
+  onDialog(action: 'dismiss' | 'accept' = 'dismiss'): void {
+    this.page.on('dialog', dialog => dialog[action]());
   }
 }
