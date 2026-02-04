@@ -38,6 +38,9 @@ var indexHTMLTemplate string
 //go:embed assets/docs.html
 var docsHTMLTemplate string
 
+//go:embed assets/dataflow.js
+var dataflowJS string
+
 // createWASM is set at build time for the CLI binary (not for WASM builds)
 // This avoids circular dependency since create.wasm embeds the html package
 var createWASM []byte

@@ -13,6 +13,9 @@ func GenerateIndexHTML(version, githubURL string) string {
 	// Embed styles
 	html = strings.Replace(html, "{{STYLES}}", stylesCSS, 1)
 
+	// Embed dataflow animation
+	html = strings.Replace(html, "{{DATAFLOW_JS}}", dataflowJS, 1)
+
 	// Replace version and GitHub URL
 	html = strings.Replace(html, "{{VERSION}}", version, -1)
 	html = strings.Replace(html, "{{GITHUB_URL}}", githubURL, -1)
