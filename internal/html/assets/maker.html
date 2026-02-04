@@ -234,6 +234,81 @@
       font-size: 0.75rem;
     }
 
+    /* About/Intro section */
+    .about-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+    }
+    .about-section h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .about-section p {
+      line-height: 1.6;
+      margin: 0.75rem 0;
+    }
+    .about-section a {
+      color: #fff;
+      text-decoration: underline;
+    }
+    .about-section a:hover {
+      opacity: 0.9;
+    }
+    .about-section details {
+      margin-top: 1rem;
+    }
+    .about-section summary {
+      cursor: pointer;
+      font-weight: 500;
+      padding: 0.5rem 0;
+    }
+    .about-section summary:hover {
+      opacity: 0.9;
+    }
+    .about-section .details-content {
+      background: rgba(255,255,255,0.1);
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+    .about-section .details-content h3 {
+      margin-top: 0;
+      font-size: 1rem;
+    }
+    .about-section ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+    .about-section li {
+      margin: 0.25rem 0;
+    }
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+    .github-link:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .github-link svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
     /* Validation */
     .validation-error {
       color: #dc3545;
@@ -263,6 +338,48 @@
       <h1 data-i18n="title">ReMemory - Create Bundles</h1>
       <p data-i18n="subtitle">Create encrypted recovery bundles for your trusted friends</p>
     </header>
+
+    <!-- About Section -->
+    <div class="about-section">
+      <h2>What is ReMemory?</h2>
+      <p>
+        ReMemory helps you protect important files (passwords, crypto keys, documents) by splitting them among trusted friends using <strong>Shamir's Secret Sharing</strong>. No single friend can access your data alone—they must work together to recover it.
+      </p>
+
+      <details>
+        <summary>How does it work? ▼</summary>
+        <div class="details-content">
+          <h3>Creating bundles (this page)</h3>
+          <ul>
+            <li>Add your sensitive files and choose trusted friends</li>
+            <li>Set a threshold (e.g., "3 of 5 friends needed")</li>
+            <li>Generate a unique bundle for each friend</li>
+            <li>Send each friend their bundle (email, USB, etc.)</li>
+          </ul>
+
+          <h3>Recovering files (when needed)</h3>
+          <ul>
+            <li>Friends open their bundle's <code>recover.html</code> in any browser</li>
+            <li>They combine their shares (threshold number required)</li>
+            <li>Files are decrypted and recovered—no server needed</li>
+          </ul>
+
+          <h3>Security</h3>
+          <ul>
+            <li>Everything runs locally in your browser—no data leaves your device</li>
+            <li>You can "Save As" this page to your computer and use it offline anytime</li>
+            <li>Files are encrypted with <strong>age</strong> (modern encryption)</li>
+            <li>Uses the same cryptography as the CLI tool</li>
+            <li>100% open source</li>
+          </ul>
+        </div>
+      </details>
+
+      <a href="https://github.com/eljojo/rememory" target="_blank" class="github-link">
+        <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+    </div>
 
     <!-- Step 1: Project Configuration -->
     <div class="card">
@@ -343,7 +460,9 @@
   <footer>
     <p>ReMemory v{{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
     <p>
-      <span data-i18n="need_help">Need help?</span> <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI tool from GitHub</a>
+      <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
+      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI</a> ·
+      <span data-i18n="footer_license">Open Source (Apache 2.0)</span>
     </p>
   </footer>
 

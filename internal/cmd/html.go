@@ -15,14 +15,14 @@ var htmlCmd = &cobra.Command{
 
 Commands:
   recover  Generate recover.html (recovery tool for collecting shares)
-  create   Generate rememory.html (bundle creation tool)
+  create   Generate maker.html (bundle creation tool)
 
 Both HTML files are completely self-contained with embedded WASM binary,
 JavaScript, and CSS. They work fully offline.
 
 Examples:
   rememory html recover > recover.html
-  rememory html create > rememory.html
+  rememory html create > maker.html
   rememory html recover --output dist/recover.html`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHTML,
@@ -52,13 +52,13 @@ func runHTML(cmd *cobra.Command, args []string) error {
 		content = html.GenerateRecoverHTML(recoverWASM, version, githubURL, nil)
 
 	case "create":
-		// Generate rememory.html (bundle creation tool)
+		// Generate maker.html (bundle creation tool)
 		// Uses create.wasm which self-contains recover.wasm for generating bundles
 		createWASM := html.GetCreateWASMBytes()
 		if len(createWASM) == 0 {
 			return fmt.Errorf("create.wasm not embedded - rebuild with 'make build'")
 		}
-		content = html.GenerateRememoryHTML(createWASM, version, githubURL)
+		content = html.GenerateMakerHTML(createWASM, version, githubURL)
 
 	default:
 		return fmt.Errorf("unknown subcommand: %s (use 'recover' or 'create')", subcommand)

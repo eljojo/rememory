@@ -14,7 +14,7 @@ export function getRememoryBin(): string {
 // Generate standalone HTML file for testing
 export function generateStandaloneHTML(tmpDir: string, type: 'recover' | 'create'): string {
   const bin = getRememoryBin();
-  const htmlPath = path.join(tmpDir, type === 'create' ? 'rememory.html' : 'recover.html');
+  const htmlPath = path.join(tmpDir, type === 'create' ? 'maker.html' : 'recover.html');
 
   execSync(`${bin} html ${type} -o ${htmlPath}`, { stdio: 'inherit' });
 
@@ -208,7 +208,7 @@ export class RecoveryPage {
 export class CreationPage {
   constructor(private page: Page, private htmlPath: string) {}
 
-  // Navigate to rememory.html and wait for WASM
+  // Navigate to maker.html and wait for WASM
   async open(): Promise<void> {
     await this.page.goto(`file://${this.htmlPath}`);
     await this.page.waitForFunction(

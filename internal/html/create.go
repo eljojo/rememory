@@ -4,13 +4,13 @@ import (
 	"strings"
 )
 
-// GenerateRememoryHTML creates the complete rememory.html with all assets embedded.
+// GenerateMakerHTML creates the complete maker.html with all assets embedded.
 // createWASMBytes is the create.wasm binary (runs in browser for bundle creation).
 // Note: create.wasm self-contains recover.wasm embedded within it (via html.GetRecoverWASMBytes()).
 // version is the rememory version string.
 // githubURL is the URL to download CLI binaries.
-func GenerateRememoryHTML(createWASMBytes []byte, version, githubURL string) string {
-	html := rememoryHTMLTemplate
+func GenerateMakerHTML(createWASMBytes []byte, version, githubURL string) string {
+	html := makerHTMLTemplate
 
 	// Embed styles
 	html = strings.Replace(html, "{{STYLES}}", stylesCSS, 1)

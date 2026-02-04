@@ -10,7 +10,7 @@ build: wasm
 
 # Build WASM modules
 # - recover.wasm: Small, recovery-only (for bundles)
-# - create.wasm: Full, includes bundle creation logic (for rememory.html)
+# - create.wasm: Full, includes bundle creation logic (for maker.html)
 wasm:
 	@mkdir -p internal/html/assets
 	@echo "Building recover.wasm (recovery only)..."
@@ -62,8 +62,8 @@ man: build
 html: build
 	@mkdir -p dist
 	./$(BINARY) html recover > dist/recover.html
-	./$(BINARY) html create > dist/rememory.html
-	@echo "Generated dist/recover.html and dist/rememory.html"
+	./$(BINARY) html create > dist/maker.html
+	@echo "Generated dist/recover.html and dist/maker.html"
 
 # Cross-compile for all platforms (used by CI)
 build-all: wasm

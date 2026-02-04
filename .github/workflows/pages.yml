@@ -39,20 +39,6 @@ jobs:
         run: |
           mkdir -p _site
           ./rememory html create > _site/index.html
-          ./rememory html recover > _site/recover.html
-          # Add a simple redirect/info page
-          cat > _site/create.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta http-equiv="refresh" content="0; url=index.html">
-            <title>Redirecting...</title>
-          </head>
-          <body>
-            <p>Redirecting to <a href="index.html">ReMemory Bundle Creator</a>...</p>
-          </body>
-          </html>
-          EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate standalone HTML files
         run: |
-          ./dist/rememory-linux-amd64 html create > dist/rememory.html
+          ./dist/rememory-linux-amd64 html create > dist/maker.html
           ./dist/rememory-linux-amd64 html recover > dist/recover.html
 
       - name: Generate demo bundles
@@ -72,6 +72,6 @@ jobs:
             dist/rememory-windows-amd64.exe
             dist/demo-bundles.zip
             dist/checksums.txt
-            dist/rememory.html
+            dist/maker.html
             dist/recover.html
           generate_release_notes: true

@@ -24,8 +24,8 @@ var recoverWASM []byte
 
 // Embedded assets for the bundle creation HTML
 
-//go:embed assets/rememory.html
-var rememoryHTMLTemplate string
+//go:embed assets/maker.html
+var makerHTMLTemplate string
 
 //go:embed assets/create-app.js
 var createAppJS string
@@ -41,7 +41,7 @@ func GetRecoverWASMBytes() []byte {
 }
 
 // GetCreateWASMBytes returns the full WASM binary with bundle creation.
-// This larger WASM is used in rememory.html for the creation tool.
+// This larger WASM is used in maker.html for the creation tool.
 // Note: Must be set via SetCreateWASMBytes before use (done in CLI init).
 func GetCreateWASMBytes() []byte {
 	return createWASM

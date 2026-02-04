@@ -21,7 +21,7 @@ test.describe('Browser Bundle Creation Tool', () => {
       return;
     }
 
-    // Generate standalone rememory.html for testing
+    // Generate standalone maker.html for testing
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-create-e2e-'));
     htmlPath = generateStandaloneHTML(tmpDir, 'create');
   });
@@ -32,7 +32,7 @@ test.describe('Browser Bundle Creation Tool', () => {
     }
   });
 
-  test('rememory.html loads and shows UI', async ({ page }) => {
+  test('maker.html loads and shows UI', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 
     await creation.open();
