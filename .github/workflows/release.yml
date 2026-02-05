@@ -70,16 +70,21 @@ jobs:
           sha256sum * > checksums.txt
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/rememory-linux-amd64
-            dist/rememory-linux-arm64
-            dist/rememory-darwin-amd64
-            dist/rememory-darwin-arm64
-            dist/rememory-windows-amd64.exe
-            dist/demo-bundles.zip
-            dist/checksums.txt
-            dist/maker.html
-            dist/recover.html
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Create draft release with assets (drafts can be modified)
+          gh release create ${{ github.ref_name }} \
+            dist/rememory-linux-amd64 \
+            dist/rememory-linux-arm64 \
+            dist/rememory-darwin-amd64 \
+            dist/rememory-darwin-arm64 \
+            dist/rememory-windows-amd64.exe \
+            dist/demo-bundles.zip \
+            dist/checksums.txt \
+            dist/maker.html \
+            dist/recover.html \
+            --generate-notes \
+            --draft
+          # Publish the release (now it becomes immutable)
+          gh release edit ${{ github.ref_name }} --draft=false
