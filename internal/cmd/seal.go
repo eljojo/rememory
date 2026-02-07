@@ -59,6 +59,19 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid project: %w", err)
 	}
 
+	if err := sealProject(p); err != nil {
+		return err
+	}
+
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	fmt.Printf("\nSaved to: %s\n", bundlesDir)
+
+	return nil
+}
+
+// sealProject archives, encrypts, splits, verifies, saves, and generates bundles
+// for an already-loaded project. Both runSeal and runDemo share this logic.
+func sealProject(p *project.Project) error {
 	// Check manifest directory exists and has content
 	manifestDir := p.ManifestPath()
 	fileCount, err := manifest.CountFiles(manifestDir)
@@ -83,7 +96,6 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("archiving manifest: %w", err)
 	}
 
-	// Warn about any skipped files (symlinks, etc.)
 	for _, warning := range archiveResult.Warnings {
 		fmt.Printf("  Warning: %s\n", warning)
 	}
@@ -132,12 +144,10 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
 
-		// Use restrictive permissions (0600) for share files since they contain partial secrets
 		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0600); err != nil {
 			return fmt.Errorf("writing share for %s: %w", friend.Name, err)
 		}
 
-		// Compute checksum of the share file
 		fileChecksum, err := crypto.HashFile(sharePath)
 		if err != nil {
 			return fmt.Errorf("computing checksum: %w", err)
@@ -194,7 +204,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s %s\n", green("✓"), si.File)
 	}
 
-	// Generate bundles automatically
+	// Generate bundles
 	fmt.Println()
 	fmt.Printf("Generating bundles for %d friends...\n", len(p.Friends))
 
@@ -213,20 +223,18 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("generating bundles: %w", err)
 	}
 
-	// Print bundle summary
+	// Print bundle listing
 	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
 	entries, _ := os.ReadDir(bundlesDir)
 
 	fmt.Println()
-	fmt.Println("Bundles ready to distribute:")
+	fmt.Println("Bundles ready:")
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			info, _ := entry.Info()
 			fmt.Printf("  %s %s (%s)\n", green("✓"), entry.Name(), formatSize(info.Size()))
 		}
 	}
-
-	fmt.Printf("\nSaved to: %s\n", bundlesDir)
 
 	return nil
 }
