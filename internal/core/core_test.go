@@ -1,7 +1,9 @@
 package core
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"strings"
 	"testing"
 )
@@ -257,13 +259,103 @@ func TestShareFilename(t *testing.T) {
 	}
 }
 
-func TestExtractTarGzPathTraversal(t *testing.T) {
-	// This test would require creating a malicious tar.gz
-	// For now, we just verify the function exists and handles empty input
-	_, err := ExtractTarGz([]byte{})
-	if err == nil {
-		t.Error("expected error for empty input")
+// createTarGz builds a tar.gz archive in memory with arbitrary entry names.
+// This allows crafting malicious archives for security testing.
+func createTarGz(t *testing.T, entries map[string]string) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gzw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gzw)
+
+	for name, content := range entries {
+		if err := tw.WriteHeader(&tar.Header{
+			Name:     name,
+			Size:     int64(len(content)),
+			Mode:     0644,
+			Typeflag: tar.TypeReg,
+		}); err != nil {
+			t.Fatalf("writing tar header for %q: %v", name, err)
+		}
+		if _, err := tw.Write([]byte(content)); err != nil {
+			t.Fatalf("writing tar content for %q: %v", name, err)
+		}
 	}
+
+	// Close tar then gzip explicitly (not defer) to ensure full flush.
+	if err := tw.Close(); err != nil {
+		t.Fatalf("closing tar writer: %v", err)
+	}
+	if err := gzw.Close(); err != nil {
+		t.Fatalf("closing gzip writer: %v", err)
+	}
+	return buf.Bytes()
+}
+
+func TestExtractTarGzPathTraversal(t *testing.T) {
+	t.Run("rejected paths", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			entry string
+		}{
+			{"classic traversal", "../etc/passwd"},
+			{"mid-path traversal", "foo/../../etc/passwd"},
+			{"deep traversal", "foo/bar/../../../etc/shadow"},
+			{"bare dotdot", ".."},
+			{"trailing dotdot", "foo/.."},
+			// foo/../bar is also rejected by the regex because it matches
+			// `..` between slashes. This is intentionally conservative for
+			// in-memory extraction where paths cannot be resolved.
+			{"non-escaping dotdot", "foo/../bar"},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				data := createTarGz(t, map[string]string{tt.entry: "malicious"})
+				_, err := ExtractTarGz(data)
+				if err == nil {
+					t.Errorf("expected error for path %q, got nil", tt.entry)
+				}
+				if err != nil && !strings.Contains(err.Error(), "invalid path") {
+					t.Errorf("expected 'invalid path' error for %q, got: %v", tt.entry, err)
+				}
+			})
+		}
+	})
+
+	t.Run("accepted paths", func(t *testing.T) {
+		entries := map[string]string{
+			"safe/file.txt":        "hello",
+			"safe/nested/deep.txt": "world",
+		}
+		data := createTarGz(t, entries)
+		files, err := ExtractTarGz(data)
+		if err != nil {
+			t.Fatalf("unexpected error for safe paths: %v", err)
+		}
+
+		extracted := make(map[string]string)
+		for _, f := range files {
+			extracted[f.Name] = string(f.Data)
+		}
+
+		for name, want := range entries {
+			got, ok := extracted[name]
+			if !ok {
+				t.Errorf("missing extracted file %q", name)
+				continue
+			}
+			if got != want {
+				t.Errorf("file %q: got %q, want %q", name, got, want)
+			}
+		}
+	})
+
+	t.Run("empty input", func(t *testing.T) {
+		_, err := ExtractTarGz([]byte{})
+		if err == nil {
+			t.Error("expected error for empty input")
+		}
+	})
 }
 
 func TestSanitizeFilename(t *testing.T) {

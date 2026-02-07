@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"archive/tar"
 	"bytes"
 	"compress/gzip"
 	"os"
@@ -81,28 +82,112 @@ func TestArchiveNotDirectory(t *testing.T) {
 	}
 }
 
-func TestExtractPathTraversal(t *testing.T) {
-	// This test ensures the extract function rejects path traversal attacks
-	// We can't easily create a malicious tar, but we test that normal paths work
-	srcDir := t.TempDir()
-	testDir := filepath.Join(srcDir, "safe")
-	if err := os.MkdirAll(testDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(testDir, "file.txt"), []byte("safe"), 0644); err != nil {
-		t.Fatal(err)
-	}
-
+// createTarGzBytes builds a tar.gz archive in memory with arbitrary entry names.
+// This allows crafting malicious archives for security testing.
+func createTarGzBytes(t *testing.T, entries map[string]string) []byte {
+	t.Helper()
 	var buf bytes.Buffer
-	if _, err := Archive(&buf, testDir); err != nil {
-		t.Fatal(err)
+	gzw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gzw)
+
+	for name, content := range entries {
+		if err := tw.WriteHeader(&tar.Header{
+			Name:     name,
+			Size:     int64(len(content)),
+			Mode:     0644,
+			Typeflag: tar.TypeReg,
+		}); err != nil {
+			t.Fatalf("writing tar header for %q: %v", name, err)
+		}
+		if _, err := tw.Write([]byte(content)); err != nil {
+			t.Fatalf("writing tar content for %q: %v", name, err)
+		}
 	}
 
-	dstDir := t.TempDir()
-	_, err := Extract(&buf, dstDir)
-	if err != nil {
-		t.Fatalf("extract: %v", err)
+	// Close tar then gzip explicitly (not defer) to ensure full flush.
+	if err := tw.Close(); err != nil {
+		t.Fatalf("closing tar writer: %v", err)
 	}
+	if err := gzw.Close(); err != nil {
+		t.Fatalf("closing gzip writer: %v", err)
+	}
+	return buf.Bytes()
+}
+
+func TestExtractPathTraversal(t *testing.T) {
+	t.Run("rejected paths", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			entry string
+		}{
+			{"direct traversal", "../escape.txt"},
+			{"relative traversal", "subdir/../../escape.txt"},
+			{"deep traversal", "foo/bar/../../../etc/shadow"},
+			{"bare dotdot", ".."},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				data := createTarGzBytes(t, map[string]string{tt.entry: "malicious"})
+				destDir := t.TempDir()
+				_, err := Extract(bytes.NewReader(data), destDir)
+				if err == nil {
+					t.Errorf("expected error for path %q, got nil", tt.entry)
+				}
+				if err != nil && !strings.Contains(err.Error(), "invalid path") {
+					t.Errorf("expected 'invalid path' error for %q, got: %v", tt.entry, err)
+				}
+
+				// Verify no files were written outside destDir.
+				entries, _ := os.ReadDir(destDir)
+				if len(entries) > 0 {
+					t.Errorf("expected no files written for traversal path, found %d entries", len(entries))
+				}
+			})
+		}
+	})
+
+	t.Run("accepted safe path", func(t *testing.T) {
+		data := createTarGzBytes(t, map[string]string{
+			"manifest/safe.txt": "safe content",
+		})
+		destDir := t.TempDir()
+		_, err := Extract(bytes.NewReader(data), destDir)
+		if err != nil {
+			t.Fatalf("unexpected error for safe path: %v", err)
+		}
+
+		got, err := os.ReadFile(filepath.Join(destDir, "manifest", "safe.txt"))
+		if err != nil {
+			t.Fatalf("reading extracted file: %v", err)
+		}
+		if string(got) != "safe content" {
+			t.Errorf("got %q, want %q", got, "safe content")
+		}
+	})
+
+	// filepath.Clean resolves "foo/../bar" to "bar" which stays within destDir,
+	// so the HasPrefix check correctly allows it. This differs from the core
+	// package's regex which rejects any path containing ".." — both behaviors
+	// are correct for their context (file-based vs in-memory extraction).
+	t.Run("non-escaping dotdot accepted", func(t *testing.T) {
+		data := createTarGzBytes(t, map[string]string{
+			"foo/../bar.txt": "resolved content",
+		})
+		destDir := t.TempDir()
+		_, err := Extract(bytes.NewReader(data), destDir)
+		if err != nil {
+			t.Fatalf("unexpected error for non-escaping dotdot: %v", err)
+		}
+
+		got, err := os.ReadFile(filepath.Join(destDir, "bar.txt"))
+		if err != nil {
+			t.Fatalf("reading extracted file: %v", err)
+		}
+		if string(got) != "resolved content" {
+			t.Errorf("got %q, want %q", got, "resolved content")
+		}
+	})
 }
 
 func TestCountFiles(t *testing.T) {
