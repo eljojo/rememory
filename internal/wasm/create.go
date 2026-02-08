@@ -11,6 +11,9 @@ import (
 	"fmt"
 	"syscall/js"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/eljojo/rememory/internal/bundle"
 	"github.com/eljojo/rememory/internal/core"
@@ -412,10 +415,21 @@ func trimLeadingSlashes(s string) string {
 	return s
 }
 
-// sanitizeName converts a name to a filesystem-safe lowercase string.
+// sanitizeName converts a name to a filesystem-safe lowercase ASCII string.
+// It transliterates accented/diacritic characters to their ASCII base form
+// (e.g. "José" → "jose", "Ñoño" → "nono") so that filenames are always valid.
 func sanitizeName(name string) string {
+	// Decompose to NFD: splits characters like "é" into "e" + combining accent.
+	// Then drop combining marks to keep only the base letter.
+	var stripped []rune
+	for _, r := range norm.NFD.String(name) {
+		if !unicode.Is(unicode.Mn, r) { // Mn = Mark, Nonspacing (combining diacritics)
+			stripped = append(stripped, r)
+		}
+	}
+
 	result := ""
-	for _, r := range name {
+	for _, r := range stripped {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
 			result += string(r)
 		} else if r == ' ' || r == '-' || r == '_' {
