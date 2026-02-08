@@ -369,13 +369,14 @@
         <button data-lang="es">ES</button>
         <button data-lang="de">DE</button>
         <button data-lang="fr">FR</button>
+        <button data-lang="sl">SL</button>
       </div>
     </nav>
 
     <div class="maker-intro">
       <h1 data-i18n="page_title">Create Bundles</h1>
       <p class="subtitle" data-i18n="subtitle">Make sure your important files are never lost.</p>
-      <p class="summary">
+      <p data-i18n="page_description" class="summary">
         Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later.
         Everything runs locally—your files never leave your browser.
       </p>
@@ -504,6 +505,7 @@
         loading: "Preparing the bundle creator...",
         title: "🧠 ReMemory - Create Bundles",
         page_title: "Create Bundles",
+        page_description: "Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later. Everything runs locally—your files never leave your browser.",
         subtitle: "Make sure your important files are never lost.",
         step1_title: "Friends",
         friends_hint: "Add at least 2 friends who will each hold a piece of your recovery key",
@@ -566,6 +568,7 @@
         loading: "Preparando el creador de sobres...",
         title: "🧠 ReMemory - Guarda lo Importante",
         page_title: "Crear Sobres",
+        page_description: "Añade archivos, elige amigos y define un umbral. Cada amigo recibe una parte que puede usar para ayudar a recuperar tus archivos más adelante. Todo funciona de forma local: tus archivos nunca salen de tu navegador.",
         subtitle: "Quien tiene un amigo, tiene un tesoro.",
 
         step1_title: "Amigos",
@@ -639,6 +642,7 @@
         loading: "Umschläge werden vorbereitet...",
         title: "🧠 ReMemory — Bewahre das Wichtige",
         page_title: "Umschläge erstellen",
+        page_description: "Füge Dateien hinzu, wähle Freunde aus und lege einen Schwellenwert fest. Jeder Freund erhält einen Anteil, den er später zur Wiederherstellung deiner Dateien verwenden kann. Alles läuft lokal – deine Dateien verlassen deinen Browser niemals.",
         subtitle: "Wer einen Freund hat, hat einen Schatz.",
 
         step1_title: "Freunde",
@@ -712,6 +716,7 @@
         loading: "Préparation des enveloppes...",
         title: "🧠 ReMemory — Gardez l'essentiel",
         page_title: "Créer des enveloppes",
+        page_description: "Ajoutez des fichiers, choisissez des amis et définissez un seuil. Chaque ami reçoit une part qu’il pourra utiliser plus tard pour aider à récupérer vos fichiers. Tout fonctionne localement : vos fichiers ne quittent jamais votre navigateur.",
         subtitle: "Qui a un ami a un trésor.",
 
         step1_title: "Amis",
@@ -779,7 +784,69 @@
         validation_title: "Certains champs nécessitent votre attention",
         validation_message: "Veuillez remplir les champs en surbrillance avant de créer les enveloppes.",
         validation_guidance: "Les champs obligatoires sont marqués d'un astérisque (*). Assurez-vous que chaque ami a un nom et un e-mail, et que vous avez ajouté au moins un fichier."
-      }
+      },
+      sl: {
+        loading: "Pripravljam ustvarjalca svežnjev ...",
+        title: "🧠 ReMemory - Ustvarjanje svežnjev",
+        page_title: "Ustvari svežnje",
+        page_description: "Dodajte datoteke, izberite prijatelje, nastavite prag. Vsak prijatelj dobi svoj sveženj, ki ga lahko uporabi za pomoč pri obnovitvi vaših datotek pozneje. Vse deluje lokalno - vaše datoteke nikoli ne zapustijo vašega brskalnika.",
+        subtitle: "Poskrbite, da vaši pomembni podatki nikoli ne bodo izgubljeni.",
+        step1_title: "Prijatelji",
+        friends_hint: "Dodajte vsaj 2 prijatelja, ki bosta vsak imela del vašega obnovitvenega ključa",
+        anonymous_label: "Anonimno",
+        anonymous_hint: "Prijatelji se ne bodo poznali med seboj",
+        num_shares_label: "Število prijateljev:",
+        add_friend: "Dodaj prijatelja",
+        threshold_label: "Prag:",
+        threshold_desc: "prijatelji potrebni za obnovitev",
+        name_label: "Ime",
+        email_label: "E-pošta",
+        phone_label: "Telefon (neobvezno)",
+        import_summary: "Uvozi stike iz obstoječega project.yml",
+        import_placeholder: "Prilepite vsebino vašega project.yml tukaj ...",
+        import_btn: "Uvozi prijatelje",
+        step2_title: "Datoteke za zaščito",
+        files_drop: "Povlecite in spustite mapo sem ali kliknite za izbiro datotek",
+        files_hint: "Te datoteke bodo šifrirane in razdeljene med vaše prijatelje",
+        files_summary: "{0} datoteka(e), {1} skupaj",
+        step3_title: "Ustvari svežnje",
+        generate_btn: "Ustvari svežnje",
+        download_all_btn: "Prenesi vse svežnje",
+        download_yaml_btn: "Shrani project.yml",
+        works_offline: "Deluje popolnoma brez povezave",
+        need_help: "Potrebujete pomoč?",
+        download_cli: "Prenesite CLI orodje iz GitHub",
+        generating: "Ustvarjanje svežnjev ...",
+        archiving: "Arhiviranje datotek ...",
+        encrypting: "Šifriranje arhiva ...",
+        splitting: "Razdeljevanje skrivnosti ...",
+        creating_bundle: "Ustvarjanje svežnja za {0} ...",
+        complete: "Vsi svežnji so bili uspešno ustvarjeni!",
+        error: "Napaka: {0}",
+        validation_min_friends: "Potrebujete vsaj 2 prijatelja",
+        validation_friend_name: "Prijatelj {0}: ime je obvezno",
+        validation_friend_email: "Prijatelj {0} ({1}): e-pošta je obvezna",
+        validation_no_files: "Izberite vsaj eno datoteko",
+        download: "Prenesi",
+        bundle_for: "Sveženj za {0}",
+        import_success: "Uvoženi {0} stiki",
+        import_error: "Neuspešno razčlenjevanje YAML: {0}",
+        // Error messages with guidance
+        error_title: "Nekaj je šlo narobe",
+        error_not_ready_title: "Proces še ni končan",
+        error_not_ready_message: "Ustvarjalec svežnjev še ni pripravljen.",
+        error_not_ready_guidance: "Počakajte trenutek in poskusite znova.",
+        error_import_title: "Uvoz ni uspel",
+        error_import_guidance: "Prepričajte se, da je format YAML pravilen. Preverite pravilno zamik in da so vsa obvezna polja (ime, e-pošta) prisotna.",
+        error_min_friends_title: "Potrebno je dodati vsaj 2 prijatelja",
+        error_min_friends_guidance: "Za obnovitev je potrebno vsaj dodati 2 prijatelja za razdelitev skrivnosti. Dodajte več prijateljev, da nadaljujete.",
+        error_generate_title: "Ustvarjanje svežnja ni uspelo",
+        error_generate_guidance: "Preverite, da imajo vsi prijatelji ime in e-pošto ter da ste izbrali vsaj eno datoteko. Nato poskusite znova.",
+        action_try_again: "Poskusi znova",
+        validation_title: "Nekatera polja je potrebno doplniti",
+        validation_message: "Izpolnite označena polja, preden ustvarite svežnje.",
+        validation_guidance: "Obvezna polja so označena z zvezdico (*). Prepričajte se, da ima vsak prijatelj ime in e-pošto ter da ste dodali vsaj eno datoteko."
+      },
     };
 
     let currentLang = 'en';
