@@ -78,14 +78,6 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf.MultiCell(0, 5, tr("  Si no entiendes inglés, puedes usar ChatGPT u otra inteligencia artificial para que te ayude a entender estas instrucciones y recuperar los datos. Copia este documento completo y pídele a la IA que te explique los pasos. La herramienta recover.html también está disponible en español."), "", "L", true)
 	pdf.Ln(5)
 
-	//Slovenian
-	pdf.SetFillColor(220, 245, 220)
-	pdf.SetFont("Helvetica", "B", bodySize)
-	pdf.CellFormat(0, 6, "  ZASEBNO - NE DELITE TEGA DOKUMENTA", "", 1, "L", true, 0, "")
-	pdf.SetFont("Helvetica", "I", bodySize)
-	pdf.MultiCell(0, 5, tr("  Ce imate tezave z razumevanjem anglescine, uporabite kaksno spletno orodje, ali pa povprasajte nekoga, ki razume anglesko."), "", "L", true)
-	pdf.Ln(5)
-
 	// Section: What is this?
 	addSection(pdf, "WHAT IS THIS?")
 	addBody(pdf, fmt.Sprintf("This bundle allows you to help recover encrypted secrets for: %s", data.ProjectName))
