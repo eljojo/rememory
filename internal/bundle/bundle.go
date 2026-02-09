@@ -70,9 +70,8 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			otherFriendsInfo = make([]html.FriendInfo, len(otherFriends))
 			for j, f := range otherFriends {
 				otherFriendsInfo[j] = html.FriendInfo{
-					Name:  f.Name,
-					Email: f.Email,
-					Phone: f.Phone,
+					Name:    f.Name,
+					Contact: f.Contact,
 				}
 			}
 		}

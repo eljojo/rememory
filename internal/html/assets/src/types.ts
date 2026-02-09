@@ -89,14 +89,12 @@ export interface ExtractResult {
 
 export interface FriendInfo {
   name: string;
-  email?: string;
-  phone?: string;
+  contact?: string;
 }
 
 export interface FriendInput {
   name: string;
-  email: string;
-  phone?: string;
+  contact?: string;
 }
 
 export interface ProjectConfig {

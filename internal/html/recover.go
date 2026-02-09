@@ -10,9 +10,8 @@ import (
 
 // FriendInfo holds friend contact information for the UI.
 type FriendInfo struct {
-	Name  string `json:"name"`
-	Email string `json:"email,omitempty"`
-	Phone string `json:"phone,omitempty"`
+	Name    string `json:"name"`
+	Contact string `json:"contact,omitempty"`
 }
 
 // PersonalizationData holds the data to personalize recover.html for a specific friend.

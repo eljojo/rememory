@@ -40,10 +40,8 @@ var (
 const (
 	// MaxNameLength is the maximum allowed length for friend names
 	MaxNameLength = 200
-	// MaxEmailLength is the maximum allowed length for email addresses
-	MaxEmailLength = 320 // RFC 5321 maximum
-	// MaxPhoneLength is the maximum allowed length for phone numbers
-	MaxPhoneLength = 50
+	// MaxContactLength is the maximum allowed length for contact info
+	MaxContactLength = 500
 )
 
 func init() {
@@ -51,7 +49,7 @@ func init() {
 	initCmd.Flags().StringVar(&initFrom, "from", "", "Base new project on existing project (copies friends)")
 	initCmd.Flags().StringVar(&initName, "name", "", "Project name (defaults to directory name)")
 	initCmd.Flags().IntVar(&initThreshold, "threshold", 0, "Number of shares needed to recover")
-	initCmd.Flags().StringArrayVar(&initFriends, "friend", nil, "Friend in format 'Name,email' or 'Name,email,phone' (repeatable)")
+	initCmd.Flags().StringArrayVar(&initFriends, "friend", nil, "Friend in format 'Name' or 'Name,contact info' (repeatable)")
 	initCmd.Flags().BoolVar(&initAnonymous, "anonymous", false, "Anonymous mode (no contact info for shareholders)")
 	initCmd.Flags().IntVar(&initShares, "shares", 0, "Number of shares (for anonymous mode)")
 }
@@ -224,24 +222,13 @@ func runInit(cmd *cobra.Command, args []string) error {
 			}
 			friends[i].Name = nameStr
 
-			fmt.Print("  Email: ")
-			emailStr, _ := reader.ReadString('\n')
-			emailStr = strings.TrimSpace(emailStr)
-			if emailStr == "" {
-				return fmt.Errorf("email is required")
+			fmt.Print("  Contact info (optional): ")
+			contactStr, _ := reader.ReadString('\n')
+			contactStr = strings.TrimSpace(contactStr)
+			if len(contactStr) > MaxContactLength {
+				return fmt.Errorf("contact info too long (max %d characters)", MaxContactLength)
 			}
-			if len(emailStr) > MaxEmailLength {
-				return fmt.Errorf("email too long (max %d characters)", MaxEmailLength)
-			}
-			friends[i].Email = emailStr
-
-			fmt.Print("  Phone (optional): ")
-			phoneStr, _ := reader.ReadString('\n')
-			phoneStr = strings.TrimSpace(phoneStr)
-			if len(phoneStr) > MaxPhoneLength {
-				return fmt.Errorf("phone too long (max %d characters)", MaxPhoneLength)
-			}
-			friends[i].Phone = phoneStr
+			friends[i].Contact = contactStr
 
 			fmt.Println()
 		}
@@ -280,21 +267,21 @@ func friendNames(friends []project.Friend) string {
 	return strings.Join(names, ", ")
 }
 
-// parseFriendFlags parses --friend flags in format "Name,email" or "Name,email,phone"
+// parseFriendFlags parses --friend flags in format "Name" or "Name,contact info"
 func parseFriendFlags(flags []string) ([]project.Friend, error) {
 	friends := make([]project.Friend, len(flags))
 	for i, f := range flags {
-		parts := strings.Split(f, ",")
-		if len(parts) < 2 {
-			return nil, fmt.Errorf("invalid friend format: %q (expected 'Name,email' or 'Name,email,phone')", f)
+		// Split on the first comma only — everything after it is free-form contact
+		name := f
+		contact := ""
+		if idx := strings.Index(f, ","); idx >= 0 {
+			name = f[:idx]
+			contact = strings.TrimSpace(f[idx+1:])
 		}
 
 		friends[i] = project.Friend{
-			Name:  strings.TrimSpace(parts[0]),
-			Email: strings.TrimSpace(parts[1]),
-		}
-		if len(parts) >= 3 {
-			friends[i].Phone = strings.TrimSpace(parts[2])
+			Name:    strings.TrimSpace(name),
+			Contact: contact,
 		}
 
 		if friends[i].Name == "" {
@@ -303,14 +290,8 @@ func parseFriendFlags(flags []string) ([]project.Friend, error) {
 		if len(friends[i].Name) > MaxNameLength {
 			return nil, fmt.Errorf("friend name too long (max %d characters)", MaxNameLength)
 		}
-		if friends[i].Email == "" {
-			return nil, fmt.Errorf("friend email cannot be empty")
-		}
-		if len(friends[i].Email) > MaxEmailLength {
-			return nil, fmt.Errorf("friend email too long (max %d characters)", MaxEmailLength)
-		}
-		if len(friends[i].Phone) > MaxPhoneLength {
-			return nil, fmt.Errorf("friend phone too long (max %d characters)", MaxPhoneLength)
+		if len(friends[i].Contact) > MaxContactLength {
+			return nil, fmt.Errorf("friend contact too long (max %d characters)", MaxContactLength)
 		}
 	}
 	return friends, nil

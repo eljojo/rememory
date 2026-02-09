@@ -63,7 +63,11 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		if !shareExists {
 			status = yellow("○")
 		}
-		fmt.Printf("  %d. %s %s (%s)\n", i+1, status, friend.Name, friend.Email)
+		contactInfo := friend.Contact
+		if contactInfo == "" {
+			contactInfo = "no contact info"
+		}
+		fmt.Printf("  %d. %s %s (%s)\n", i+1, status, friend.Name, contactInfo)
 	}
 
 	// Bundles status

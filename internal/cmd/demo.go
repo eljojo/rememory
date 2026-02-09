@@ -61,9 +61,9 @@ func runDemo(cmd *cobra.Command, args []string) error {
 
 	// Demo friends
 	friends := []project.Friend{
-		{Name: "Alice", Email: "alice@example.com", Phone: "555-0101"},
-		{Name: "Bob", Email: "bob@example.com", Phone: "555-0102"},
-		{Name: "Carol", Email: "carol@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
+		{Name: "Carol", Contact: "carol@example.com"},
 	}
 	threshold := 2
 

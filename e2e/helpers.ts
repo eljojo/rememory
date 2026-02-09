@@ -260,12 +260,11 @@ export class CreationPage {
     await removeButtons.nth(index).click();
   }
 
-  async setFriend(index: number, name: string, email: string, phone?: string): Promise<void> {
+  async setFriend(index: number, name: string, contact?: string): Promise<void> {
     const entry = this.page.locator('.friend-entry').nth(index);
     await entry.locator('.friend-name').fill(name);
-    await entry.locator('.friend-email').fill(email);
-    if (phone) {
-      await entry.locator('.friend-phone').fill(phone);
+    if (contact) {
+      await entry.locator('.friend-contact').fill(contact);
     }
   }
 
@@ -273,10 +272,12 @@ export class CreationPage {
     await expect(this.page.locator('.friend-entry')).toHaveCount(count);
   }
 
-  async expectFriendData(index: number, name: string, email: string): Promise<void> {
+  async expectFriendData(index: number, name: string, contact?: string): Promise<void> {
     const entry = this.page.locator('.friend-entry').nth(index);
     await expect(entry.locator('.friend-name')).toHaveValue(name);
-    await expect(entry.locator('.friend-email')).toHaveValue(email);
+    if (contact !== undefined) {
+      await expect(entry.locator('.friend-contact')).toHaveValue(contact);
+    }
   }
 
   // Threshold

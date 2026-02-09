@@ -231,7 +231,7 @@ declare const t: TranslationFunction;
 
       if (project.friends && project.friends.length > 0) {
         project.friends.forEach(f => {
-          addFriend(f.name, f.email || '', f.phone || '');
+          addFriend(f.name, f.contact || '');
         });
       }
 
@@ -258,16 +258,16 @@ declare const t: TranslationFunction;
     });
   }
 
-  function addFriend(name = '', email = '', phone = ''): void {
+  function addFriend(name = '', contact = ''): void {
     const index = state.friends.length;
-    state.friends.push({ name, email, phone });
+    state.friends.push({ name, contact });
 
     const entry = document.createElement('div');
     entry.className = 'friend-entry';
     entry.dataset.index = String(index);
 
     const sampleName = getNextSampleName();
-    const sampleEmail = sampleName.toLowerCase() + '@example.com';
+    const sampleContact = sampleName.toLowerCase() + '@example.com';
 
     entry.innerHTML = `
       <div class="friend-number">#${index + 1}</div>
@@ -276,12 +276,8 @@ declare const t: TranslationFunction;
         <input type="text" class="friend-name" value="${escapeHtml(name)}" placeholder="${sampleName}" required>
       </div>
       <div class="field">
-        <label class="required">${t('email_label')}</label>
-        <input type="email" class="friend-email" value="${escapeHtml(email)}" placeholder="${sampleEmail}" required>
-      </div>
-      <div class="field">
-        <label>${t('phone_label')}</label>
-        <input type="tel" class="friend-phone" value="${escapeHtml(phone)}" placeholder="+1-555-1234">
+        <label>${t('contact_label')}</label>
+        <input type="text" class="friend-contact" value="${escapeHtml(contact)}" placeholder="${sampleContact}">
       </div>
       <button type="button" class="remove-btn" title="${t('remove')}">&times;</button>
     `;
@@ -295,18 +291,10 @@ declare const t: TranslationFunction;
       checkGenerateReady();
     });
 
-    const emailInput = entry.querySelector('.friend-email') as HTMLInputElement;
-    emailInput?.addEventListener('input', (e) => {
+    const contactInput = entry.querySelector('.friend-contact') as HTMLInputElement;
+    contactInput?.addEventListener('input', (e) => {
       const target = e.target as HTMLInputElement;
-      state.friends[index].email = target.value.trim();
-      target.classList.remove('input-error');
-      checkGenerateReady();
-    });
-
-    const phoneInput = entry.querySelector('.friend-phone') as HTMLInputElement;
-    phoneInput?.addEventListener('input', (e) => {
-      const target = e.target as HTMLInputElement;
-      state.friends[index].phone = target.value.trim();
+      state.friends[index].contact = target.value.trim();
     });
 
     const removeBtn = entry.querySelector('.remove-btn');
@@ -339,7 +327,7 @@ declare const t: TranslationFunction;
     if (elements.friendsList) elements.friendsList.innerHTML = '';
     const friends = [...state.friends];
     state.friends = [];
-    friends.forEach(f => addFriend(f.name, f.email, f.phone || ''));
+    friends.forEach(f => addFriend(f.name, f.contact || ''));
   }
 
   function updateThresholdOptions(): void {
@@ -591,15 +579,6 @@ declare const t: TranslationFunction;
               if (!result.firstInvalidElement) result.firstInvalidElement = nameInput;
             }
           }
-          if (!f.email) {
-            result.valid = false;
-            if (!silent) {
-              result.errors.push(t('validation_friend_email', i + 1, f.name || '?'));
-              const emailInput = entry.querySelector('.friend-email') as HTMLInputElement;
-              emailInput?.classList.add('input-error');
-              if (!result.firstInvalidElement) result.firstInvalidElement = emailInput;
-            }
-          }
         });
       }
     }
@@ -672,15 +651,13 @@ declare const t: TranslationFunction;
         for (let i = 0; i < state.numShares; i++) {
           friends.push({
             name: `Share ${i + 1}`,
-            email: '',
-            phone: ''
+            contact: ''
           });
         }
       } else {
         friends = state.friends.map(f => ({
           name: f.name,
-          email: f.email,
-          phone: f.phone || ''
+          contact: f.contact || ''
         }));
       }
 
@@ -804,9 +781,8 @@ declare const t: TranslationFunction;
     } else {
       state.friends.forEach(f => {
         yaml += `  - name: ${f.name}\n`;
-        yaml += `    email: ${f.email}\n`;
-        if (f.phone) {
-          yaml += `    phone: "${f.phone}"\n`;
+        if (f.contact) {
+          yaml += `    contact: "${f.contact}"\n`;
         }
       });
     }

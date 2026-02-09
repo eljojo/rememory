@@ -95,7 +95,7 @@ test.describe('Browser Bundle Creation Tool', () => {
     await creation.setFriend(0, 'Alice', 'alice@test.com');
     await creation.setFriend(1, 'Bob', 'bob@test.com');
 
-    // Click generate again without files - still should show file validation
+    // Click generate again without files - still should show file validation (name is the only required field)
     await creation.generate();
     await expect(page.locator('#files-drop-zone.has-error')).toBeVisible(); // Files drop zone should be highlighted
   });
@@ -110,12 +110,11 @@ name: imported-project
 threshold: 2
 friends:
   - name: Charlie
-    email: charlie@test.com
-    phone: "555-1234"
+    contact: charlie@test.com
   - name: Diana
-    email: diana@test.com
+    contact: diana@test.com
   - name: Eve
-    email: eve@test.com
+    contact: eve@test.com
 `;
 
     await creation.importYAML(yamlContent);
@@ -174,7 +173,7 @@ friends:
     await creation.open();
 
     // Fill in friends
-    await creation.setFriend(0, 'Alice', 'alice@test.com', '555-1111');
+    await creation.setFriend(0, 'Alice', 'alice@test.com');
     await creation.setFriend(1, 'Bob', 'bob@test.com');
 
     // Add a third friend
@@ -211,7 +210,7 @@ friends:
 
     await creation.open();
 
-    // Quick setup
+    // Quick setup - name is the only required field, contact is optional
     await creation.setFriend(0, 'Alice', 'alice@test.com');
     await creation.setFriend(1, 'Bob', 'bob@test.com');
 

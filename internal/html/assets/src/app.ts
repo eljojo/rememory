@@ -262,14 +262,7 @@ declare const t: TranslationFunction;
       item.className = 'contact-item';
       item.dataset.name = friend.name;
 
-      let contactInfo = '';
-      if (friend.email) {
-        contactInfo += `<a href="mailto:${escapeHtml(friend.email)}">${escapeHtml(friend.email)}</a>`;
-      }
-      if (friend.phone) {
-        if (contactInfo) contactInfo += ' &bull; ';
-        contactInfo += escapeHtml(friend.phone);
-      }
+      const contactInfo = friend.contact ? escapeHtml(friend.contact) : '';
 
       item.innerHTML = `
         <div class="checkbox"></div>

@@ -33,9 +33,8 @@ type FileEntry struct {
 
 // FriendInput represents friend data from JavaScript.
 type FriendInput struct {
-	Name  string
-	Email string
-	Phone string
+	Name    string
+	Contact string
 }
 
 // CreateBundlesConfig holds all parameters for bundle creation.
@@ -82,11 +81,10 @@ func createBundlesJS(this js.Value, args []js.Value) any {
 	for i := 0; i < friendsLen; i++ {
 		f := friendsJS.Index(i)
 		config.Friends[i] = FriendInput{
-			Name:  f.Get("name").String(),
-			Email: f.Get("email").String(),
+			Name: f.Get("name").String(),
 		}
-		if phone := f.Get("phone"); !phone.IsUndefined() && !phone.IsNull() {
-			config.Friends[i].Phone = phone.String()
+		if contact := f.Get("contact"); !contact.IsUndefined() && !contact.IsNull() {
+			config.Friends[i].Contact = contact.String()
 		}
 	}
 
@@ -150,13 +148,10 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		return nil, fmt.Errorf("no files provided")
 	}
 
-	// Validate friends (email not required for anonymous mode)
+	// Validate friends
 	for i, f := range config.Friends {
 		if f.Name == "" {
 			return nil, fmt.Errorf("friend %d: name is required", i+1)
-		}
-		if !config.Anonymous && f.Email == "" {
-			return nil, fmt.Errorf("friend %d (%s): email is required", i+1, f.Name)
 		}
 	}
 
@@ -218,9 +213,8 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	projectFriends := make([]project.Friend, len(config.Friends))
 	for i, f := range config.Friends {
 		projectFriends[i] = project.Friend{
-			Name:  f.Name,
-			Email: f.Email,
-			Phone: f.Phone,
+			Name:    f.Name,
+			Contact: f.Contact,
 		}
 	}
 
@@ -243,9 +237,8 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			otherFriendsInfo = make([]html.FriendInfo, len(otherFriends))
 			for j, f := range otherFriends {
 				otherFriendsInfo[j] = html.FriendInfo{
-					Name:  f.Name,
-					Email: f.Email,
-					Phone: f.Phone,
+					Name:    f.Name,
+					Contact: f.Contact,
 				}
 			}
 		}
@@ -467,9 +460,8 @@ func parseProjectYAMLJS(this js.Value, args []js.Value) any {
 	friends := make([]any, len(proj.Friends))
 	for i, f := range proj.Friends {
 		friends[i] = map[string]any{
-			"name":  f.Name,
-			"email": f.Email,
-			"phone": f.Phone,
+			"name":    f.Name,
+			"contact": f.Contact,
 		}
 	}
 
@@ -488,9 +480,8 @@ type ProjectYAML struct {
 	Name      string `yaml:"name"`
 	Threshold int    `yaml:"threshold"`
 	Friends   []struct {
-		Name  string `yaml:"name"`
-		Email string `yaml:"email"`
-		Phone string `yaml:"phone,omitempty"`
+		Name    string `yaml:"name"`
+		Contact string `yaml:"contact,omitempty"`
 	} `yaml:"friends"`
 }
 

@@ -90,12 +90,11 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	if !data.Anonymous {
 		addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
 		for _, friend := range data.OtherFriends {
-		pdf.SetFont(fontSans, "B", bodySize)
-		pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
-		pdf.SetFont(fontSans, "", bodySize)
-			pdf.CellFormat(0, 5, fmt.Sprintf("    Email: %s", friend.Email), "", 1, "L", false, 0, "")
-			if friend.Phone != "" {
-				pdf.CellFormat(0, 5, fmt.Sprintf("    Phone: %s", friend.Phone), "", 1, "L", false, 0, "")
+			pdf.SetFont(fontSans, "B", bodySize)
+			pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
+			pdf.SetFont(fontSans, "", bodySize)
+			if friend.Contact != "" {
+				pdf.CellFormat(0, 5, fmt.Sprintf("    Contact: %s", friend.Contact), "", 1, "L", false, 0, "")
 			}
 			pdf.Ln(2)
 		}

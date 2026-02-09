@@ -18,9 +18,8 @@ const (
 
 // Friend represents a person who will hold a share.
 type Friend struct {
-	Name  string `yaml:"name"`
-	Email string `yaml:"email"`
-	Phone string `yaml:"phone,omitempty"`
+	Name    string `yaml:"name"`
+	Contact string `yaml:"contact,omitempty"`
 }
 
 // ShareInfo stores information about a generated share.
@@ -101,10 +100,6 @@ func (p *Project) Validate() error {
 	for i, f := range p.Friends {
 		if f.Name == "" {
 			return fmt.Errorf("friend %d: name is required", i+1)
-		}
-		// Email is only required for non-anonymous projects
-		if !p.Anonymous && f.Email == "" {
-			return fmt.Errorf("friend %d (%s): email is required", i+1, f.Name)
 		}
 	}
 
