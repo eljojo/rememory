@@ -424,4 +424,31 @@ export class CreationPage {
   async expectNumShares(count: number): Promise<void> {
     await expect(this.page.locator('#num-shares')).toHaveValue(String(count));
   }
+
+  // Export YAML and return content
+  async exportYAML(): Promise<string> {
+    // Listen for download event and intercept the Blob
+    const yamlContent = await this.page.evaluate(async () => {
+      return new Promise<string>((resolve) => {
+        // Override URL.createObjectURL to capture the blob
+        const originalCreateObjectURL = URL.createObjectURL;
+        URL.createObjectURL = (blob: Blob | MediaSource) => {
+          if (blob instanceof Blob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              URL.createObjectURL = originalCreateObjectURL;
+              resolve(reader.result as string);
+            };
+            reader.readAsText(blob);
+          }
+          return originalCreateObjectURL(blob);
+        };
+        
+        // Click the download button
+        document.getElementById('download-yaml-btn')?.click();
+      });
+    });
+    
+    return yamlContent;
+  }
 }

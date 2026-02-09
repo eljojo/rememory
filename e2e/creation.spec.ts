@@ -363,4 +363,42 @@ friends:
     // Files drop zone should be highlighted
     await expect(page.locator('#files-drop-zone.has-error')).toBeVisible();
   });
+
+  test('YAML export escapes special characters in friend names and contact fields', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Set friends with special characters that need escaping
+    // Focus on testing quote and backslash escaping which are most critical for YAML validity
+    await page.locator('.friend-entry').nth(0).locator('.friend-name').fill('Alice "The Hacker" Smith');
+    await page.locator('.friend-entry').nth(0).locator('.friend-contact').fill('Email: alice@test.com');
+
+    await page.locator('.friend-entry').nth(1).locator('.friend-name').fill('Bob\\Johnson');
+    await page.locator('.friend-entry').nth(1).locator('.friend-contact').fill('Contact info: bob@example.com');
+
+    // Export YAML
+    const yamlContent = await creation.exportYAML();
+
+    // Verify the YAML contains properly escaped characters
+    // The escaping function should convert:
+    // - Double quotes to \" (backslash-quote)
+    // - Backslashes to \\ (backslash-backslash)
+    // This prevents YAML injection and ensures syntactic validity
+    expect(yamlContent).toContain('\\"The Hacker\\"');  // Quotes should be escaped
+    expect(yamlContent).toContain('Bob\\\\Johnson');     // Backslashes should be doubled
+    
+    // Verify that the entire name and contact fields are properly quoted
+    expect(yamlContent).toMatch(/name: "Alice \\"The Hacker\\" Smith"/);
+    expect(yamlContent).toMatch(/name: "Bob\\\\Johnson"/);
+    expect(yamlContent).toMatch(/contact: "Email: alice@test\.com"/);
+    expect(yamlContent).toMatch(/contact: "Contact info: bob@example\.com"/);
+    
+    // Verify the YAML can be parsed (imported) without errors
+    // This tests that the escaping produces valid YAML
+    await creation.importYAML(yamlContent);
+
+    // Should have successfully imported 2 friends
+    await creation.expectFriendCount(2);
+  });
 });
