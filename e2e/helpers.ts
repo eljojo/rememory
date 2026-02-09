@@ -429,23 +429,48 @@ export class CreationPage {
   async exportYAML(): Promise<string> {
     // Listen for download event and intercept the Blob
     const yamlContent = await this.page.evaluate(async () => {
-      return new Promise<string>((resolve) => {
+      return new Promise<string>((resolve, reject) => {
         // Override URL.createObjectURL to capture the blob
         const originalCreateObjectURL = URL.createObjectURL;
+        let resolved = false;
+        
+        // Set a timeout in case the download never happens
+        const timeout = setTimeout(() => {
+          if (!resolved) {
+            URL.createObjectURL = originalCreateObjectURL;
+            reject(new Error('YAML download timeout'));
+          }
+        }, 5000);
+        
         URL.createObjectURL = (blob: Blob | MediaSource) => {
-          if (blob instanceof Blob) {
+          if (blob instanceof Blob && !resolved) {
+            resolved = true;
+            clearTimeout(timeout);
             const reader = new FileReader();
             reader.onload = () => {
               URL.createObjectURL = originalCreateObjectURL;
               resolve(reader.result as string);
             };
+            reader.onerror = () => {
+              URL.createObjectURL = originalCreateObjectURL;
+              reject(new Error('Failed to read blob'));
+            };
             reader.readAsText(blob);
+            return originalCreateObjectURL(blob);
           }
+          // Handle MediaSource or non-Blob cases
           return originalCreateObjectURL(blob);
         };
         
         // Click the download button
-        document.getElementById('download-yaml-btn')?.click();
+        const btn = document.getElementById('download-yaml-btn');
+        if (!btn) {
+          clearTimeout(timeout);
+          URL.createObjectURL = originalCreateObjectURL;
+          reject(new Error('Download button not found'));
+          return;
+        }
+        btn.click();
       });
     });
     
