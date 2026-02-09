@@ -40,6 +40,8 @@ graph TB
 
 The key insight: **any 3 shares can reconstruct the key, but 2 shares reveal nothing**—not "very little," mathematically zero information.
 
+The threshold is up to you: 3-of-5 for distributing among trusted friends, 2-of-3 for a small circle, or even 2-of-2 for couples who want shared access to each other's digital lives.
+
 ---
 
 ## Two Ways to Use ReMemory
@@ -203,23 +205,41 @@ make serve        # Serves at http://localhost:8000
 <details>
 <summary>Other Similar Tools</summary>
 
-ReMemory isn't the first tool to use Shamir's Secret Sharing for file protection. I built ReMemory before discovering these alternatives:
+There's a flavour of secret sharing for everyone. ReMemory isn't the first tool to use Shamir's Secret Sharing, but it focuses on making recovery possible for **non-technical people** without installing anything. Here's how it compares:
 
-- **[Horcrux](https://github.com/jesseduffield/horcrux)** — CLI tool that splits files into encrypted fragments using Shamir's Secret Sharing
-- **[Haystack](https://github.com/henrysdev/Haystack)** — Elixir-based CLI for fragmenting confidential documents
-- **[Horcrux (nao1215)](https://github.com/nao1215/horcrux)** — TypeScript library with adapters for Node.js and React Native (requires native runtime—uses Node.js crypto and streams directly)
+#### Shamir's Secret Sharing tools
 
-**The key difference:** ReMemory is designed for non-technical people to perform the recovery.
+| Tool | Type | Input | Splitting Method | Output | Non-technical Recovery | Offline | Contact Details |
+|------|------|-------|-----------------|--------|----------------------|---------|-----------------|
+| **[eljojo/rememory](https://github.com/eljojo/rememory)** | CLI + Web | Files & folders | Shamir's SSS | ZIP bundles with PDF instructions, `recover.html`, encrypted archive | Yes — open HTML in browser | Yes | Yes — included in each bundle |
+| **[jesseduffield/horcrux](https://github.com/jesseduffield/horcrux)** | CLI | Files | Shamir's SSS | Encrypted file fragments | No — requires CLI | Yes | No |
+| **[jefdaj/horcrux](https://github.com/jefdaj/horcrux)** | CLI | Files (GPG) | Shamir's SSS (via `ssss`) | `.key` + `.sig` files, steganography in images/audio | No — requires CLI + GPG | Yes (TAILS recommended) | No |
+| **[paritytech/banana_split](https://github.com/paritytech/banana_split)** | Web app | Text only | Shamir's SSS + NaCl | Printable QR codes | Partial — scan QR + type passphrase | Yes (self-contained HTML) | No |
+| **[cyphar/paperback](https://github.com/cyphar/paperback)** | CLI | Files | Shamir's SSS in GF(2^32) | Printable PDFs with QR codes + text fallback | Partial — scan QR or type text | Yes | No |
+| **[simonfrey/s4](https://github.com/simonfrey/s4)** ([site](https://simon-frey.com/s4/)) | Web GUI + Go lib | Text/bytes | Shamir's SSS + AES | Text shares | No — copy/paste shares | Yes (save HTML locally) | No |
+| **[xkortex/passcrux](https://github.com/xkortex/passcrux)** | CLI | Text/passphrases | Shamir's SSS | Text shares (hex/base32/base64) | No — requires CLI | Yes | No |
+| **[ssss](http://point-at-infinity.org/ssss/)** | CLI | Text (128 char max) | Shamir's SSS | Text shares | No — requires CLI | Yes | No |
+| **[cedws/amnesia](https://github.com/cedws/amnesia)** | CLI | Text/data streams | Shamir's SSS + argon2id | JSON file (Q&A-based, single user) | No — requires CLI | Yes | No |
+| **[henrysdev/Haystack](https://github.com/henrysdev/Haystack)** | CLI | Files | Shamir's SSS | Encrypted file fragments | No — requires CLI | Yes | No |
 
-With Horcrux or Haystack, your friends need to install software and run command-line tools to reconstruct your secrets. That's fine if your friends are developers, but most people's trusted circle includes family members, partners, or friends who've never opened a terminal.
+#### Other approaches
 
-ReMemory solves this by providing:
-- **PDF instructions** — printable, readable, no technical knowledge required
-- **ZIP bundles** — a familiar format anyone can open
-- **Browser-based recovery** — just open `recover.html`, no installation needed
-- **Self-contained offline tool** — works without internet, servers, or this project existing
+| Tool | Type | Input | Method | Output | Non-technical Recovery | Offline | Contact Details |
+|------|------|-------|--------|--------|----------------------|---------|-----------------|
+| **[msolomon/keybearer](https://github.com/msolomon/keybearer)** ([site](https://michael-solomon.net/keybearer)) | Web app | Files | Layered encryption | Encrypted file download | Partial — web UI for decryption | Yes (client-side JS) | No |
+| **[RobinWeitzel/secret_sharer](https://github.com/RobinWeitzel/secret_sharer)** ([site](https://robinweitzel.de/secret_sharer/)) | Web app | Text only | Split-key AES-256 (fixed 2-of-2) | PDF with 2 QR codes + security code | Yes — scan QR codes | Yes (client-side) | No |
+| **[Bitwarden Emergency Access](https://bitwarden.com/help/emergency-access/)** | Web service | Vault items + attachments | RSA key exchange (1-of-1) | Live vault access (no file output) | Yes — web UI | No (server required) | Via Bitwarden accounts |
+| **[potatoqualitee/eol-dr](https://github.com/potatoqualitee/eol-dr)** | Guide/checklist | N/A | N/A (not a tool) | [Printable checklist](https://github.com/potatoqualitee/eol-dr/blob/main/checklist.md) covering accounts, finances, subscriptions, devices | N/A | Yes (print it) | Template fields |
 
-The cryptographic foundation is the same. The difference is who can actually use it when you need them to.
+**Key takeaways:**
+
+- Most tools only handle **text or passphrases** — [eljojo/rememory](https://github.com/eljojo/rememory), both horcrux projects, [henrysdev/Haystack](https://github.com/henrysdev/Haystack), [cyphar/paperback](https://github.com/cyphar/paperback), and [msolomon/keybearer](https://github.com/msolomon/keybearer) are the few that handle actual files.
+- Only [eljojo/rememory](https://github.com/eljojo/rememory) generates a **self-contained recovery tool** (`recover.html`) bundled with each share — no installation, no internet, no CLI needed.
+- Only [eljojo/rememory](https://github.com/eljojo/rememory) includes **contact details** in each bundle so friends know how to reach each other during recovery.
+- [paritytech/banana_split](https://github.com/paritytech/banana_split) and [cyphar/paperback](https://github.com/cyphar/paperback) output **QR codes** for printing, which is great for paper-based backups of short secrets.
+- **Bitwarden Emergency Access** is fundamentally different — it delegates vault access to one trusted person (not M-of-N splitting) and requires an online service.
+- [potatoqualitee/eol-dr](https://github.com/potatoqualitee/eol-dr) is not a tool but a valuable **end-of-life planning [checklist](https://github.com/potatoqualitee/eol-dr/blob/main/checklist.md)** covering accounts, finances, subscriptions, and devices — complementary to any tool here.
+- [ssss](http://point-at-infinity.org/ssss/) is the classic Unix implementation but is limited to 128 ASCII characters and requires a terminal.
 
 </details>
 
