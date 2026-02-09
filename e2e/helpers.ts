@@ -434,7 +434,7 @@ export class CreationPage {
         const originalCreateObjectURL = URL.createObjectURL;
         let resolved = false;
         
-        // Set a timeout in case the download never happens
+        // Set a timeout in case the download never happens (5 seconds)
         const timeout = setTimeout(() => {
           if (!resolved) {
             URL.createObjectURL = originalCreateObjectURL;
