@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/spf13/cobra"
 )
@@ -97,7 +98,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 func checkShareExists(p *project.Project, friend project.Friend) bool {
 	sharesDir := p.SharesPath()
-	filename := fmt.Sprintf("SHARE-%s.txt", sanitizeFriendName(friend.Name))
+	filename := fmt.Sprintf("SHARE-%s.txt", core.SanitizeFilename(friend.Name))
 	_, err := os.Stat(filepath.Join(sharesDir, filename))
 	return err == nil
 }
@@ -141,16 +142,4 @@ func plural(n int) string {
 		return ""
 	}
 	return "s"
-}
-
-func sanitizeFriendName(name string) string {
-	result := ""
-	for _, r := range name {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			result += string(r)
-		} else if r == ' ' || r == '-' || r == '_' {
-			result += "-"
-		}
-	}
-	return result
 }

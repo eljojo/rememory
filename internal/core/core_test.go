@@ -363,11 +363,29 @@ func TestSanitizeFilename(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"Alice", "Alice"},
-		{"Bob Smith", "Bob-Smith"},
-		{"Carol!", "Carol"},
+		{"Alice", "alice"},
+		{"Bob Smith", "bob-smith"},
+		{"Carol!", "carol"},
 		{"test@user.com", "testusercom"},
 		{"file/path", "filepath"},
+		// NFD transliteration: accented chars → ASCII base
+		{"José", "jose"},
+		{"Ñoño", "nono"},
+		{"Müller", "muller"},
+		// Underscore → hyphen
+		{"bob_smith", "bob-smith"},
+		// Hyphen trimming and collapsing
+		{"---hyphens---", "hyphens"},
+		{"a--b", "a-b"},
+		// Leading/trailing spaces
+		{"  Alice  ", "alice"},
+		// Path traversal chars stripped
+		{"../etc/passwd", "etcpasswd"},
+		// Non-ASCII input that sanitizes to empty
+		{"日本語", ""},
+		{"!!!???", ""},
+		// Empty input
+		{"", ""},
 	}
 
 	for _, tt := range tests {

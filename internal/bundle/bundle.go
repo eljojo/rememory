@@ -9,9 +9,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
-
-	"golang.org/x/text/unicode/norm"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
@@ -88,7 +85,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 		recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 
-		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", sanitizeName(friend.Name)))
+		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", core.SanitizeFilename(friend.Name)))
 
 		err := GenerateBundle(BundleParams{
 			OutputPath:       bundlePath,
@@ -197,7 +194,7 @@ func loadShares(p *project.Project) ([]*core.Share, error) {
 	shares := make([]*core.Share, len(p.Friends))
 	for i, friend := range p.Friends {
 		// Try to find share file for this friend
-		filename := fmt.Sprintf("SHARE-%s.txt", sanitizeName(friend.Name))
+		filename := fmt.Sprintf("SHARE-%s.txt", core.SanitizeFilename(friend.Name))
 		sharePath := filepath.Join(sharesDir, filename)
 
 		data, err := os.ReadFile(sharePath)
@@ -214,30 +211,6 @@ func loadShares(p *project.Project) ([]*core.Share, error) {
 	}
 
 	return shares, nil
-}
-
-// sanitizeName converts a name to a filesystem-safe lowercase ASCII string.
-// It transliterates accented/diacritic characters to their ASCII base form
-// (e.g. "José" → "jose", "Ñoño" → "nono") so that filenames are always valid.
-func sanitizeName(name string) string {
-	// Decompose to NFD: splits characters like "é" into "e" + combining accent.
-	// Then drop combining marks to keep only the base letter.
-	var stripped []rune
-	for _, r := range norm.NFD.String(name) {
-		if !unicode.Is(unicode.Mn, r) { // Mn = Mark, Nonspacing (combining diacritics)
-			stripped = append(stripped, r)
-		}
-	}
-
-	result := ""
-	for _, r := range stripped {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			result += string(r)
-		} else if r == ' ' || r == '-' || r == '_' {
-			result += "-"
-		}
-	}
-	return strings.ToLower(result)
 }
 
 // VerifyBundle verifies the integrity of a bundle ZIP file.

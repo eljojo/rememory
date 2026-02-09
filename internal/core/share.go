@@ -3,10 +3,12 @@ package core
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
@@ -190,15 +192,40 @@ func (s *Share) Filename() string {
 	if name == "" {
 		name = fmt.Sprintf("%d", s.Index)
 	}
-	// Sanitize the name for filesystem use
 	name = SanitizeFilename(name)
-	return fmt.Sprintf("SHARE-%s.txt", strings.ToLower(name))
+	return fmt.Sprintf("SHARE-%s.txt", name)
 }
 
-// SanitizeFilename removes characters that are problematic in filenames.
+// SanitizeFilename converts a name to a filesystem-safe lowercase ASCII string.
+// It transliterates accented/diacritic characters to their ASCII base form
+// (e.g. "José" → "jose", "Müller" → "muller") using NFD decomposition.
 func SanitizeFilename(name string) string {
-	// Replace spaces with hyphens, remove other problematic chars
-	name = strings.ReplaceAll(name, " ", "-")
-	reg := regexp.MustCompile(`[^a-zA-Z0-9\-_]`)
-	return reg.ReplaceAllString(name, "")
+	// NFD decompose: split characters like "é" into "e" + combining accent,
+	// then drop combining marks to keep only the base letter.
+	var stripped []rune
+	for _, r := range norm.NFD.String(name) {
+		if !unicode.Is(unicode.Mn, r) {
+			stripped = append(stripped, r)
+		}
+	}
+
+	// Keep alphanumeric, convert spaces/hyphens/underscores to hyphen, drop rest.
+	var b strings.Builder
+	for _, r := range stripped {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else if r == ' ' || r == '-' || r == '_' {
+			b.WriteRune('-')
+		}
+	}
+
+	result := strings.ToLower(b.String())
+
+	// Collapse consecutive hyphens and trim leading/trailing hyphens.
+	for strings.Contains(result, "--") {
+		result = strings.ReplaceAll(result, "--", "-")
+	}
+	result = strings.Trim(result, "-")
+
+	return result
 }
