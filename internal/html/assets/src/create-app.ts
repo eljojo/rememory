@@ -37,6 +37,16 @@ declare const t: TranslationFunction;
     return `recovery-${year}-${month}-${day}`;
   }
 
+  // Escape special characters in YAML double-quoted strings
+  function escapeYamlString(str: string): string {
+    return str
+      .replace(/\\/g, '\\\\')  // Backslash must be escaped first
+      .replace(/"/g, '\\"')     // Escape double quotes
+      .replace(/\n/g, '\\n')    // Escape newlines
+      .replace(/\r/g, '\\r')    // Escape carriage returns
+      .replace(/\t/g, '\\t');   // Escape tabs
+  }
+
   // State
   const state: CreationState & { anonymous: boolean; numShares: number } = {
     projectName: generateProjectName(),
@@ -780,9 +790,9 @@ declare const t: TranslationFunction;
       }
     } else {
       state.friends.forEach(f => {
-        yaml += `  - name: ${f.name}\n`;
+        yaml += `  - name: "${escapeYamlString(f.name)}"\n`;
         if (f.contact) {
-          yaml += `    contact: "${f.contact}"\n`;
+          yaml += `    contact: "${escapeYamlString(f.contact)}"\n`;
         }
       });
     }
