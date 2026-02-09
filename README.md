@@ -40,7 +40,7 @@ graph TB
 
 The key insight: **any 3 shares can reconstruct the key, but 2 shares reveal nothing**—not "very little," mathematically zero information.
 
-The threshold is up to you: 3-of-5 for distributing among trusted friends, 2-of-3 for a small circle, or even 2-of-2 for couples who want shared access to each other's digital lives.
+The threshold is up to you: 3-of-5 for distributing among trusted friends, 2-of-3 for a small circle, or even 2-of-2 for couples with shared private content that neither partner can access alone.
 
 ---
 
