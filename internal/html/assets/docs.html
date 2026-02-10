@@ -17,18 +17,18 @@
   <meta name="twitter:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <style>{{STYLES}}</style>
   <style>
-    /* Documentation page specific styles */
+    /* Documentation page layout */
     .docs-nav {
       background: white;
       padding: 1rem 2rem;
-      border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 1rem;
+      max-width: 1200px;
+      margin: 0 auto 0;
     }
 
     .docs-nav .logo {
@@ -52,6 +52,91 @@
       text-decoration: underline;
     }
 
+    /* Sidebar + main layout */
+    .docs-layout {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      gap: 2.5rem;
+    }
+
+    .docs-sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      padding: 1.5rem 0;
+      align-self: flex-start;
+    }
+
+    .docs-main {
+      flex: 1;
+      min-width: 0;
+      max-width: 800px;
+      padding: 1.5rem 0 2rem;
+    }
+
+    /* Sidebar TOC */
+    .toc {
+      padding: 0;
+      font-size: 0.875rem;
+    }
+
+    .toc h2 {
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc li {
+      margin-bottom: 0.125rem;
+    }
+
+    .toc a {
+      color: #495057;
+      text-decoration: none;
+      display: block;
+      padding: 0.25rem 0.75rem;
+      border-left: 2px solid transparent;
+      border-radius: 0 4px 4px 0;
+      transition: all 0.15s ease;
+    }
+
+    .toc a:hover {
+      color: #3498db;
+      background: #f0f7ff;
+    }
+
+    .toc a.active {
+      color: #3498db;
+      border-left-color: #3498db;
+      background: #f0f7ff;
+      font-weight: 500;
+    }
+
+    .toc .indent {
+      margin-left: 0;
+    }
+
+    .toc .indent a {
+      padding-left: 1.5rem;
+      font-size: 0.8125rem;
+    }
+
+    /* Header */
     .docs-header {
       text-align: center;
       margin-bottom: 2rem;
@@ -67,44 +152,7 @@
       color: #6c757d;
     }
 
-    .toc {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-
-    .toc h2 {
-      font-size: 1rem;
-      color: #6c757d;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1rem;
-    }
-
-    .toc ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .toc li {
-      margin-bottom: 0.5rem;
-    }
-
-    .toc a {
-      color: #3498db;
-      text-decoration: none;
-    }
-
-    .toc a:hover {
-      text-decoration: underline;
-    }
-
-    .toc .indent {
-      margin-left: 1.5rem;
-    }
-
+    /* Content sections */
     .doc-section {
       background: white;
       border-radius: 8px;
@@ -268,7 +316,59 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    @media (max-width: 600px) {
+    .docs-footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #6c757d;
+      font-size: 0.875rem;
+    }
+
+    .docs-footer a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .docs-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Mobile: sidebar becomes inline */
+    @media (max-width: 768px) {
+      .docs-layout {
+        flex-direction: column;
+        padding: 0 1rem;
+        gap: 0;
+      }
+
+      .docs-sidebar {
+        position: static;
+        width: 100%;
+        max-height: none;
+        overflow-y: visible;
+        padding: 0 0 1rem;
+      }
+
+      .toc {
+        background: white;
+        border-radius: 8px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+      }
+
+      .toc a {
+        border-left: none;
+        padding: 0.25rem 0;
+      }
+
+      .toc .indent a {
+        padding-left: 1rem;
+      }
+
+      .docs-main {
+        padding: 0 0 2rem;
+      }
+
       .step-guide {
         flex-direction: column;
       }
@@ -276,47 +376,51 @@
       .docs-nav {
         flex-direction: column;
         text-align: center;
+        margin: 0 1rem;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <nav class="docs-nav">
-      <a href="index.html" class="logo">🧠 ReMemory</a>
-      <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="maker.html">Create Bundles</a>
-        <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
-      </div>
-    </nav>
+  <nav class="docs-nav">
+    <a href="index.html" class="logo">🧠 ReMemory</a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="maker.html">Create Bundles</a>
+      <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
+    </div>
+  </nav>
 
-    <header class="docs-header">
-      <h1>🧠 ReMemory User Guide</h1>
-      <p>Learn how to create encrypted recovery bundles and recover your secrets</p>
-      <p style="font-size: 0.9rem; color: #6c757d; margin-top: 0.5rem;">
-        Prefer the command line? See the <a href="https://github.com/eljojo/rememory/blob/main/docs/guide.md">CLI guide</a>.
-      </p>
-    </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar">
+      <nav class="toc">
+        <h2>Contents</h2>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#creating">Creating Bundles</a></li>
+          <li class="indent"><a href="#step1">Step 1: Add Friends</a></li>
+          <li class="indent"><a href="#step2">Step 2: Add Files</a></li>
+          <li class="indent"><a href="#step3">Step 3: Generate Bundles</a></li>
+          <li class="indent"><a href="#distributing">Distributing</a></li>
+          <li><a href="#recovering">Recovering Files</a></li>
+          <li class="indent"><a href="#bundle-contents">What Friends Receive</a></li>
+          <li class="indent"><a href="#recovery-bundle">Path A: Bundle ZIP</a></li>
+          <li class="indent"><a href="#recovery-pdf">Path B: Printed PDF</a></li>
+          <li><a href="#best-practices">Best Practices</a></li>
+          <li><a href="#cli">CLI Alternative</a></li>
+          <li><a href="#anonymous">Anonymous Mode</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-    <nav class="toc">
-      <h2>Contents</h2>
-      <ul>
-        <li><a href="#overview">Overview</a></li>
-        <li><a href="#creating">Creating Bundles</a></li>
-        <li class="indent"><a href="#step1">Step 1: Add Friends</a></li>
-        <li class="indent"><a href="#step2">Step 2: Add Files</a></li>
-        <li class="indent"><a href="#step3">Step 3: Generate Bundles</a></li>
-        <li class="indent"><a href="#distributing">Distributing to Friends</a></li>
-        <li><a href="#recovering">Recovering Files</a></li>
-        <li class="indent"><a href="#bundle-contents">What Friends Receive</a></li>
-        <li class="indent"><a href="#recovery-bundle">Path A: I Have the Bundle ZIP</a></li>
-        <li class="indent"><a href="#recovery-pdf">Path B: I Have a Printed PDF</a></li>
-        <li><a href="#best-practices">Best Practices</a></li>
-        <li><a href="#cli">CLI Alternative</a></li>
-        <li><a href="#anonymous">Advanced: Anonymous Mode</a></li>
-      </ul>
-    </nav>
+    <div class="docs-main">
+      <header class="docs-header">
+        <h1>🧠 ReMemory User Guide</h1>
+        <p>Learn how to create encrypted recovery bundles and recover your secrets</p>
+        <p style="font-size: 0.9rem; color: #6c757d; margin-top: 0.5rem;">
+          Prefer the command line? See the <a href="https://github.com/eljojo/rememory/blob/main/docs/guide.md">CLI guide</a>.
+        </p>
+      </header>
 
     <section id="overview" class="doc-section">
       <h2>Overview</h2>
@@ -685,15 +789,50 @@
         You'll need to coordinate through other means.
       </div>
     </section>
-  </div>
 
-  <footer>
-    <p>ReMemory {{VERSION}}</p>
-    <p>
-      <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
-      <a href="{{GITHUB_URL}}" target="_blank">Download CLI</a> ·
-      <a href="index.html">Home</a>
-    </p>
-  </footer>
+    <footer class="docs-footer">
+      <p>ReMemory {{VERSION}}</p>
+      <p>
+        <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
+        <a href="{{GITHUB_URL}}" target="_blank">Download CLI</a> ·
+        <a href="index.html">Home</a>
+      </p>
+    </footer>
+    </div><!-- .docs-main -->
+  </div><!-- .docs-layout -->
+
+  <script>
+    // Scroll spy: highlight current section in sidebar TOC
+    (function() {
+      var links = document.querySelectorAll('.toc a');
+      var sections = [];
+      links.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+
+      var ticking = false;
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(function() {
+          var scrollY = window.scrollY + 80;
+          var current = null;
+          for (var i = 0; i < sections.length; i++) {
+            if (sections[i].el.offsetTop <= scrollY) {
+              current = sections[i];
+            }
+          }
+          links.forEach(function(l) { l.classList.remove('active'); });
+          if (current) current.link.classList.add('active');
+          ticking = false;
+        });
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
 </body>
 </html>
