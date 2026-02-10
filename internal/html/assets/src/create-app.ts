@@ -351,7 +351,8 @@ declare const t: TranslationFunction;
       for (let k = 2; k <= n; k++) {
         const option = document.createElement('option');
         option.value = String(k);
-        option.textContent = `${k} of ${n}`;
+        option.textContent = t('threshold_option', k, n);
+        option.dataset.i18n = 'threshold_option';
         elements.thresholdSelect.appendChild(option);
       }
 
