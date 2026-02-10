@@ -23,6 +23,7 @@ type ShareInfo struct {
 	Created   string // RFC3339 formatted
 	Checksum  string
 	DataB64   string // Base64 encoded share data for transport
+	Compact   string // Compact-encoded share string (e.g. RM1:2:5:3:BASE64:CHECK)
 }
 
 // ShareData is minimal data needed for combining.
@@ -45,6 +46,21 @@ func parseShare(content string) (*ShareInfo, error) {
 		return nil, err
 	}
 
+	return shareToInfo(share), nil
+}
+
+// parseCompactShare parses a compact-encoded share string.
+func parseCompactShare(compact string) (*ShareInfo, error) {
+	share, err := core.ParseCompact(compact)
+	if err != nil {
+		return nil, err
+	}
+
+	return shareToInfo(share), nil
+}
+
+// shareToInfo converts a core.Share to a ShareInfo for JS interop.
+func shareToInfo(share *core.Share) *ShareInfo {
 	return &ShareInfo{
 		Version:   share.Version,
 		Index:     share.Index,
@@ -54,7 +70,8 @@ func parseShare(content string) (*ShareInfo, error) {
 		Created:   share.Created.Format("2006-01-02T15:04:05Z07:00"),
 		Checksum:  share.Checksum,
 		DataB64:   base64.StdEncoding.EncodeToString(share.Data),
-	}, nil
+		Compact:   share.CompactEncode(),
+	}
 }
 
 // combineShares combines multiple shares to recover the passphrase.

@@ -53,6 +53,7 @@ jobs:
           ./rememory html index > _site/index.html
           ./rememory html create > _site/maker.html
           ./rememory html docs > _site/docs.html
+          ./rememory html recover > _site/recover.html
           cp docs/screenshots/* _site/screenshots/ 2>/dev/null || true
 
       - name: Setup Pages

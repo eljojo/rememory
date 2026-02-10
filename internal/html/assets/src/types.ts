@@ -11,6 +11,7 @@ export interface ParsedShare {
   total: number;
   holder?: string;
   dataB64: string;
+  compact?: string;   // Compact-encoded string (e.g. RM1:2:5:3:BASE64:CHECK)
   isHolder?: boolean;  // True if this is the current user's share
 }
 
@@ -89,14 +90,13 @@ export interface ExtractResult {
 
 export interface FriendInfo {
   name: string;
-  email?: string;
-  phone?: string;
+  contact?: string;
+  shareIndex: number;  // 1-based share index for this friend
 }
 
 export interface FriendInput {
   name: string;
-  email: string;
-  phone?: string;
+  contact?: string;
 }
 
 export interface ProjectConfig {
@@ -186,6 +186,7 @@ declare global {
     rememoryDecryptManifest(manifest: Uint8Array, passphrase: string): DecryptResult;
     rememoryExtractTarGz(data: Uint8Array): ExtractResult;
     rememoryExtractBundle(zipData: Uint8Array): BundleExtractResult;
+    rememoryParseCompactShare(compact: string): ShareParseResult;
 
     // Creation functions (create.wasm)
     rememoryCreateBundles(config: BundleConfig): BundleCreateResult;
@@ -246,3 +247,22 @@ export interface ToastManager {
 // ============================================
 
 export type TranslationFunction = (key: string, ...args: (string | number)[]) => string;
+
+// ============================================
+// BarcodeDetector API (not in standard TS lib)
+// ============================================
+
+export interface DetectedBarcode {
+  rawValue: string;
+  format: string;
+  boundingBox: DOMRectReadOnly;
+  cornerPoints: Array<{ x: number; y: number }>;
+}
+
+declare global {
+  class BarcodeDetector {
+    constructor(options?: { formats: string[] });
+    detect(source: HTMLVideoElement | HTMLCanvasElement | ImageBitmap | ImageData): Promise<DetectedBarcode[]>;
+    static getSupportedFormats(): Promise<string[]>;
+  }
+}

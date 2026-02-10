@@ -54,6 +54,10 @@ declare const t: TranslationFunction;
     contactList: HTMLElement | null;
     step1Card: HTMLElement | null;
     step2Card: HTMLElement | null;
+    scanQrBtn: HTMLButtonElement | null;
+    qrScannerModal: HTMLElement | null;
+    qrVideo: HTMLVideoElement | null;
+    qrScannerClose: HTMLButtonElement | null;
   }
 
   // DOM elements
@@ -80,7 +84,11 @@ declare const t: TranslationFunction;
     contactListSection: document.getElementById('contact-list-section'),
     contactList: document.getElementById('contact-list'),
     step1Card: null,
-    step2Card: null
+    step2Card: null,
+    scanQrBtn: document.getElementById('scan-qr-btn') as HTMLButtonElement | null,
+    qrScannerModal: document.getElementById('qr-scanner-modal'),
+    qrVideo: document.getElementById('qr-video') as HTMLVideoElement | null,
+    qrScannerClose: document.getElementById('qr-scanner-close') as HTMLButtonElement | null
   };
 
   // Personalization data (embedded in HTML)
@@ -89,6 +97,9 @@ declare const t: TranslationFunction;
 
   // Share regex to extract from README.txt content
   const shareRegex = /-----BEGIN REMEMORY SHARE-----([\s\S]*?)-----END REMEMORY SHARE-----/;
+
+  // Compact share format regex: RM{version}:{index}:{total}:{threshold}:{base64url}:{check}
+  const compactShareRegex = /^RM\d+:\d+:\d+:\d+:[A-Za-z0-9_-]+:[0-9a-f]{4}$/;
 
   // ============================================
   // Error Handlers
@@ -213,6 +224,7 @@ declare const t: TranslationFunction;
     setupDropZones();
     setupButtons();
     setupPaste();
+    setupScanner();
 
     // Render contact list immediately (doesn't need WASM)
     if (personalization?.otherFriends && personalization.otherFriends.length > 0) {
@@ -226,6 +238,9 @@ declare const t: TranslationFunction;
     if (personalization) {
       loadPersonalizationData();
     }
+
+    // Check URL fragment for compact share (e.g. #share=RM1:2:5:3:BASE64:CHECK)
+    loadShareFromFragment();
   }
 
   // ============================================
@@ -244,12 +259,48 @@ declare const t: TranslationFunction;
         state.threshold = share.threshold;
         state.total = share.total;
         state.shares.push(share);
+
         updateSharesUI();
         updateContactList();
       }
     }
 
     checkRecoverReady();
+  }
+
+  // ============================================
+  // URL Fragment Share Loading
+  // ============================================
+
+  function loadShareFromFragment(): void {
+    if (!state.wasmReady) return;
+
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#share=')) return;
+
+    const compact = decodeURIComponent(hash.slice('#share='.length));
+    if (!compactShareRegex.test(compact)) return;
+
+    const result = window.rememoryParseCompactShare(compact);
+    if (result.error || !result.share) return;
+
+    const share = result.share;
+
+    if (state.shares.some(s => s.index === share.index)) return;
+
+    if (state.shares.length === 0) {
+      state.threshold = share.threshold;
+      state.total = share.total;
+    }
+
+    state.shares.push(share);
+    updateSharesUI();
+    checkRecoverReady();
+
+    // Clear the fragment from the URL bar to avoid re-importing on reload
+    if (window.history?.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
   }
 
   function renderContactList(): void {
@@ -261,15 +312,11 @@ declare const t: TranslationFunction;
       const item = document.createElement('div');
       item.className = 'contact-item';
       item.dataset.name = friend.name;
+      if (friend.shareIndex) {
+        item.dataset.shareIndex = String(friend.shareIndex);
+      }
 
-      let contactInfo = '';
-      if (friend.email) {
-        contactInfo += `<a href="mailto:${escapeHtml(friend.email)}">${escapeHtml(friend.email)}</a>`;
-      }
-      if (friend.phone) {
-        if (contactInfo) contactInfo += ' &bull; ';
-        contactInfo += escapeHtml(friend.phone);
-      }
+      const contactInfo = friend.contact ? escapeHtml(friend.contact) : '';
 
       item.innerHTML = `
         <div class="checkbox"></div>
@@ -286,12 +333,16 @@ declare const t: TranslationFunction;
   function updateContactList(): void {
     if (!personalization?.otherFriends || !elements.contactList) return;
 
-    const collectedNames = new Set(state.shares.map(s => s.holder?.toLowerCase()));
+    const collectedNames = new Set(
+      state.shares.map(s => s.holder?.toLowerCase()).filter(Boolean)
+    );
+    const collectedIndices = new Set(state.shares.map(s => s.index));
 
     elements.contactList.querySelectorAll('.contact-item').forEach(item => {
       const el = item as HTMLElement;
       const name = el.dataset.name?.toLowerCase();
-      const isCollected = name ? collectedNames.has(name) : false;
+      const shareIndex = el.dataset.shareIndex ? parseInt(el.dataset.shareIndex, 10) : 0;
+      const isCollected = (name ? collectedNames.has(name) : false) || collectedIndices.has(shareIndex);
       el.classList.toggle('collected', isCollected);
       const checkbox = el.querySelector('.checkbox');
       if (checkbox) {
@@ -468,7 +519,36 @@ declare const t: TranslationFunction;
       clearInlineError(elements.shareDropZone);
     }
 
-    if (!shareRegex.test(content)) {
+    // Try compact format first, then PEM format
+    let share: import('./types').ParsedShare | undefined;
+
+    if (compactShareRegex.test(content.trim())) {
+      const result = window.rememoryParseCompactShare(content.trim());
+      if (result.error || !result.share) {
+        showError(
+          result.error || t('error_invalid_share_message', t('pasted_content')),
+          {
+            title: t('error_invalid_share_title'),
+            guidance: t('error_invalid_share_guidance')
+          }
+        );
+        return;
+      }
+      share = result.share;
+    } else if (shareRegex.test(content)) {
+      const result = window.rememoryParseShare(content);
+      if (result.error || !result.share) {
+        showError(
+          t('error_invalid_share_message', t('pasted_content')),
+          {
+            title: t('error_invalid_share_title'),
+            guidance: t('error_invalid_share_guidance')
+          }
+        );
+        return;
+      }
+      share = result.share;
+    } else {
       showError(
         t('error_paste_no_share_message'),
         {
@@ -478,20 +558,6 @@ declare const t: TranslationFunction;
       );
       return;
     }
-
-    const result = window.rememoryParseShare(content);
-    if (result.error || !result.share) {
-      showError(
-        t('error_invalid_share_message', t('pasted_content')),
-        {
-          title: t('error_invalid_share_title'),
-          guidance: t('error_invalid_share_guidance')
-        }
-      );
-      return;
-    }
-
-    const share = result.share;
 
     if (state.shares.some(s => s.index === share.index)) {
       errorHandlers.duplicateShare(share.index);
@@ -506,6 +572,121 @@ declare const t: TranslationFunction;
     state.shares.push(share);
     updateSharesUI();
     checkRecoverReady();
+  }
+
+  // ============================================
+  // QR Code Scanner (BarcodeDetector API)
+  // ============================================
+
+  let scannerStream: MediaStream | null = null;
+  let scannerAnimFrame: number | null = null;
+
+  function setupScanner(): void {
+    // Only show the button if BarcodeDetector is available
+    if (!('BarcodeDetector' in window)) return;
+
+    elements.scanQrBtn?.classList.remove('hidden');
+    elements.scanQrBtn?.addEventListener('click', () => {
+      if (!state.wasmReady) {
+        toast.warning(t('error_not_ready_title'), t('error_not_ready_message'), t('error_not_ready_guidance'));
+        return;
+      }
+      openScanner();
+    });
+
+    elements.qrScannerClose?.addEventListener('click', closeScanner);
+  }
+
+  async function openScanner(): Promise<void> {
+    elements.qrScannerModal?.classList.remove('hidden');
+
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+    } catch (_err) {
+      toast.warning(t('scan_camera_error'), t('scan_camera_error'));
+      closeScanner();
+      return;
+    }
+
+    if (elements.qrVideo) {
+      elements.qrVideo.srcObject = scannerStream;
+    }
+
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+    function scanLoop(): void {
+      if (!scannerStream || !elements.qrVideo) return;
+
+      // Wait until video is playing and has dimensions
+      if (elements.qrVideo.readyState < 2 || elements.qrVideo.videoWidth === 0) {
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+        return;
+      }
+
+      detector.detect(elements.qrVideo).then(barcodes => {
+        if (!scannerStream) return; // Scanner was closed
+
+        for (const barcode of barcodes) {
+          const value = barcode.rawValue.trim();
+          // Check for compact share format directly or URL with fragment
+          let compact = '';
+          if (compactShareRegex.test(value)) {
+            compact = value;
+          } else {
+            // Check for URL with #share= fragment
+            try {
+              const url = new URL(value);
+              const hash = url.hash;
+              if (hash && hash.startsWith('#share=')) {
+                const decoded = decodeURIComponent(hash.slice('#share='.length));
+                if (compactShareRegex.test(decoded)) {
+                  compact = decoded;
+                }
+              }
+            } catch {
+              // Not a URL, ignore
+            }
+          }
+
+          if (compact) {
+            handleScannedShare(compact);
+            return;
+          }
+        }
+
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+      }).catch(() => {
+        // Detection error, keep trying
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+      });
+    }
+
+    scannerAnimFrame = requestAnimationFrame(scanLoop);
+  }
+
+  async function handleScannedShare(compact: string): Promise<void> {
+    closeScanner();
+    await parseAndAddShareFromPaste(compact);
+  }
+
+  function closeScanner(): void {
+    if (scannerAnimFrame !== null) {
+      cancelAnimationFrame(scannerAnimFrame);
+      scannerAnimFrame = null;
+    }
+
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(track => track.stop());
+      scannerStream = null;
+    }
+
+    if (elements.qrVideo) {
+      elements.qrVideo.srcObject = null;
+    }
+
+    elements.qrScannerModal?.classList.add('hidden');
   }
 
   // ============================================
@@ -637,7 +818,6 @@ declare const t: TranslationFunction;
         <span class="icon">&#9989;</span>
         <div class="details">
           <div class="name">${escapeHtml(share.holder || 'Share ' + share.index)}${holderLabel}</div>
-          <div class="meta">${t('share_index', share.index, share.total)}</div>
         </div>
         ${showRemove ? `<button class="remove" data-idx="${idx}" title="${t('remove')}">&times;</button>` : ''}
       `;
@@ -663,13 +843,18 @@ declare const t: TranslationFunction;
     // Update threshold info
     if (state.threshold > 0 && elements.thresholdInfo) {
       const needed = Math.max(0, state.threshold - state.shares.length);
+      const needLabel = needed === 1 ? t('need_more_one') : t('need_more', needed);
       elements.thresholdInfo.innerHTML = needed > 0
-        ? `&#128274; ${t('need_more', needed)} (${t('shares_of', state.shares.length, state.threshold)})`
+        ? `&#128274; ${needLabel} (${t('shares_of', state.shares.length, state.threshold)})`
         : `&#9989; ${t('ready')} (${t('shares_of', state.shares.length, state.threshold)})`;
       elements.thresholdInfo.className = 'threshold-info' + (needed === 0 ? ' ready' : '');
       elements.thresholdInfo.classList.remove('hidden');
+
+      // Collapse step 1 content when threshold is met
+      elements.step1Card?.classList.toggle('threshold-met', needed === 0);
     } else {
       elements.thresholdInfo?.classList.add('hidden');
+      elements.step1Card?.classList.remove('threshold-met');
     }
 
     updateContactList();

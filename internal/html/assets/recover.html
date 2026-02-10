@@ -10,6 +10,21 @@
   <!-- Toast notifications container -->
   <div id="toast-container" class="toast-container" role="alert" aria-live="polite"></div>
 
+  <!-- QR Scanner modal -->
+  <div id="qr-scanner-modal" class="qr-scanner-modal hidden">
+    <div class="qr-scanner-header">
+      <span data-i18n="scan_title">Scan a QR code</span>
+      <button id="qr-scanner-close" class="qr-scanner-close">&times;</button>
+    </div>
+    <div class="qr-scanner-body">
+      <video id="qr-video" autoplay playsinline></video>
+      <div class="qr-scanner-overlay"></div>
+    </div>
+    <div class="qr-scanner-hint">
+      <span data-i18n="scan_hint">Point your camera at a QR code from a friend's PDF</span>
+    </div>
+  </div>
+
   <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
@@ -23,6 +38,7 @@
         <button data-lang="es">ES</button>
         <button data-lang="de">DE</button>
         <button data-lang="fr">FR</button>
+        <button data-lang="sl">SL</button>
       </div>
       <h1 data-i18n="title">🧠 ReMemory Recovery</h1>
       <p data-i18n="subtitle">Recover your encrypted files using Shamir's Secret Sharing</p>
@@ -40,6 +56,9 @@
       <div class="paste-section">
         <button id="paste-toggle-btn" class="btn btn-secondary" type="button">
           <span>📋</span> <span data-i18n="paste_btn">Paste a share</span>
+        </button>
+        <button id="scan-qr-btn" class="btn btn-secondary hidden" type="button">
+          <span>📷</span> <span data-i18n="scan_btn">Scan QR code</span>
         </button>
         <div id="paste-area" class="paste-area hidden">
           <textarea id="paste-input" placeholder="Paste share text here..." data-i18n-placeholder="paste_placeholder" rows="6"></textarea>
@@ -128,10 +147,10 @@
         works_offline: "Works fully offline",
         need_help: "Need help?",
         download_cli: "Download CLI tool from GitHub",
-        need_more: "Waiting for {0} more piece(s)",
+        need_more: "Waiting for {0} more pieces",
+        need_more_one: "Waiting for the last piece",
         ready: "Everything's ready",
         shares_of: "{0} of {1} pieces",
-        share_index: "Piece {0} of {1}",
         remove: "Remove",
         loaded: "loaded",
         manifest_loaded_bundle: "loaded from bundle",
@@ -151,10 +170,12 @@
         your_share_loaded: "Your piece is already here",
         contact_list: "Contact the others",
         contact_list_hint: "Reach out to these friends to gather their pieces",
-        shares_remaining: "{0} more piece(s) needed",
-        email_label: "Email",
-        phone_label: "Phone",
+        contact_label: "Contact",
         pasted_content: "pasted text",
+        scan_btn: "Scan QR code",
+        scan_title: "Scan a QR code",
+        scan_hint: "Point your camera at a QR code from a friend's PDF",
+        scan_camera_error: "Could not access the camera",
         // Error titles
         error_title: "Something went wrong",
         error_wasm_title: "Recovery tool failed to load",
@@ -218,10 +239,10 @@
         works_offline: "Funciona completamente sin internet",
         need_help: "¿Necesitas ayuda?",
         download_cli: "Descarga la herramienta CLI desde GitHub",
-        need_more: "Faltan {0} parte(s)",
+        need_more: "Faltan {0} partes",
+        need_more_one: "Falta la última parte",
         ready: "Todo está listo",
         shares_of: "{0} de {1} partes",
-        share_index: "Parte {0} de {1}",
         remove: "Eliminar",
         loaded: "cargado",
         manifest_loaded_bundle: "cargado del paquete",
@@ -241,10 +262,12 @@
         your_share_loaded: "Tu parte ya está cargada",
         contact_list: "Contactar a los demás",
         contact_list_hint: "Habla con estos amigos para reunir sus partes",
-        shares_remaining: "Faltan {0} parte(s)",
-        email_label: "Correo",
-        phone_label: "Teléfono",
+        contact_label: "Contacto",
         pasted_content: "texto pegado",
+        scan_btn: "Escanear QR",
+        scan_title: "Escanear un código QR",
+        scan_hint: "Apunta tu cámara al código QR del PDF de tu amigo",
+        scan_camera_error: "No se pudo acceder a la cámara",
         error_title: "Algo salió mal",
         error_wasm_title: "Error al cargar la herramienta",
         error_wasm_message: "No se pudo cargar el módulo de recuperación en tu navegador.",
@@ -306,10 +329,10 @@
         works_offline: "Funktioniert komplett offline",
         need_help: "Brauchst du Hilfe?",
         download_cli: "CLI-Tool von GitHub herunterladen",
-        need_more: "Es fehlen noch {0} Teil(e)",
+        need_more: "Es fehlen noch {0} Teile",
+        need_more_one: "Es fehlt noch das letzte Teil",
         ready: "Alles ist bereit",
         shares_of: "{0} von {1} Teilen",
-        share_index: "Teil {0} von {1}",
         remove: "Entfernen",
         loaded: "geladen",
         manifest_loaded_bundle: "aus Bundle geladen",
@@ -329,10 +352,12 @@
         your_share_loaded: "Dein Teil ist bereits geladen",
         contact_list: "Die anderen kontaktieren",
         contact_list_hint: "Bitte diese Freunde um ihre Teile",
-        shares_remaining: "Noch {0} Teil(e) nötig",
-        email_label: "E-Mail",
-        phone_label: "Telefon",
+        contact_label: "Kontakt",
         pasted_content: "eingefügter Text",
+        scan_btn: "QR-Code scannen",
+        scan_title: "QR-Code scannen",
+        scan_hint: "Richte deine Kamera auf den QR-Code aus dem PDF deines Freundes",
+        scan_camera_error: "Kein Zugriff auf die Kamera",
         error_title: "Etwas ist schiefgelaufen",
         error_wasm_title: "Wiederherstellungstool konnte nicht geladen werden",
         error_wasm_message: "Das Wiederherstellungsmodul konnte in deinem Browser nicht geladen werden.",
@@ -394,10 +419,10 @@
         works_offline: "Fonctionne entièrement hors ligne",
         need_help: "Besoin d'aide ?",
         download_cli: "Télécharger l'outil CLI depuis GitHub",
-        need_more: "Il manque encore {0} part(s)",
+        need_more: "Il manque encore {0} parts",
+        need_more_one: "Il manque la dernière part",
         ready: "Tout est prêt",
         shares_of: "{0} sur {1} parts",
-        share_index: "Part {0} sur {1}",
         remove: "Supprimer",
         loaded: "chargé",
         manifest_loaded_bundle: "chargé depuis le bundle",
@@ -417,10 +442,12 @@
         your_share_loaded: "Votre part est déjà chargée",
         contact_list: "Contacter les autres",
         contact_list_hint: "Contactez ces amis pour réunir leurs parts",
-        shares_remaining: "Il manque encore {0} part(s)",
-        email_label: "E-mail",
-        phone_label: "Téléphone",
+        contact_label: "Contact",
         pasted_content: "texte collé",
+        scan_btn: "Scanner QR",
+        scan_title: "Scanner un code QR",
+        scan_hint: "Dirigez votre caméra vers le QR code du PDF de votre ami",
+        scan_camera_error: "Impossible d'accéder à la caméra",
         error_title: "Une erreur s'est produite",
         error_wasm_title: "Échec du chargement de l'outil",
         error_wasm_message: "Le module de récupération n'a pas pu être chargé dans votre navigateur.",
@@ -463,6 +490,97 @@
         action_use_cli: "Utiliser l'outil CLI",
         action_try_again: "Réessayer",
         action_try_different_shares: "Essayer d'autres parts"
+      },
+      sl: {
+        loading: "Pripravljenje orodja za obnovitev ...",
+        title: "🧠 ReMemory Recovery",
+        subtitle: "Orodje narejeno za prijatelje, da se združijo v težkih časih ...",
+        step1_title: "Zberite svežnje",
+        step1_drop: "Spustite datoteke README.txt tukaj ali kliknite za izbiro datotek iz naprave",
+        step1_hint: "Vsaka datoteka vsebuje sveženj enega prijatelja",
+        step2_title: "Dodajte šifriran arhiv",
+        step2_drop: "Spustite MANIFEST.age tukaj ali kliknite za izbiro datotek iz naprave",
+        step2_hint: "To je zaklenjen arhiv znotraj katere so spomini",
+        step3_title: "Obnovite datoteke",
+        decrypt_btn: "Odkleni & Obnovi",
+        download_btn: "Prenesi arhiv (.tar.gz)",
+        no_manifest: "Arhiv še ni dodan",
+        works_offline: "Deluje popolnoma brez povezave",
+        need_help: "Potrebujete pomoč?",
+        download_cli: "Prenesite CLI orodje z GitHub",
+        need_more: "Potrebno je dodati še {0} delov",
+        need_more_one: "Potrebno je dodati še zadnji del",
+        ready: "Vse je pripravljeno",
+        shares_of: "{0} od {1} delov",
+        remove: "Odstrani",
+        loaded: "naloženo",
+        manifest_loaded_bundle: "naloženo iz svežnja",
+        combining: "Sestavljanje svežnjev skupaj ...",
+        decrypting: "Odklepanje arhiva ...",
+        reading: "Odpiranje arhiva ...",
+        complete: "Končano. Obnovljenih datotek: {0}.",
+        error: "Napaka: {0}",
+        duplicate: "Ta sveženj je že tukaj (indeks {0})",
+        no_share: "Sveženj ni bil najden v {0}",
+        invalid_share: "Ta sveženj je videti neveljaven v {0}: {1}",
+        paste_btn: "Prilepi sveženj",
+        paste_placeholder: "Prilepite besedilo svežnja tukaj ...",
+        paste_submit: "Dodaj sveženj",
+        paste_no_share: "V prilepljenem besedilu ni bilo najdenega svežnja",
+        your_share: "Vaš sveženj",
+        your_share_loaded: "Vaš sveženj je že tukaj",
+        contact_list: "Kontaktirajte druge",
+        contact_list_hint: "Obrnite se na te prijatelje, da zberete njihove svežnje",
+        contact_label: "Kontakt",
+        pasted_content: "prilepljeno besedilo",
+        scan_btn: "Skeniraj QR kodo",
+        scan_title: "Skeniraj QR kodo",
+        scan_hint: "Usmerite kamero na QR kodo s prijateljevega PDF-ja",
+        scan_camera_error: "Ni mogoče dostopati do kamere",
+        // Error titles
+        error_title: "Nekaj je šlo narobe",
+        error_wasm_title: "Orodje za obnovitev ni uspelo naložiti",
+        error_wasm_message: "Modula za obnovitev ni bilo mogoče naložiti v vašem brskalniku.",
+        error_wasm_guidance: "Poskusite osvežiti stran. Če se težava ponavlja, poskusite z drugim brskalnikom (priporočamo Chrome ali Firefox) ali uporabite orodje CLI.",
+        error_not_ready_title: "Še ni pripravljeno",
+        error_not_ready_message: "Orodje za obnovitev se še nalaga.",
+        error_not_ready_guidance: "Prosim, počakajte trenutek in poskusite znova.",
+        error_invalid_share_title: "Neveljavna oblika svežnja",
+        error_invalid_share_message: "Datoteka \"{0}\" ne vsebuje veljavnega svežnja.",
+        error_invalid_share_guidance: "Poskrbite, da uporabljate datoteko README.txt iz svežnja. Vsebovati mora besedilo med oznakama 'BEGIN REMEMORY SHARE' in 'END REMEMORY SHARE'.",
+        error_no_share_title: "Sveženj ni bil najden",
+        error_no_share_message: "Datoteka \"{0}\" ne vsebuje svežnja za obnovitev.",
+        error_no_share_guidance: "Vsak prijatelj je prejel sveženj z datoteko README.txt, ki vsebuje njihov sveženj. Prepričajte se, da nalagate pravilno datoteko.",
+        error_duplicate_title: "Podvojen sveženj",
+        error_duplicate_message: "Sveženj #{0} je že dodan.",
+        error_duplicate_guidance: "Vsak sveženj lahko uporabite samo enkrat. Poskusite dodati sveženj drugega prijatelja.",
+        error_file_read_title: "Ni bilo mogoče prebrati datoteke",
+        error_file_read_message: "Ni bilo mogoče prebrati datoteke \"{0}\".",
+        error_file_read_guidance: "Datoteka je morda poškodovana ali nedostopna. Poskusite jo znova prenesti ali prosite prijatelja, naj vam pošlje sveženj še enkrat.",
+        error_bundle_extract_title: "Neveljaven sveženj",
+        error_bundle_extract_message: "Ni bilo mogoče izvleči svežnja \"{0}\".",
+        error_bundle_extract_guidance: "Ta ZIP datoteka ne izgleda kot veljaven ReMemory sveženj. Prepričajte se, da uporabljate izvirno datoteko bundle.zip, ki je bila razdeljena.",
+        error_wrong_manifest_title: "Napačna vrsta datoteke",
+        error_wrong_manifest_message: "Datoteka \"{0}\" ni šifriran arhiv.",
+        error_wrong_manifest_guidance: "Šifriran arhiv mora biti poimenovan MANIFEST.age. Najdete ga lahko v katerem koli od svežnjev, ki so bili razdeljeni prijateljem.",
+        error_paste_no_share_title: "V prilepljenem besedilu ni bilo najdenega svežnja",
+        error_paste_no_share_message: "Prilepljeno besedilo ne vsebuje veljavnega svežnja za obnovitev.",
+        error_paste_no_share_guidance: "Kopirajte celotno vsebino iz datoteke README.txt vašega prijatelja, vključno z oznakami 'BEGIN REMEMORY SHARE' in 'END REMEMORY SHARE'.",
+        error_decrypt_title: "Dešifriranje ni uspelo",
+        error_decrypt_message: "Arhiva ni bilo mogoče dešifrirati z danimi svežnji.",
+        error_decrypt_guidance: "To običajno pomeni, da svežnji ne ustrezajo temu arhivu ali pa da ni bilo zagotovljenih dovolj veljavnih svežnjev. Prepričajte se, da so vsi svežnji iz istega nabora za obnovitev.",
+        error_decrypt_status: "Dešifriranje ni uspelo. Preverite svoje svežnje in poskusite znova.",
+        error_extract_title: "Izvleček arhiva ni uspel",
+        error_extract_message: "Dešifriranega arhiva ni bilo mogoče odpreti.",
+        error_extract_guidance: "Arhiv je morda poškodovan. Če imate varnostno kopijo izvirne datoteke MANIFEST.age, poskusite uporabiti to.",
+        error_extract_status: "Izvleček ni uspel. Arhiv je morda poškodovan.",
+        error_recovery_title: "Obnovitev ni uspela",
+        error_recovery_guidance: "Preverite, ali imate pravilne svežnje in pravo datoteko MANIFEST.age. Po potrebi lahko poskusite znova z različnimi svežnji.",
+        // Action buttons
+        action_reload: "Osveži stran",
+        action_use_cli: "Uporabi CLI orodje",
+        action_try_again: "Poskusi znova",
+        action_try_different_shares: "Poskusi različne svežnje"
       }
     };
 
@@ -505,7 +623,7 @@
     (function() {
       const saved = localStorage.getItem('rememory-lang');
       const browserLang = navigator.language.split('-')[0];
-      currentLang = saved || (['es', 'de', 'fr'].includes(browserLang) ? browserLang : 'en');
+      currentLang = saved || (['es', 'de', 'fr', 'sl'].includes(browserLang) ? browserLang : 'en');
     })();
 
     // Initialize language toggle buttons after DOM is ready

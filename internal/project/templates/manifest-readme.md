@@ -104,3 +104,9 @@ Any messages you want to leave.
 - Anything that should go through a lawyer instead
 
 **Remember:** This manifest will be encrypted and split among your trusted friends. Only add information you would trust them with in an emergency.
+
+---
+
+## Need help figuring out what to include?
+
+Check out [potatoqualitee/eol-dr](https://github.com/potatoqualitee/eol-dr) — a comprehensive end-of-life [checklist](https://github.com/potatoqualitee/eol-dr/blob/main/checklist.md) covering accounts, finances, subscriptions, and devices. It's a great starting point for thinking through what your loved ones might need.

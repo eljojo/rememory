@@ -26,11 +26,11 @@ func TestFullWorkflow(t *testing.T) {
 
 	// Step 1: Create project (simulating 'rememory init')
 	friends := []project.Friend{
-		{Name: "Alice", Email: "alice@example.com"},
-		{Name: "Bob", Email: "bob@example.com"},
-		{Name: "Carol", Email: "carol@example.com"},
-		{Name: "David", Email: "david@example.com"},
-		{Name: "Eve", Email: "eve@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
+		{Name: "Carol", Contact: "carol@example.com"},
+		{Name: "David", Contact: "david@example.com"},
+		{Name: "Eve", Contact: "eve@example.com"},
 	}
 	threshold := 3
 
@@ -325,9 +325,9 @@ func TestBundleGeneration(t *testing.T) {
 	projectDir := filepath.Join(baseDir, "test-bundle-project")
 
 	friends := []project.Friend{
-		{Name: "Alice", Email: "alice@example.com", Phone: "555-1111"},
-		{Name: "Bob", Email: "bob@example.com"},
-		{Name: "Carol", Email: "carol@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
+		{Name: "Carol", Contact: "carol@example.com"},
 	}
 	threshold := 2
 
@@ -523,11 +523,11 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	// Verify README contains other friends (not this one)
 	for _, f := range allFriends {
 		if f.Name == friend.Name {
-			// Should NOT contain own email in contacts section
-			// (but will contain name in header, so just check email)
+			// Should NOT contain own contact in contacts section
+			// (but will contain name in header, so just check contact)
 			continue
 		}
-		if !strings.Contains(readmeContent, f.Email) {
+		if f.Contact != "" && !strings.Contains(readmeContent, f.Contact) {
 			t.Errorf("README missing contact for %s", f.Name)
 		}
 	}
@@ -562,9 +562,9 @@ func TestBundleRecovery(t *testing.T) {
 	projectDir := filepath.Join(baseDir, "test-recovery-project")
 
 	friends := []project.Friend{
-		{Name: "Alice", Email: "alice@example.com"},
-		{Name: "Bob", Email: "bob@example.com"},
-		{Name: "Carol", Email: "carol@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
+		{Name: "Carol", Contact: "carol@example.com"},
 	}
 	threshold := 2
 

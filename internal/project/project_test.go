@@ -12,8 +12,8 @@ func TestNewAndLoad(t *testing.T) {
 	projectDir := filepath.Join(dir, "test-project")
 
 	friends := []Friend{
-		{Name: "Alice", Email: "alice@example.com", Phone: "555-1234"},
-		{Name: "Bob", Email: "bob@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
 	}
 
 	// Create new project
@@ -64,40 +64,47 @@ func TestValidate(t *testing.T) {
 				Name:      "test",
 				Threshold: 2,
 				Friends: []Friend{
-					{Name: "Alice", Email: "a@example.com"},
-					{Name: "Bob", Email: "b@example.com"},
+					{Name: "Alice", Contact: "a@example.com"},
+					{Name: "Bob", Contact: "b@example.com"},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid without contact",
+			project: Project{
+				Name:      "test",
+				Threshold: 2,
+				Friends: []Friend{
+					{Name: "Alice"},
+					{Name: "Bob"},
 				},
 			},
 			wantErr: false,
 		},
 		{
 			name:    "no name",
-			project: Project{Threshold: 2, Friends: []Friend{{Name: "A", Email: "a@x.com"}, {Name: "B", Email: "b@x.com"}}},
+			project: Project{Threshold: 2, Friends: []Friend{{Name: "A"}, {Name: "B"}}},
 			wantErr: true,
 		},
 		{
 			name:    "not enough friends",
-			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "A", Email: "a@x.com"}}},
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "A"}}},
 			wantErr: true,
 		},
 		{
 			name:    "threshold too low",
-			project: Project{Name: "test", Threshold: 1, Friends: []Friend{{Name: "A", Email: "a@x.com"}, {Name: "B", Email: "b@x.com"}}},
+			project: Project{Name: "test", Threshold: 1, Friends: []Friend{{Name: "A"}, {Name: "B"}}},
 			wantErr: true,
 		},
 		{
 			name:    "threshold too high",
-			project: Project{Name: "test", Threshold: 5, Friends: []Friend{{Name: "A", Email: "a@x.com"}, {Name: "B", Email: "b@x.com"}}},
+			project: Project{Name: "test", Threshold: 5, Friends: []Friend{{Name: "A"}, {Name: "B"}}},
 			wantErr: true,
 		},
 		{
 			name:    "friend missing name",
-			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Email: "a@x.com"}, {Name: "B", Email: "b@x.com"}}},
-			wantErr: true,
-		},
-		{
-			name:    "friend missing email",
-			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "A"}, {Name: "B", Email: "b@x.com"}}},
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Contact: "a@x.com"}, {Name: "B"}}},
 			wantErr: true,
 		},
 		{
@@ -196,8 +203,8 @@ func TestWriteManifestReadme(t *testing.T) {
 	data := TemplateData{
 		ProjectName: "test-project",
 		Friends: []Friend{
-			{Name: "Alice", Email: "alice@example.com"},
-			{Name: "Bob", Email: "bob@example.com"},
+			{Name: "Alice", Contact: "alice@example.com"},
+			{Name: "Bob", Contact: "bob@example.com"},
 		},
 		Threshold: 2,
 	}
@@ -270,7 +277,7 @@ func TestNewInvalidProject(t *testing.T) {
 	projectDir := filepath.Join(dir, "invalid")
 
 	// Invalid: only 1 friend
-	friends := []Friend{{Name: "Alice", Email: "a@x.com"}}
+	friends := []Friend{{Name: "Alice", Contact: "a@x.com"}}
 	_, err := New(projectDir, "test", 2, friends)
 	if err == nil {
 		t.Error("expected error for invalid project")
@@ -305,8 +312,8 @@ func TestNewAnonymous(t *testing.T) {
 		if f.Name != expected {
 			t.Errorf("friend %d name: got %q, want %q", i, f.Name, expected)
 		}
-		if f.Email != "" {
-			t.Errorf("friend %d should have no email", i)
+		if f.Contact != "" {
+			t.Errorf("friend %d should have no contact", i)
 		}
 	}
 }
@@ -339,8 +346,8 @@ func TestSaveAndReload(t *testing.T) {
 	projectDir := filepath.Join(dir, "test")
 
 	friends := []Friend{
-		{Name: "Alice", Email: "alice@example.com"},
-		{Name: "Bob", Email: "bob@example.com"},
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
 	}
 
 	p, err := New(projectDir, "test", 2, friends)

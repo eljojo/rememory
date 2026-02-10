@@ -3,10 +3,12 @@ package pdf
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/go-pdf/fpdf"
+	qrcode "github.com/skip2/go-qrcode"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
@@ -26,6 +28,7 @@ type ReadmeData struct {
 	RecoverChecksum  string
 	Created          time.Time
 	Anonymous        bool
+	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
 }
 
 // Font sizes
@@ -34,48 +37,64 @@ const (
 	headingSize = 12.0
 	bodySize    = 10.0
 	monoSize    = 8.0
+	smallMono   = 7.0
 )
+
+// QR code size in mm on the PDF page.
+const qrSizeMM = 70.0
+
+// QRContent returns the string that will be encoded in the QR code.
+// Returns "URL#share=COMPACT". If RecoveryURL is not set, defaults to the production URL.
+func (d ReadmeData) QRContent() string {
+	compact := d.Share.CompactEncode()
+	recoveryURL := d.RecoveryURL
+	if recoveryURL == "" {
+		recoveryURL = core.DefaultRecoveryURL
+	}
+	return recoveryURL + "#share=" + url.QueryEscape(compact)
+}
 
 // GenerateReadme creates the README.pdf content.
 func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(20, 20, 20)
 	pdf.SetAutoPageBreak(true, 20)
+
+	// Register embedded UTF-8 TrueType fonts (DejaVu Sans)
+	registerUTF8Fonts(pdf)
+
 	pdf.AddPage()
 
-	// Translator for UTF-8 characters (Spanish accents, etc.)
-	tr := pdf.UnicodeTranslatorFromDescriptor("")
-
 	// Title
-	pdf.SetFont("Helvetica", "B", titleSize)
+	pdf.SetFont(fontSans, "B", titleSize)
 	pdf.CellFormat(0, 10, "REMEMORY RECOVERY BUNDLE", "", 1, "C", false, 0, "")
-	pdf.SetFont("Helvetica", "", headingSize)
+	pdf.SetFont(fontSans, "", headingSize)
 	pdf.CellFormat(0, 8, fmt.Sprintf("For: %s", data.Holder), "", 1, "C", false, 0, "")
 	pdf.Ln(5)
 
 	// Warning box
 	pdf.SetFillColor(255, 240, 240)
-	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.SetFont(fontSans, "B", bodySize)
 	pdf.CellFormat(0, 7, "  !! YOU CANNOT USE THIS FILE ALONE", "", 1, "L", true, 0, "")
-	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.SetFont(fontSans, "", bodySize)
 	if data.Anonymous {
 		pdf.CellFormat(0, 5, "  You will need to combine this with other shares.", "", 1, "L", true, 0, "")
 	} else {
 		pdf.CellFormat(0, 5, "  You will need help from other friends listed below.", "", 1, "L", true, 0, "")
 	}
 	pdf.Ln(2)
-	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.SetFont(fontSans, "B", bodySize)
 	pdf.CellFormat(0, 7, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
-	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.SetFont(fontSans, "", bodySize)
 	pdf.CellFormat(0, 5, "  This document contains your secret share. Keep it safe.", "", 1, "L", true, 0, "")
 	pdf.Ln(3)
 
 	// Spanish AI help note (green background, right after warning)
 	pdf.SetFillColor(220, 245, 220)
-	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.SetFont(fontSans, "B", bodySize)
 	pdf.CellFormat(0, 6, "  NOTA PARA HISPANOHABLANTES", "", 1, "L", true, 0, "")
-	pdf.SetFont("Helvetica", "I", bodySize)
-	pdf.MultiCell(0, 5, tr("  Si no entiendes inglés, puedes usar ChatGPT u otra inteligencia artificial para que te ayude a entender estas instrucciones y recuperar los datos. Copia este documento completo y pídele a la IA que te explique los pasos. La herramienta recover.html también está disponible en español."), "", "L", true)
+	pdf.SetFont(fontSans, "I", bodySize)
+	pdf.MultiCell(0, 5, "  Si no entiendes inglés, puedes usar ChatGPT u otra inteligencia artificial para que te ayude a entender estas instrucciones y recuperar los datos. Copia este documento completo y pídele a la IA que te explique los pasos. La herramienta recover.html también está disponible en español.", "", "L", true)
 	pdf.Ln(5)
 
 	// Section: What is this?
@@ -89,25 +108,74 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	if !data.Anonymous {
 		addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
 		for _, friend := range data.OtherFriends {
-			pdf.SetFont("Helvetica", "B", bodySize)
+			pdf.SetFont(fontSans, "B", bodySize)
 			pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
-			pdf.SetFont("Helvetica", "", bodySize)
-			pdf.CellFormat(0, 5, fmt.Sprintf("    Email: %s", friend.Email), "", 1, "L", false, 0, "")
-			if friend.Phone != "" {
-				pdf.CellFormat(0, 5, fmt.Sprintf("    Phone: %s", friend.Phone), "", 1, "L", false, 0, "")
+			pdf.SetFont(fontSans, "", bodySize)
+			if friend.Contact != "" {
+				pdf.CellFormat(0, 5, fmt.Sprintf("    Contact: %s", friend.Contact), "", 1, "L", false, 0, "")
 			}
 			pdf.Ln(2)
 		}
 		pdf.Ln(5)
 	}
 
+	// Section: Your Share (QR code + PEM block)
+	addSection(pdf, "YOUR SHARE")
+	pdf.Ln(2)
+
+	// Generate QR code PNG
+	qrContent := data.QRContent()
+	qrPNG, err := generateQRPNG(qrContent)
+	if err != nil {
+		return nil, fmt.Errorf("generating QR code: %w", err)
+	}
+
+	// Register QR image and place it centered
+	qrReader := bytes.NewReader(qrPNG)
+	opts := fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
+	pdf.RegisterImageOptionsReader("qrcode", opts, qrReader)
+	pageWidth, _ := pdf.GetPageSize()
+	leftMargin, _, rightMargin, _ := pdf.GetMargins()
+	contentWidth := pageWidth - leftMargin - rightMargin
+	qrX := leftMargin + (contentWidth-qrSizeMM)/2
+	pdf.ImageOptions("qrcode", qrX, pdf.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
+	pdf.SetY(pdf.GetY() + qrSizeMM + 3)
+
+	// Caption under QR code
+	pdf.SetFont(fontSans, "I", bodySize)
+	pdf.CellFormat(0, 5, "Scan this with your phone camera to import your share", "", 1, "C", false, 0, "")
+	pdf.Ln(2)
+
+	// Show the compact string below the QR for manual entry
+	compact := data.Share.CompactEncode()
+	pdf.SetFont(fontMono, "", smallMono)
+	pdf.SetFillColor(245, 245, 245)
+	pdf.CellFormat(0, 4, compact, "", 1, "C", true, 0, "")
+	pdf.Ln(8)
+
+	// PEM block (machine-readable format)
+	addSection(pdf, "MACHINE-READABLE FORMAT")
+	pdf.SetFont(fontMono, "", smallMono)
+	pdf.SetFillColor(245, 245, 245)
+
+	shareText := data.Share.Encode()
+	shareLines := strings.Split(shareText, "\n")
+	for _, line := range shareLines {
+		if line != "" {
+			pdf.CellFormat(0, 3.5, line, "", 1, "L", true, 0, "")
+		} else {
+			pdf.Ln(1.5)
+		}
+	}
+	pdf.Ln(5)
+
 	// Section: Browser recovery
 	addSection(pdf, "HOW TO RECOVER (PRIMARY METHOD - Browser)")
 	addBody(pdf, "1. Open recover.html in any modern browser (Chrome, Firefox, Safari, Edge)")
 	pdf.Ln(2)
-	pdf.SetFont("Helvetica", "B", bodySize)
+	pdf.SetFont(fontSans, "B", bodySize)
 	pdf.MultiCell(0, 5, "   YOUR SHARE IS ALREADY LOADED!", "", "L", false)
-	pdf.SetFont("Helvetica", "I", bodySize)
+	pdf.SetFont(fontSans, "I", bodySize)
 	pdf.MultiCell(0, 5, "   The recovery tool is personalized for you.", "", "L", false)
 	pdf.Ln(2)
 	addBody(pdf, "2. Load the encrypted file (MANIFEST.age) from this bundle:")
@@ -135,40 +203,23 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 		addBody(pdf, "6. Download the recovered files")
 	}
 	pdf.Ln(2)
-	pdf.SetFont("Helvetica", "I", bodySize)
+	pdf.SetFont(fontSans, "I", bodySize)
 	pdf.MultiCell(0, 5, "Works completely offline - no internet required!", "", "L", false)
 	pdf.Ln(5)
 
 	// Section: CLI fallback
 	addSection(pdf, "HOW TO RECOVER (FALLBACK - Command Line)")
 	addBody(pdf, "If recover.html doesn't work, download the CLI tool from:")
-	pdf.SetFont("Courier", "", monoSize)
+	pdf.SetFont(fontMono, "", monoSize)
 	pdf.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
 	pdf.Ln(2)
 	addBody(pdf, "Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age")
 	pdf.Ln(5)
 
-	// Section: Share
-	addSection(pdf, "YOUR SHARE (upload this file or copy-paste this block)")
-	pdf.SetFont("Courier", "", monoSize)
-	pdf.SetFillColor(245, 245, 245)
-
-	// Draw share in a box
-	shareText := data.Share.Encode()
-	shareLines := strings.Split(shareText, "\n")
-	for _, line := range shareLines {
-		if line != "" {
-			pdf.CellFormat(0, 4, line, "", 1, "L", true, 0, "")
-		} else {
-			pdf.Ln(2)
-		}
-	}
-	pdf.Ln(5)
-
 	// Footer: Metadata
-	pdf.SetFont("Helvetica", "B", monoSize)
+	pdf.SetFont(fontSans, "B", smallMono)
 	pdf.CellFormat(0, 5, "METADATA", "", 1, "L", false, 0, "")
-	pdf.SetFont("Courier", "", monoSize)
+	pdf.SetFont(fontMono, "", smallMono)
 	pdf.SetFillColor(245, 245, 245)
 	addMeta(pdf, "rememory-version", data.Version)
 	addMeta(pdf, "created", data.Created.Format(time.RFC3339))
@@ -189,17 +240,22 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 }
 
 func addSection(pdf *fpdf.Fpdf, title string) {
-	pdf.SetFont("Helvetica", "B", headingSize)
+	pdf.SetFont(fontSans, "B", headingSize)
 	pdf.SetFillColor(230, 230, 230)
 	pdf.CellFormat(0, 8, " "+title, "", 1, "L", true, 0, "")
 	pdf.Ln(2)
 }
 
 func addBody(pdf *fpdf.Fpdf, text string) {
-	pdf.SetFont("Helvetica", "", bodySize)
+	pdf.SetFont(fontSans, "", bodySize)
 	pdf.MultiCell(0, 5, text, "", "L", false)
 }
 
 func addMeta(pdf *fpdf.Fpdf, key, value string) {
 	pdf.CellFormat(0, 4, fmt.Sprintf("%s: %s", key, value), "", 1, "L", true, 0, "")
+}
+
+// generateQRPNG creates a QR code PNG image for the given content string.
+func generateQRPNG(content string) ([]byte, error) {
+	return qrcode.Encode(content, qrcode.Medium, 512)
 }

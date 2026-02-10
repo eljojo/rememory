@@ -21,6 +21,7 @@ type Config struct {
 	Version          string // Tool version (e.g., "v1.0.0")
 	GitHubReleaseURL string // URL to GitHub release for CLI download
 	WASMBytes        []byte // Compiled recover.wasm binary
+	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
 }
 
 // GenerateAll creates bundles for all friends in the project.
@@ -57,19 +58,15 @@ func GenerateAll(p *project.Project, cfg Config) error {
 		var otherFriendsInfo []html.FriendInfo
 		if !p.Anonymous {
 			otherFriends = make([]project.Friend, 0, len(p.Friends)-1)
+			otherFriendsInfo = make([]html.FriendInfo, 0, len(p.Friends)-1)
 			for j, f := range p.Friends {
 				if j != i {
 					otherFriends = append(otherFriends, f)
-				}
-			}
-
-			// Convert to FriendInfo for HTML personalization
-			otherFriendsInfo = make([]html.FriendInfo, len(otherFriends))
-			for j, f := range otherFriends {
-				otherFriendsInfo[j] = html.FriendInfo{
-					Name:  f.Name,
-					Email: f.Email,
-					Phone: f.Phone,
+					otherFriendsInfo = append(otherFriendsInfo, html.FriendInfo{
+						Name:       f.Name,
+						Contact:    f.Contact,
+						ShareIndex: j + 1, // 1-based share index
+					})
 				}
 			}
 		}
@@ -85,7 +82,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 		recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 
-		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", sanitizeName(friend.Name)))
+		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", core.SanitizeFilename(friend.Name)))
 
 		err := GenerateBundle(BundleParams{
 			OutputPath:       bundlePath,
@@ -103,6 +100,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			GitHubReleaseURL: cfg.GitHubReleaseURL,
 			SealedAt:         p.Sealed.At,
 			Anonymous:        p.Anonymous,
+			RecoveryURL:      cfg.RecoveryURL,
 		})
 		if err != nil {
 			return fmt.Errorf("generating bundle for %s: %w", friend.Name, err)
@@ -134,6 +132,7 @@ type BundleParams struct {
 	GitHubReleaseURL string
 	SealedAt         time.Time
 	Anonymous        bool
+	RecoveryURL      string
 }
 
 // GenerateBundle creates a single bundle ZIP file for one friend.
@@ -171,6 +170,7 @@ func GenerateBundle(params BundleParams) error {
 		RecoverChecksum:  readmeData.RecoverChecksum,
 		Created:          readmeData.Created,
 		Anonymous:        readmeData.Anonymous,
+		RecoveryURL:      params.RecoveryURL,
 	})
 	if err != nil {
 		return fmt.Errorf("generating PDF: %w", err)
@@ -194,7 +194,7 @@ func loadShares(p *project.Project) ([]*core.Share, error) {
 	shares := make([]*core.Share, len(p.Friends))
 	for i, friend := range p.Friends {
 		// Try to find share file for this friend
-		filename := fmt.Sprintf("SHARE-%s.txt", sanitizeName(friend.Name))
+		filename := fmt.Sprintf("SHARE-%s.txt", core.SanitizeFilename(friend.Name))
 		sharePath := filepath.Join(sharesDir, filename)
 
 		data, err := os.ReadFile(sharePath)
@@ -211,19 +211,6 @@ func loadShares(p *project.Project) ([]*core.Share, error) {
 	}
 
 	return shares, nil
-}
-
-// sanitizeName converts a name to a filesystem-safe lowercase string.
-func sanitizeName(name string) string {
-	result := ""
-	for _, r := range name {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			result += string(r)
-		} else if r == ' ' || r == '-' || r == '_' {
-			result += "-"
-		}
-	}
-	return strings.ToLower(result)
 }
 
 // VerifyBundle verifies the integrity of a bundle ZIP file.

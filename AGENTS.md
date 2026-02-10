@@ -1,0 +1,131 @@
+# AGENTS.md
+
+This file provides guidance for contributors and coding agents in this repository.
+
+## What is ReMemory
+
+ReMemory encrypts files with [age](https://github.com/FiloSottile/age), splits the decryption key among trusted friends using Shamir's Secret Sharing (via HashiCorp Vault's implementation), and gives each friend a self-contained offline recovery tool (`recover.html`) that works in any browser without servers or internet.
+
+## Development Principles
+
+- **Care and attention to detail.** This software protects important information for real people. Mistakes can mean lost secrets, failed recoveries, or leaked data. Be thorough and thoughtful.
+- **Empathy.** The people recovering secrets may be non-technical, stressed, or grieving. Every message, instruction, and UI choice should be clear, patient, and helpful. Lend a hand, don't assume expertise.
+- **Stand the test of time.** Recovery bundles may sit untouched for years or decades before they're needed. Avoid dependencies on external services, ephemeral formats, or assumptions about the future. The bundles must work even if this project disappears.
+- **Universality.** The recovery experience must work across platforms, browsers, and languages.
+- **Grounded and humble tone.** When writing README text, guides, or user-facing copy, stay honest about what this tool is and isn't. Don't oversell or make grand claims.
+- **Shared logic across CLI and WASM.** Cryptographic operations and core logic live in `internal/core/` and are reused by both the CLI and browser paths. Don't duplicate — centralize.
+- **Tests verify safety.** Write a failing test first, then make it pass. This applies everywhere — Go unit tests, integration tests, and Playwright browser tests alike. If you can't demonstrate the test failing without your change, you can't be sure it's actually testing anything. Any change that touches `recover.html` or `maker.html` needs a corresponding Playwright test.
+- **Keep docs current.** When changing behavior, update the relevant docs, README, and this AGENTS.md file in the same change.
+- **No network in recovery.** `recover.html` must not make network requests. Avoid adding dependencies that could pull remote resources (fonts, CDNs, analytics, etc.).
+- **Stable formats.** The share format, bundle layout, and recovery steps are part of the protocol. Changing them requires migration thinking, updated test fixtures, and clear rationale.
+
+## Non-goals
+
+- No server-side component.
+- No network calls in the recovery path.
+- No telemetry or analytics.
+- No dependency on external CDNs or remote resources.
+- No runtime dependency on Node/npm for end users or recovery.
+- No promise of "revocation" once shares are distributed — you can't unsend data.
+- No custom cryptographic primitives — composition of established tools only (age, Shamir via HashiCorp Vault).
+- No "guaranteed to work forever" claims — the goal is durability, not certainty.
+
+## Security Invariants
+
+These must not regress. Reference them in reviews.
+
+- `recover.html` must work offline, from a local `file://` open, without installation.
+- Bundles must be self-contained and must not require this repo, any server, or the internet to function.
+- Below-threshold shares must not leak information about the secret (information-theoretic security). Don't add metadata to shares that could weaken this.
+- Manifest encryption must remain age-based. No custom crypto.
+- Any cryptographic change requires tests, review, and clear rationale.
+
+## Build & Development Commands
+
+```bash
+make build          # Build WASM modules (recover.wasm + create.wasm), compile TypeScript, then build CLI binary
+make test           # Run all Go tests (go test -v ./...)
+make lint           # Run go vet + gofmt check
+make test-e2e       # Run Playwright browser tests (requires: npm install, npx playwright install)
+make html           # Generate static site into dist/ (index.html, maker.html, docs.html, recover.html)
+make serve          # Build static site and serve at localhost:8000
+```
+
+Run a single test:
+```bash
+go test -v -run TestName ./internal/core/
+```
+
+The build pipeline is: **TypeScript (esbuild) -> WASM (two targets) -> Go binary**. Always use `make test` instead of bare `go test ./...` — the Go build embeds compiled `.wasm` and `.js` files via `//go:embed`, so `go test` will fail if those assets haven't been generated first by `make wasm`.
+
+## Architecture
+
+### Two WASM targets
+
+The same `internal/wasm/` package produces two WASM binaries controlled by build tags. `make wasm` builds both and writes them to `internal/html/assets/`:
+
+- **`recover.wasm`** (no tags) — Recovery-only, small (~1.8MB). Embedded in every friend's `recover.html` bundle. Entry point: `main_recover.go`.
+  `GOOS=js GOARCH=wasm go build -o internal/html/assets/recover.wasm ./internal/wasm`
+- **`create.wasm`** (`-tags create`) — Full creation + recovery. Used by `maker.html` (web UI). Entry point: `main_create.go`.
+  `GOOS=js GOARCH=wasm go build -tags create -o internal/html/assets/create.wasm ./internal/wasm`
+
+Both expose Go functions to JavaScript via `syscall/js` (registered in their respective `main_*.go` files), with the JS bridge in `js_wrappers.go`.
+
+`make html` generates self-contained HTML files into `dist/` (`index.html`, `maker.html`, `docs.html`, `recover.html`).
+
+### HTML generation with embedded assets
+
+`internal/html/embed.go` uses `//go:embed` to bundle all assets (HTML templates, CSS, JS, WASM) into the Go binary. The `recover.go`, `maker.go`, `docs.go`, and `index.go` files in `internal/html/` generate self-contained HTML by string-replacing `{{PLACEHOLDER}}` tokens with embedded assets. WASM is gzip-compressed and base64-encoded inline.
+
+**Circular dependency avoidance:** `create.wasm` itself embeds the html package (for bundle creation), so `create.wasm` cannot be embedded via `//go:embed` in the html package. Instead, the CLI binary loads `create.wasm` at init time and injects it via `html.SetCreateWASMBytes()`.
+
+### Bundle generation
+
+Each friend's ZIP bundle contains: `README.txt`, `README.pdf`, `MANIFEST.age`, and a personalized `recover.html` (with their share pre-loaded and contact list embedded). Generated by `internal/bundle/`.
+
+- `internal/bundle/readme.go` — Generates README.txt (Go string builder, not a template)
+- `internal/pdf/readme.go` — Generates README.pdf (via go-pdf/fpdf)
+- `internal/project/templates/manifest-readme.md` — Go template for the README.md placed inside `manifest/` when a project is initialized (the guide users fill in with their secrets)
+
+### Key packages
+
+- `internal/core/` — Cryptographic primitives: Shamir split/combine, age encrypt/decrypt, share encoding (PEM-like `BEGIN REMEMORY SHARE` format), tar.gz archive
+- `internal/project/` — Project config (`project.yml`), friend definitions, template rendering
+- `internal/manifest/` — Archive/extract the manifest directory
+- `internal/cmd/` — Cobra CLI commands (init, seal, bundle, recover, verify, demo, html, status, doc)
+- `internal/wasm/` — WASM entry points exposing Go crypto to the browser
+- `internal/html/` — HTML generation with embedded assets, asset embedding
+- `e2e/` — Playwright tests for browser-based recovery and creation flows
+
+### TypeScript
+
+Frontend code lives in `internal/html/assets/src/`. Compiled via esbuild to IIFE bundles (not ES modules):
+- `shared.ts` — Common utilities (share parsing, WASM loading)
+- `app.ts` — Recovery UI (`recover.html`)
+- `create-app.ts` — Bundle creation UI (`maker.html`)
+
+## Testing
+
+- **Go unit tests:** Standard `_test.go` files alongside packages. `internal/integration_test.go` has end-to-end Go tests covering the full seal-and-recover flow.
+- **Playwright E2E tests:** `e2e/` directory tests the browser-based recovery and creation tools. Requires building the binary first (`make test-e2e` handles this).
+
+## CI/CD (GitHub Actions)
+
+Three workflows in `.github/workflows/`:
+
+- **`ci.yml`** — Runs on push/PR to `main`. Builds WASM, runs Go tests, lints, builds the binary, then runs Playwright E2E tests. Requires both Go and Node 22.
+- **`pages.yml`** — Runs on push to `main`. Builds the CLI, generates static HTML files (`index.html`, `maker.html`, `docs.html`) and deploys to GitHub Pages. Does not include `recover.html` (that's only distributed in bundles and releases).
+- **`release.yml`** — Triggered by `v*` tags. Runs tests, cross-compiles for 5 platforms (`make build-all`), generates standalone `maker.html` + `recover.html`, creates demo bundles (3 friends, threshold 2), computes checksums, and publishes a GitHub release. Use `make bump-patch`, `bump-minor`, or `bump-major` to create version tags.
+
+## Contributing
+
+- **Small PRs, incremental improvements.** Keep pull requests focused and reviewable. A series of small, well-scoped PRs is better than one large change.
+- **Discuss before building big things.** For major features, refactors, or architectural changes, open an issue to discuss the approach first. Once there's agreement on a plan, break the work into sub-issues and land it incrementally. Don't open a large PR out of the blue.
+- **Bug fixes and small improvements can go straight to PR.** Not everything needs a discussion — use your judgment. If the change is self-contained and obvious, just open the PR.
+
+## Nix
+
+This project includes a Nix flake for reproducible development environments. If you have Nix installed:
+
+- Prefix commands with `nix develop -c` if they fail to find dependencies (e.g., `nix develop -c make test`).
+- If `make` itself doesn't resolve correctly, use the system make directly: `/usr/bin/make`.

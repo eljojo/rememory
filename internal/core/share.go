@@ -1,17 +1,25 @@
 package core
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 const (
 	ShareBegin = "-----BEGIN REMEMORY SHARE-----"
 	ShareEnd   = "-----END REMEMORY SHARE-----"
+
+	// DefaultRecoveryURL is the default base URL for QR codes in PDFs.
+	// Points to the recover.html hosted on GitHub Pages.
+	DefaultRecoveryURL = "https://eljojo.github.io/rememory/recover.html"
 )
 
 // Share represents a single Shamir share with metadata.
@@ -184,21 +192,118 @@ func (s *Share) Verify() error {
 	return nil
 }
 
+// CompactEncode returns a short string encoding of the share suitable for
+// QR codes and URL fragments. Format: RM{version}:{index}:{total}:{threshold}:{base64url_data}:{short_check}
+// The short_check is the first 4 hex characters of the SHA-256 of the raw share data.
+func (s *Share) CompactEncode() string {
+	data := base64.RawURLEncoding.EncodeToString(s.Data)
+	check := shortChecksum(s.Data)
+	return fmt.Sprintf("RM%d:%d:%d:%d:%s:%s", s.Version, s.Index, s.Total, s.Threshold, data, check)
+}
+
+// ParseCompact parses a compact-encoded share string back into a Share.
+// It validates the format, decodes the data, and verifies the short checksum.
+func ParseCompact(s string) (*Share, error) {
+	parts := strings.Split(s, ":")
+	if len(parts) != 6 {
+		return nil, fmt.Errorf("invalid compact share: expected 6 colon-separated fields, got %d", len(parts))
+	}
+
+	prefix := parts[0]
+	if !strings.HasPrefix(prefix, "RM") {
+		return nil, fmt.Errorf("invalid compact share: must start with 'RM', got %q", prefix)
+	}
+
+	version, err := strconv.Atoi(prefix[2:])
+	if err != nil || version < 1 {
+		return nil, fmt.Errorf("invalid compact share: bad version %q", prefix[2:])
+	}
+
+	index, err := strconv.Atoi(parts[1])
+	if err != nil || index < 1 {
+		return nil, fmt.Errorf("invalid compact share: bad index %q", parts[1])
+	}
+
+	total, err := strconv.Atoi(parts[2])
+	if err != nil || total < 1 {
+		return nil, fmt.Errorf("invalid compact share: bad total %q", parts[2])
+	}
+
+	threshold, err := strconv.Atoi(parts[3])
+	if err != nil || threshold < 1 {
+		return nil, fmt.Errorf("invalid compact share: bad threshold %q", parts[3])
+	}
+
+	data, err := base64.RawURLEncoding.DecodeString(parts[4])
+	if err != nil {
+		return nil, fmt.Errorf("invalid compact share: bad base64 data: %w", err)
+	}
+	if len(data) == 0 {
+		return nil, fmt.Errorf("invalid compact share: empty data")
+	}
+
+	// Verify short checksum
+	expectedCheck := shortChecksum(data)
+	if parts[5] != expectedCheck {
+		return nil, fmt.Errorf("invalid compact share: checksum mismatch (got %s, want %s)", parts[5], expectedCheck)
+	}
+
+	return &Share{
+		Version:   version,
+		Index:     index,
+		Total:     total,
+		Threshold: threshold,
+		Data:      data,
+		Checksum:  HashBytes(data),
+	}, nil
+}
+
+// shortChecksum returns the first 4 hex characters of the SHA-256 of data.
+func shortChecksum(data []byte) string {
+	h := sha256.Sum256(data)
+	return hex.EncodeToString(h[:2])
+}
+
 // Filename returns a suggested filename for this share.
 func (s *Share) Filename() string {
 	name := s.Holder
 	if name == "" {
 		name = fmt.Sprintf("%d", s.Index)
 	}
-	// Sanitize the name for filesystem use
 	name = SanitizeFilename(name)
-	return fmt.Sprintf("SHARE-%s.txt", strings.ToLower(name))
+	return fmt.Sprintf("SHARE-%s.txt", name)
 }
 
-// SanitizeFilename removes characters that are problematic in filenames.
+// SanitizeFilename converts a name to a filesystem-safe lowercase ASCII string.
+// It transliterates accented/diacritic characters to their ASCII base form
+// (e.g. "José" → "jose", "Müller" → "muller") using NFD decomposition.
 func SanitizeFilename(name string) string {
-	// Replace spaces with hyphens, remove other problematic chars
-	name = strings.ReplaceAll(name, " ", "-")
-	reg := regexp.MustCompile(`[^a-zA-Z0-9\-_]`)
-	return reg.ReplaceAllString(name, "")
+	// NFD decompose: split characters like "é" into "e" + combining accent,
+	// then drop combining marks to keep only the base letter.
+	var stripped []rune
+	for _, r := range norm.NFD.String(name) {
+		if !unicode.Is(unicode.Mn, r) {
+			stripped = append(stripped, r)
+		}
+	}
+
+	// Keep alphanumeric, convert spaces/hyphens/underscores to hyphen, drop rest.
+	var b strings.Builder
+	for _, r := range stripped {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else if r == ' ' || r == '-' || r == '_' {
+			b.WriteRune('-')
+		}
+	}
+
+	result := strings.ToLower(b.String())
+
+	// Collapse consecutive hyphens and trim leading/trailing hyphens.
+	for strings.Contains(result, "--") {
+		result = strings.ReplaceAll(result, "--", "-")
+	}
+	result = strings.Trim(result, "-")
+
+	return result
 }

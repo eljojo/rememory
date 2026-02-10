@@ -67,9 +67,8 @@ func GenerateReadme(data ReadmeData) string {
 		sb.WriteString("--------------------------------------------------------------------------------\n")
 		for _, friend := range data.OtherFriends {
 			sb.WriteString(fmt.Sprintf("%s\n", friend.Name))
-			sb.WriteString(fmt.Sprintf("  Email: %s\n", friend.Email))
-			if friend.Phone != "" {
-				sb.WriteString(fmt.Sprintf("  Phone: %s\n", friend.Phone))
+			if friend.Contact != "" {
+				sb.WriteString(fmt.Sprintf("  Contact: %s\n", friend.Contact))
 			}
 			sb.WriteString("\n")
 		}

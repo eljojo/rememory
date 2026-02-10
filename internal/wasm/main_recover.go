@@ -13,6 +13,7 @@ func main() {
 	js.Global().Set("rememoryDecryptManifest", js.FuncOf(decryptManifestJS))
 	js.Global().Set("rememoryExtractTarGz", js.FuncOf(extractTarGzJS))
 	js.Global().Set("rememoryExtractBundle", js.FuncOf(extractBundleJS))
+	js.Global().Set("rememoryParseCompactShare", js.FuncOf(parseCompactShareJS))
 
 	// Signal that WASM is ready
 	js.Global().Set("rememoryReady", true)
