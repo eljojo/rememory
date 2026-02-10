@@ -350,7 +350,6 @@ declare const t: TranslationFunction;
         const option = document.createElement('option');
         option.value = String(k);
         option.textContent = t('threshold_option', k, n);
-        option.dataset.i18n = 'threshold_option';
         elements.thresholdSelect.appendChild(option);
       }
 
