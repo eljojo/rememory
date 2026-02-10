@@ -2,8 +2,6 @@ package core
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"strings"
 	"testing"
 )
@@ -108,14 +106,14 @@ func TestSuggestWord(t *testing.T) {
 }
 
 func TestBIP39ListIntegrity(t *testing.T) {
-	// Check count
-	if len(bip39English) != 2048 {
-		t.Fatalf("expected 2048 words, got %d", len(bip39English))
+	en := GetWordList(LangEN)
+	if en == nil {
+		t.Fatal("English word list not found")
 	}
 
-	// Check no duplicates
+	// Check count (fixed-size array, but verify no empty entries)
 	seen := make(map[string]bool, 2048)
-	for i, w := range bip39English {
+	for i, w := range en.Words {
 		if w == "" {
 			t.Errorf("empty word at index %d", i)
 		}
@@ -125,13 +123,10 @@ func TestBIP39ListIntegrity(t *testing.T) {
 		seen[w] = true
 	}
 
-	// SHA-256 integrity check: hash the newline-joined word list
-	joined := strings.Join(bip39English[:], "\n") + "\n"
-	hash := sha256.Sum256([]byte(joined))
-	hexHash := hex.EncodeToString(hash[:])
-	expectedHash := "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda"
-	if hexHash != expectedHash {
-		t.Errorf("BIP39 word list hash mismatch:\n  got:  %s\n  want: %s", hexHash, expectedHash)
+	// SHA-256 integrity check
+	hash := WordListHash(LangEN)
+	if hash != en.ExpectedHash {
+		t.Errorf("BIP39 English word list hash mismatch:\n  got:  %s\n  want: %s", hash, en.ExpectedHash)
 	}
 }
 

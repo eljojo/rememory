@@ -196,7 +196,7 @@ func TestMakerHasExpectedKeys(t *testing.T) {
 		"generate_btn", "download_all_btn",
 		"add_friend", "threshold_label",
 		"error_title", "action_try_again",
-		"language_label", "language_default",
+		"language_label",
 	}
 
 	keys, err := GetComponentKeys("maker")

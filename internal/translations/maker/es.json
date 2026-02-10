@@ -57,7 +57,7 @@
   "validation_message": "Por favor completa los campos resaltados antes de generar los kits.",
   "validation_guidance": "Los campos obligatorios están marcados con un asterisco (*). Asegúrate de que cada amigo tenga nombre y de haber agregado al menos un archivo.",
   "language_label": "Idioma del kit",
-  "language_default": "Predeterminado",
+
   "custom_language_label": "Idioma personalizado",
   "remove": "Eliminar"
 }

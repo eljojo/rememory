@@ -57,7 +57,7 @@
   "validation_message": "Please fill in the highlighted fields before generating bundles.",
   "validation_guidance": "Required fields are marked with an asterisk (*). Make sure each friend has a name and you've added at least one file.",
   "language_label": "Bundle language",
-  "language_default": "Default",
+
   "custom_language_label": "Custom language",
   "remove": "Remove"
 }

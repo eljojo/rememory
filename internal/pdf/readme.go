@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-pdf/fpdf"
 	qrcode "github.com/skip2/go-qrcode"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
@@ -155,46 +156,30 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.CellFormat(0, 4, compact, "", 1, "C", true, 0, "")
 	p.Ln(8)
 
-	// Word grid (25 recovery words in two columns)
-	words, _ := data.Share.Words()
-	if len(words) > 0 {
-		half := (len(words) + 1) / 2
-		rowHeight := 5.5
-		// Total height: section header (10) + grid rows + caption (12) + spacing
-		gridHeight := 10 + float64(half)*rowHeight + 12
-		_, pageHeight := p.GetPageSize()
-		_, _, _, bottomMargin := p.GetMargins()
-		usableBottom := pageHeight - bottomMargin
+	// Word grids (recovery words in two columns)
+	nativeWords, _ := data.Share.WordsForLang(core.Lang(lang))
+	if len(nativeWords) > 0 {
+		if lang != "en" {
+			// Non-English: show native language grid first, then English
+			langName := t("lang_" + lang)
+			renderWordGridPDF(p, nativeWords, t("recovery_words_title_lang", len(nativeWords), langName), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_hint"), "", "L", false)
+			p.Ln(5)
 
-		// If the word grid won't fit on the current page, start a new page
-		if p.GetY()+gridHeight > usableBottom {
-			p.AddPage()
+			// English fallback grid
+			englishWords, _ := data.Share.Words()
+			renderWordGridPDF(p, englishWords, t("recovery_words_title_english", len(englishWords)), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_dual_hint"), "", "L", false)
+			p.Ln(5)
+		} else {
+			// English only: single grid
+			renderWordGridPDF(p, nativeWords, t("recovery_words_title", len(nativeWords)), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_hint"), "", "L", false)
+			p.Ln(5)
 		}
-
-		addSection(p, t("recovery_words_title", len(words)))
-		p.SetFont(fontMono, "", bodySize)
-
-		colWidth := contentWidth / 2
-		startY := p.GetY()
-
-		for i := 0; i < half; i++ {
-			y := startY + float64(i)*rowHeight
-
-			// Left column: words 1-13
-			p.SetXY(leftMargin, y)
-			p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+1, words[i]), "", 0, "L", false, 0, "")
-
-			// Right column: words 14-25
-			if i+half < len(words) {
-				p.SetXY(leftMargin+colWidth, y)
-				p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+half+1, words[i+half]), "", 0, "L", false, 0, "")
-			}
-		}
-
-		p.SetY(startY + float64(half)*rowHeight + 2)
-		p.SetFont(fontSans, "I", bodySize)
-		p.MultiCell(0, 5, t("recovery_words_hint"), "", "L", false)
-		p.Ln(5)
 	}
 
 	// PEM block (machine-readable format)
@@ -297,6 +282,42 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+// renderWordGridPDF renders a two-column word grid with page-break detection.
+func renderWordGridPDF(p *fpdf.Fpdf, words []string, title string, leftMargin, contentWidth float64) {
+	half := (len(words) + 1) / 2
+	rowHeight := 5.5
+	gridHeight := 10 + float64(half)*rowHeight + 2
+	_, pageHeight := p.GetPageSize()
+	_, _, _, bottomMargin := p.GetMargins()
+	usableBottom := pageHeight - bottomMargin
+
+	if p.GetY()+gridHeight > usableBottom {
+		p.AddPage()
+	}
+
+	addSection(p, title)
+	p.SetFont(fontMono, "", bodySize)
+
+	colWidth := contentWidth / 2
+	startY := p.GetY()
+
+	for i := 0; i < half; i++ {
+		y := startY + float64(i)*rowHeight
+
+		// NFC-normalize words so accented characters render as single glyphs
+		// (BIP39 word lists may store them in NFD form: ra + combining accent + pido)
+		p.SetXY(leftMargin, y)
+		p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+1, norm.NFC.String(words[i])), "", 0, "L", false, 0, "")
+
+		if i+half < len(words) {
+			p.SetXY(leftMargin+colWidth, y)
+			p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+half+1, norm.NFC.String(words[i+half])), "", 0, "L", false, 0, "")
+		}
+	}
+
+	p.SetY(startY + float64(half)*rowHeight + 2)
 }
 
 func addSection(pdf *fpdf.Fpdf, title string) {

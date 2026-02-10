@@ -57,7 +57,7 @@
   "validation_message": "Bitte fülle die markierten Felder aus, bevor du Umschläge erstellst.",
   "validation_guidance": "Pflichtfelder sind mit einem Sternchen (*) gekennzeichnet. Stelle sicher, dass jeder Freund einen Namen und eine E-Mail hat und du mindestens eine Datei hinzugefügt hast.",
   "language_label": "Paket-Sprache",
-  "language_default": "Standard",
+
   "custom_language_label": "Eigene Sprache",
   "remove": "Entfernen"
 }

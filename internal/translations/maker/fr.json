@@ -57,7 +57,7 @@
   "validation_message": "Veuillez remplir les champs en surbrillance avant de créer les enveloppes.",
   "validation_guidance": "Les champs obligatoires sont marqués d'un astérisque (*). Assurez-vous que chaque ami a un nom et que vous avez ajouté au moins un fichier.",
   "language_label": "Langue du paquet",
-  "language_default": "Par défaut",
+
   "custom_language_label": "Langue personnalisée",
   "remove": "Supprimer"
 }

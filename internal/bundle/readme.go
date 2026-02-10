@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/eljojo/rememory/internal/translations"
@@ -25,6 +27,22 @@ type ReadmeData struct {
 	Created          time.Time
 	Anonymous        bool
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+}
+
+// writeWordGrid writes a two-column word grid to the string builder.
+// Words are NFC-normalized so accented characters are precomposed
+// (BIP39 word lists may store them in NFD form).
+func writeWordGrid(sb *strings.Builder, words []string) {
+	half := (len(words) + 1) / 2
+	for i := 0; i < half; i++ {
+		left := fmt.Sprintf("%2d. %-18s", i+1, norm.NFC.String(words[i]))
+		if i+half < len(words) {
+			right := fmt.Sprintf("%2d. %s", i+half+1, norm.NFC.String(words[i+half]))
+			sb.WriteString(fmt.Sprintf("%s%s\n", left, right))
+		} else {
+			sb.WriteString(left + "\n")
+		}
+	}
 }
 
 // GenerateReadme creates the README.txt content with all embedded information.
@@ -118,20 +136,26 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 
 	// Word list (primary human-readable format)
-	words, _ := data.Share.Words()
-	if len(words) > 0 {
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title", len(words))))
-		half := (len(words) + 1) / 2
-		for i := 0; i < half; i++ {
-			left := fmt.Sprintf("%2d. %-14s", i+1, words[i])
-			if i+half < len(words) {
-				right := fmt.Sprintf("%2d. %s", i+half+1, words[i+half])
-				sb.WriteString(fmt.Sprintf("%s%s\n", left, right))
-			} else {
-				sb.WriteString(left + "\n")
-			}
+	nativeWords, _ := data.Share.WordsForLang(core.Lang(lang))
+	if len(nativeWords) > 0 {
+		if lang != "en" {
+			// Non-English: show native language grid first, then English
+			langName := t("lang_" + lang)
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title_lang", len(nativeWords), langName)))
+			writeWordGrid(&sb, nativeWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_hint")))
+
+			// English fallback grid
+			englishWords, _ := data.Share.Words()
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title_english", len(englishWords))))
+			writeWordGrid(&sb, englishWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_dual_hint")))
+		} else {
+			// English only: single grid
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title", len(nativeWords))))
+			writeWordGrid(&sb, nativeWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_hint")))
 		}
-		sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_hint")))
 	}
 
 	// PEM block (machine-readable format)

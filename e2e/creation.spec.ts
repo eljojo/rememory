@@ -237,7 +237,7 @@ friends:
 
     // Switch to Spanish
     await creation.setLanguage('es');
-    await creation.expectPageTitle('Crear Sobres');
+    await creation.expectPageTitle('Crear Kits de Recuperación');
 
     // Switch to German
     await creation.setLanguage('de');

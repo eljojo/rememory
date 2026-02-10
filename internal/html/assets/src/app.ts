@@ -1159,10 +1159,11 @@ declare const t: TranslationFunction;
   // extractWordsFromText extracts BIP39 words from text, handling:
   //   - Numbered two-column grids: " 1. merit   14. beef" (sorted by number)
   //   - Plain word lists: "merit often shuffle wedding"
+  // Supports Unicode letters (accented/umlauted characters like ábaco, günther).
   function extractWordsFromText(text: string): string[] {
-    // Try to parse numbered format first (e.g. "1. word", "13. word")
+    // Try to parse numbered format first (e.g. "1. word", "13. ábaco")
     const numbered: { idx: number; word: string }[] = [];
-    const re = /(\d+)\.\s+([a-zA-Z]+)/g;
+    const re = /(\d+)\.\s+([\p{L}]+)/gu;
     let m;
     while ((m = re.exec(text)) !== null) {
       numbered.push({ idx: parseInt(m[1], 10), word: m[2].toLowerCase() });
@@ -1178,7 +1179,7 @@ declare const t: TranslationFunction;
     return text
       .toLowerCase()
       .split(/\s+/)
-      .filter(w => w.length > 0 && /^[a-z]+$/.test(w));
+      .filter(w => w.length > 0 && /^[\p{L}]+$/u.test(w));
   }
 
   // ============================================

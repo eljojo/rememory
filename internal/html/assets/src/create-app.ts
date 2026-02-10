@@ -180,6 +180,14 @@ declare let currentLang: string;
       if (elements.friendsHint) {
         elements.friendsHint.textContent = t('anonymous_hint');
       }
+      // Disable custom language (no per-friend languages in anonymous mode)
+      if (elements.customLanguageMode?.checked) {
+        elements.customLanguageMode.checked = false;
+        elements.customLanguageMode.dispatchEvent(new Event('change'));
+      }
+      if (elements.customLanguageMode) {
+        elements.customLanguageMode.disabled = true;
+      }
     } else {
       // Show friends list and hide shares input
       elements.friendsSection?.classList.remove('hidden');
@@ -187,6 +195,9 @@ declare let currentLang: string;
       elements.importSection?.classList.remove('hidden');
       if (elements.friendsHint) {
         elements.friendsHint.textContent = t('friends_hint');
+      }
+      if (elements.customLanguageMode) {
+        elements.customLanguageMode.disabled = false;
       }
     }
   }
@@ -196,11 +207,18 @@ declare let currentLang: string;
       const container = document.querySelector('.container');
       if (elements.customLanguageMode?.checked) {
         container?.classList.add('custom-language-active');
+        // Disable anonymous mode (incompatible with per-friend languages)
+        if (elements.anonymousMode) {
+          elements.anonymousMode.disabled = true;
+        }
       } else {
         container?.classList.remove('custom-language-active');
-        // Reset all friend languages to default
+        // Reset all friend languages to project default
         state.friends.forEach(f => { f.language = ''; });
         renderFriendsList();
+        if (elements.anonymousMode) {
+          elements.anonymousMode.disabled = false;
+        }
       }
     });
   }
@@ -288,7 +306,9 @@ declare let currentLang: string;
 
   function addFriend(name = '', contact = '', language = ''): void {
     const index = state.friends.length;
-    state.friends.push({ name, contact, language: language || '' });
+    // When custom language is active, show a concrete language; otherwise empty (uses project default)
+    const effectiveLang = language || (elements.customLanguageMode?.checked ? (currentLang || 'en') : '');
+    state.friends.push({ name, contact, language: effectiveLang });
 
     const entry = document.createElement('div');
     entry.className = 'friend-entry';
@@ -298,7 +318,6 @@ declare let currentLang: string;
     const sampleContact = sampleName.toLowerCase() + '@example.com';
 
     const langOptions = [
-      { code: '', label: t('language_default') },
       { code: 'en', label: 'English' },
       { code: 'es', label: 'Español' },
       { code: 'de', label: 'Deutsch' },
@@ -306,7 +325,7 @@ declare let currentLang: string;
       { code: 'sl', label: 'Slovenščina' }
     ];
     const langOptionsHtml = langOptions.map(o =>
-      `<option value="${o.code}"${o.code === (language || '') ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
+      `<option value="${o.code}"${o.code === effectiveLang ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
     ).join('');
 
     entry.innerHTML = `

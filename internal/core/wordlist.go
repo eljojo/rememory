@@ -3,35 +3,27 @@ package core
 import (
 	"crypto/sha256"
 	"fmt"
-	"strings"
-	"sync"
 )
 
-// wordIndex maps BIP39 words to their index (0-2047). Initialized once via sync.Once.
-var (
-	wordIndex     map[string]int
-	wordIndexOnce sync.Once
-)
-
-func initWordIndex() {
-	wordIndexOnce.Do(func() {
-		wordIndex = make(map[string]int, len(bip39English))
-		for i, w := range bip39English {
-			wordIndex[w] = i
-		}
-	})
-}
-
-// EncodeWords converts bytes to BIP39 words (11 bits per word).
+// EncodeWords converts bytes to BIP39 English words (11 bits per word).
 // 33 bytes (264 bits) produces exactly 24 words.
 func EncodeWords(data []byte) []string {
+	return EncodeWordsLang(data, LangEN)
+}
+
+// EncodeWordsLang converts bytes to BIP39 words in the given language (11 bits per word).
+func EncodeWordsLang(data []byte, lang Lang) []string {
+	wl := GetWordList(lang)
+	if wl == nil {
+		wl = GetWordList(LangEN)
+	}
 	totalBits := len(data) * 8
 	numWords := (totalBits + 10) / 11 // ceiling division
 
 	words := make([]string, numWords)
 	for i := 0; i < numWords; i++ {
 		idx := extract11Bits(data, i*11)
-		words[i] = bip39English[idx]
+		words[i] = wl.Words[idx]
 	}
 	return words
 }
@@ -52,22 +44,23 @@ func extract11Bits(data []byte, bitOffset int) int {
 	return val
 }
 
-// DecodeWords converts BIP39 words back to bytes.
+// DecodeWords converts BIP39 English words back to bytes.
 // Returns an error with typo suggestions if a word is not recognized.
 func DecodeWords(words []string) ([]byte, error) {
-	initWordIndex()
+	return DecodeWordsLang(words, LangEN)
+}
 
+// DecodeWordsLang converts BIP39 words back to bytes using the given language's list.
+func DecodeWordsLang(words []string, lang Lang) ([]byte, error) {
 	if len(words) == 0 {
 		return nil, fmt.Errorf("no words provided")
 	}
 
-	// Convert words to 11-bit indices
 	indices := make([]int, len(words))
 	for i, w := range words {
-		w = strings.ToLower(strings.TrimSpace(w))
-		idx, ok := wordIndex[w]
+		idx, ok := LookupWord(lang, w)
 		if !ok {
-			suggestion := SuggestWord(w)
+			suggestion := SuggestWordLang(w, lang)
 			if suggestion != "" {
 				return nil, fmt.Errorf("word %d %q not recognized — did you mean %q?", i+1, w, suggestion)
 			}
@@ -76,7 +69,6 @@ func DecodeWords(words []string) ([]byte, error) {
 		indices[i] = idx
 	}
 
-	// Convert 11-bit indices to bytes
 	totalBits := len(words) * 11
 	numBytes := totalBits / 8
 	result := make([]byte, numBytes)
@@ -150,82 +142,146 @@ func word25Decode(val int) (index int, checksum int) {
 	return val >> word25CheckBits, val & word25CheckMask
 }
 
-// Words returns this share's data encoded as 25 BIP39 words.
+// Words returns this share's data encoded as 25 BIP39 English words.
 // The first 24 words encode the share data (33 bytes = 264 bits, 11 bits per word).
 // The 25th word packs 4 bits of share index + 7 bits of checksum (see word25 layout above).
 // Returns an error for v1 shares or if the share index is negative.
 func (s *Share) Words() ([]string, error) {
+	return s.WordsForLang(LangEN)
+}
+
+// WordsForLang returns this share's data encoded as 25 BIP39 words in the given language.
+func (s *Share) WordsForLang(lang Lang) ([]string, error) {
 	if s.Version < 2 {
 		return nil, fmt.Errorf("word encoding requires share version 2 or later (got v%d)", s.Version)
 	}
 	if s.Index < 0 {
 		return nil, fmt.Errorf("share index must be non-negative (got %d)", s.Index)
 	}
-	words := EncodeWords(s.Data)
+	wl := GetWordList(lang)
+	if wl == nil {
+		wl = GetWordList(LangEN)
+	}
+	words := EncodeWordsLang(s.Data, lang)
 	bip39Idx := word25Encode(s.Index, s.Data)
-	words = append(words, bip39English[bip39Idx])
+	words = append(words, wl.Words[bip39Idx])
 	return words, nil
 }
 
 // DecodeShareWords decodes 25 BIP39 words into share data and index.
-// The first 24 words are decoded to bytes; the 25th word carries index + checksum.
+// Auto-detects the word list language. The first 24 words are decoded to bytes;
+// the 25th word carries index + checksum.
 // Returns index=0 if the share index was > 15 (the sentinel value).
 // Returns an error if the checksum doesn't match (wrong word order, typos, etc.).
 func DecodeShareWords(words []string) (data []byte, index int, err error) {
+	data, index, _, err = DecodeShareWordsAuto(words)
+	return
+}
+
+// DecodeShareWordsAuto decodes 25 BIP39 words with auto-detected language.
+// Returns the decoded data, share index, detected language, and any error.
+func DecodeShareWordsAuto(words []string) (data []byte, index int, lang Lang, err error) {
 	if len(words) != 25 {
-		return nil, 0, fmt.Errorf("expected 25 words, got %d", len(words))
+		return nil, 0, "", fmt.Errorf("expected 25 words, got %d", len(words))
 	}
 
-	// Look up the 25th word in the BIP39 list
-	lastWord := strings.ToLower(strings.TrimSpace(words[len(words)-1]))
-	initWordIndex()
-
-	bip39Idx, ok := wordIndex[lastWord]
-	if !ok {
-		suggestion := SuggestWord(lastWord)
-		if suggestion != "" {
-			return nil, 0, fmt.Errorf("word %d %q not recognized — did you mean %q?", len(words), lastWord, suggestion)
+	lang = DetectWordListLang(words)
+	if lang == "" {
+		// Try to give a helpful suggestion from any language
+		for _, w := range words {
+			if suggestion := SuggestWordAllLangs(w); suggestion != "" {
+				return nil, 0, "", fmt.Errorf("could not identify word list language — word %q not recognized, did you mean %q?", w, suggestion)
+			}
 		}
-		return nil, 0, fmt.Errorf("word %d %q not recognized", len(words), lastWord)
+		return nil, 0, "", fmt.Errorf("could not identify word list language")
+	}
+
+	// Look up the 25th word
+	lastIdx, ok := LookupWord(lang, words[len(words)-1])
+	if !ok {
+		suggestion := SuggestWordLang(words[len(words)-1], lang)
+		if suggestion != "" {
+			return nil, 0, "", fmt.Errorf("word %d %q not recognized — did you mean %q?", len(words), words[len(words)-1], suggestion)
+		}
+		return nil, 0, "", fmt.Errorf("word %d %q not recognized", len(words), words[len(words)-1])
 	}
 
 	// Decode the data words (all but the last)
-	data, err = DecodeWords(words[:len(words)-1])
+	data, err = DecodeWordsLang(words[:len(words)-1], lang)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, "", err
 	}
 
 	// Unpack index and checksum from the 25th word
-	index, expectedCheck := word25Decode(bip39Idx)
+	index, expectedCheck := word25Decode(lastIdx)
 
 	// Verify checksum against the decoded data
 	actualCheck := word25Checksum(data)
 	if actualCheck != expectedCheck {
-		return nil, 0, fmt.Errorf("word checksum failed — check word order and spelling")
+		return nil, 0, "", fmt.Errorf("word checksum failed — check word order and spelling")
 	}
 
-	return data, index, nil
+	return data, index, lang, nil
 }
 
-// SuggestWord finds the closest BIP39 word by Levenshtein distance (max 2).
+// SuggestWord finds the closest BIP39 English word by Levenshtein distance (max 2).
 // Returns empty string if no close match is found.
 func SuggestWord(input string) string {
-	input = strings.ToLower(strings.TrimSpace(input))
-	if input == "" {
+	return SuggestWordLang(input, LangEN)
+}
+
+// SuggestWordLang finds the closest word in a specific language's list (max distance 2).
+func SuggestWordLang(input string, lang Lang) string {
+	wl := GetWordList(lang)
+	if wl == nil {
+		return ""
+	}
+	normalized := NormalizeWord(input)
+	if normalized == "" {
 		return ""
 	}
 
 	bestWord := ""
 	bestDist := 3 // only suggest if distance <= 2
 
-	for _, w := range bip39English {
-		d := levenshtein(input, w)
+	for _, w := range wl.Words {
+		d := levenshtein(normalized, NormalizeWord(w))
 		if d < bestDist {
 			bestDist = d
 			bestWord = w
 		}
 		if d == 0 {
 			return w // exact match
+		}
+	}
+
+	return bestWord
+}
+
+// SuggestWordAllLangs searches all languages for the closest match (max distance 2).
+func SuggestWordAllLangs(input string) string {
+	normalized := NormalizeWord(input)
+	if normalized == "" {
+		return ""
+	}
+
+	bestWord := ""
+	bestDist := 3
+
+	for _, lang := range AllLangs() {
+		wl := GetWordList(lang)
+		if wl == nil {
+			continue
+		}
+		for _, w := range wl.Words {
+			d := levenshtein(normalized, NormalizeWord(w))
+			if d < bestDist {
+				bestDist = d
+				bestWord = w
+			}
+			if d == 0 {
+				return w
+			}
 		}
 	}
 

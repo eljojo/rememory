@@ -199,7 +199,7 @@ func decodeWordsJS(this js.Value, args []js.Value) any {
 		words[i] = wordsArray.Index(i).String()
 	}
 
-	data, index, checksum, err := decodeShareWords(words)
+	data, index, checksum, lang, err := decodeShareWords(words)
 	if err != nil {
 		return errorResult(err.Error())
 	}
@@ -211,6 +211,7 @@ func decodeWordsJS(this js.Value, args []js.Value) any {
 		"data":     jsData,
 		"index":    index,
 		"checksum": checksum,
+		"lang":     lang,
 		"error":    nil,
 	})
 }
