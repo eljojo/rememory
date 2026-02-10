@@ -10,6 +10,21 @@
   <!-- Toast notifications container -->
   <div id="toast-container" class="toast-container" role="alert" aria-live="polite"></div>
 
+  <!-- QR Scanner modal -->
+  <div id="qr-scanner-modal" class="qr-scanner-modal hidden">
+    <div class="qr-scanner-header">
+      <span data-i18n="scan_title">Scan a QR code</span>
+      <button id="qr-scanner-close" class="qr-scanner-close">&times;</button>
+    </div>
+    <div class="qr-scanner-body">
+      <video id="qr-video" autoplay playsinline></video>
+      <div class="qr-scanner-overlay"></div>
+    </div>
+    <div class="qr-scanner-hint">
+      <span data-i18n="scan_hint">Point your camera at a QR code from a friend's PDF</span>
+    </div>
+  </div>
+
   <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
@@ -41,6 +56,9 @@
       <div class="paste-section">
         <button id="paste-toggle-btn" class="btn btn-secondary" type="button">
           <span>📋</span> <span data-i18n="paste_btn">Paste a share</span>
+        </button>
+        <button id="scan-qr-btn" class="btn btn-secondary hidden" type="button">
+          <span>📷</span> <span data-i18n="scan_btn">Scan QR code</span>
         </button>
         <div id="paste-area" class="paste-area hidden">
           <textarea id="paste-input" placeholder="Paste share text here..." data-i18n-placeholder="paste_placeholder" rows="6"></textarea>
@@ -132,7 +150,6 @@
         need_more: "Waiting for {0} more piece(s)",
         ready: "Everything's ready",
         shares_of: "{0} of {1} pieces",
-        share_index: "Piece {0} of {1}",
         remove: "Remove",
         loaded: "loaded",
         manifest_loaded_bundle: "loaded from bundle",
@@ -155,6 +172,11 @@
         shares_remaining: "{0} more piece(s) needed",
         contact_label: "Contact",
         pasted_content: "pasted text",
+        scan_btn: "Scan QR code",
+        scan_title: "Scan a QR code",
+        scan_hint: "Point your camera at a QR code from a friend's PDF",
+        scan_unsupported: "QR scanning is not supported in this browser. You can type the short code below the QR code instead.",
+        scan_camera_error: "Could not access the camera",
         // Error titles
         error_title: "Something went wrong",
         error_wasm_title: "Recovery tool failed to load",
@@ -221,7 +243,6 @@
         need_more: "Faltan {0} parte(s)",
         ready: "Todo está listo",
         shares_of: "{0} de {1} partes",
-        share_index: "Parte {0} de {1}",
         remove: "Eliminar",
         loaded: "cargado",
         manifest_loaded_bundle: "cargado del paquete",
@@ -244,6 +265,11 @@
         shares_remaining: "Faltan {0} parte(s)",
         contact_label: "Contacto",
         pasted_content: "texto pegado",
+        scan_btn: "Escanear QR",
+        scan_title: "Escanear un código QR",
+        scan_hint: "Apunta tu cámara al código QR del PDF de tu amigo",
+        scan_unsupported: "Tu navegador no admite escanear QR. Puedes escribir el código corto debajo del QR.",
+        scan_camera_error: "No se pudo acceder a la cámara",
         error_title: "Algo salió mal",
         error_wasm_title: "Error al cargar la herramienta",
         error_wasm_message: "No se pudo cargar el módulo de recuperación en tu navegador.",
@@ -308,7 +334,6 @@
         need_more: "Es fehlen noch {0} Teil(e)",
         ready: "Alles ist bereit",
         shares_of: "{0} von {1} Teilen",
-        share_index: "Teil {0} von {1}",
         remove: "Entfernen",
         loaded: "geladen",
         manifest_loaded_bundle: "aus Bundle geladen",
@@ -331,6 +356,11 @@
         shares_remaining: "Noch {0} Teil(e) nötig",
         contact_label: "Kontakt",
         pasted_content: "eingefügter Text",
+        scan_btn: "QR-Code scannen",
+        scan_title: "QR-Code scannen",
+        scan_hint: "Richte deine Kamera auf den QR-Code aus dem PDF deines Freundes",
+        scan_unsupported: "QR-Scanning wird in diesem Browser nicht unterstützt. Du kannst den kurzen Code unter dem QR-Code stattdessen eintippen.",
+        scan_camera_error: "Kein Zugriff auf die Kamera",
         error_title: "Etwas ist schiefgelaufen",
         error_wasm_title: "Wiederherstellungstool konnte nicht geladen werden",
         error_wasm_message: "Das Wiederherstellungsmodul konnte in deinem Browser nicht geladen werden.",
@@ -395,7 +425,6 @@
         need_more: "Il manque encore {0} part(s)",
         ready: "Tout est prêt",
         shares_of: "{0} sur {1} parts",
-        share_index: "Part {0} sur {1}",
         remove: "Supprimer",
         loaded: "chargé",
         manifest_loaded_bundle: "chargé depuis le bundle",
@@ -418,6 +447,11 @@
         shares_remaining: "Il manque encore {0} part(s)",
         contact_label: "Contact",
         pasted_content: "texte collé",
+        scan_btn: "Scanner QR",
+        scan_title: "Scanner un code QR",
+        scan_hint: "Dirigez votre caméra vers le QR code du PDF de votre ami",
+        scan_unsupported: "Le scan QR n'est pas supporté dans ce navigateur. Vous pouvez taper le code court sous le QR code.",
+        scan_camera_error: "Impossible d'accéder à la caméra",
         error_title: "Une erreur s'est produite",
         error_wasm_title: "Échec du chargement de l'outil",
         error_wasm_message: "Le module de récupération n'a pas pu être chargé dans votre navigateur.",
@@ -481,7 +515,6 @@
         need_more: "Potrebno je dodati še {0} delov",
         ready: "Vse je pripravljeno",
         shares_of: "{0} od {1} delov",
-        share_index: "Del {0} od {1}",
         remove: "Odstrani",
         loaded: "naloženo",
         manifest_loaded_bundle: "naloženo iz svežnja",
@@ -504,6 +537,11 @@
         shares_remaining: "{0} delov še potrebnih",
         contact_label: "Kontakt",
         pasted_content: "prilepljeno besedilo",
+        scan_btn: "Skeniraj QR kodo",
+        scan_title: "Skeniraj QR kodo",
+        scan_hint: "Usmerite kamero na QR kodo s prijateljevega PDF-ja",
+        scan_unsupported: "Skeniranje QR kode ni podprto v tem brskalniku. Namesto tega lahko vnesete kratko kodo pod QR kodo.",
+        scan_camera_error: "Ni mogoče dostopati do kamere",
         // Error titles
         error_title: "Nekaj je šlo narobe",
         error_wasm_title: "Orodje za obnovitev ni uspelo naložiti",

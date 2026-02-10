@@ -245,3 +245,22 @@ export interface ToastManager {
 // ============================================
 
 export type TranslationFunction = (key: string, ...args: (string | number)[]) => string;
+
+// ============================================
+// BarcodeDetector API (not in standard TS lib)
+// ============================================
+
+export interface DetectedBarcode {
+  rawValue: string;
+  format: string;
+  boundingBox: DOMRectReadOnly;
+  cornerPoints: Array<{ x: number; y: number }>;
+}
+
+declare global {
+  class BarcodeDetector {
+    constructor(options?: { formats: string[] });
+    detect(source: HTMLVideoElement | HTMLCanvasElement | ImageBitmap | ImageData): Promise<DetectedBarcode[]>;
+    static getSupportedFormats(): Promise<string[]>;
+  }
+}

@@ -16,10 +16,6 @@ import (
 	"github.com/eljojo/rememory/internal/project"
 )
 
-// DefaultRecoveryURL is the default base URL for QR codes in PDFs.
-// Points to the recover.html hosted on GitHub Pages.
-const DefaultRecoveryURL = "https://eljojo.github.io/rememory/recover.html"
-
 // Config holds configuration for bundle generation.
 type Config struct {
 	Version          string // Tool version (e.g., "v1.0.0")

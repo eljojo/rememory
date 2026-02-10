@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -80,6 +80,12 @@ html: build
 serve: html
 	@echo "Serving at http://localhost:8000"
 	@cd dist && python3 -m http.server 8000
+
+# Run demo: clean, build, and create a demo project
+demo: build
+	rm -rf demo-recovery
+	./$(BINARY) demo
+	open demo-recovery/output/bundles/bundle-alice.zip
 
 # Cross-compile for all platforms (used by CI)
 build-all: wasm

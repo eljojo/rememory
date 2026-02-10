@@ -16,6 +16,10 @@ import (
 const (
 	ShareBegin = "-----BEGIN REMEMORY SHARE-----"
 	ShareEnd   = "-----END REMEMORY SHARE-----"
+
+	// DefaultRecoveryURL is the default base URL for QR codes in PDFs.
+	// Points to the recover.html hosted on GitHub Pages.
+	DefaultRecoveryURL = "https://eljojo.github.io/rememory/recover.html"
 )
 
 // Share represents a single Shamir share with metadata.

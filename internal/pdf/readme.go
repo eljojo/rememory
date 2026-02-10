@@ -27,7 +27,7 @@ type ReadmeData struct {
 	RecoverChecksum  string
 	Created          time.Time
 	Anonymous        bool
-	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
+	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
 }
 
 // Font sizes
@@ -43,14 +43,14 @@ const (
 const qrSizeMM = 70.0
 
 // QRContent returns the string that will be encoded in the QR code.
-// If RecoveryURL is set, it returns "URL#share=COMPACT".
-// Otherwise it returns just the compact share string.
+// Returns "URL#share=COMPACT". If RecoveryURL is not set, defaults to the production URL.
 func (d ReadmeData) QRContent() string {
 	compact := d.Share.CompactEncode()
-	if d.RecoveryURL != "" {
-		return d.RecoveryURL + "#share=" + compact
+	recoveryURL := d.RecoveryURL
+	if recoveryURL == "" {
+		recoveryURL = core.DefaultRecoveryURL
 	}
-	return compact
+	return recoveryURL + "#share=" + compact
 }
 
 // GenerateReadme creates the README.pdf content.
@@ -118,6 +118,56 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 		pdf.Ln(5)
 	}
 
+	// Section: Your Share (QR code + PEM block)
+	addSection(pdf, "YOUR SHARE")
+	pdf.Ln(2)
+
+	// Generate QR code PNG
+	qrContent := data.QRContent()
+	qrPNG, err := generateQRPNG(qrContent)
+	if err != nil {
+		return nil, fmt.Errorf("generating QR code: %w", err)
+	}
+
+	// Register QR image and place it centered
+	qrReader := bytes.NewReader(qrPNG)
+	opts := fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
+	pdf.RegisterImageOptionsReader("qrcode", opts, qrReader)
+	pageWidth, _ := pdf.GetPageSize()
+	leftMargin, _, rightMargin, _ := pdf.GetMargins()
+	contentWidth := pageWidth - leftMargin - rightMargin
+	qrX := leftMargin + (contentWidth-qrSizeMM)/2
+	pdf.ImageOptions("qrcode", qrX, pdf.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
+	pdf.SetY(pdf.GetY() + qrSizeMM + 3)
+
+	// Caption under QR code
+	pdf.SetFont(fontSans, "I", bodySize)
+	pdf.CellFormat(0, 5, "Scan this with your phone camera to import your share", "", 1, "C", false, 0, "")
+	pdf.Ln(2)
+
+	// Show the compact string below the QR for manual entry
+	compact := data.Share.CompactEncode()
+	pdf.SetFont(fontMono, "", smallMono)
+	pdf.SetFillColor(245, 245, 245)
+	pdf.CellFormat(0, 4, compact, "", 1, "C", true, 0, "")
+	pdf.Ln(8)
+
+	// PEM block (machine-readable format)
+	addSection(pdf, "MACHINE-READABLE FORMAT")
+	pdf.SetFont(fontMono, "", smallMono)
+	pdf.SetFillColor(245, 245, 245)
+
+	shareText := data.Share.Encode()
+	shareLines := strings.Split(shareText, "\n")
+	for _, line := range shareLines {
+		if line != "" {
+			pdf.CellFormat(0, 3.5, line, "", 1, "L", true, 0, "")
+		} else {
+			pdf.Ln(1.5)
+		}
+	}
+	pdf.Ln(5)
+
 	// Section: Browser recovery
 	addSection(pdf, "HOW TO RECOVER (PRIMARY METHOD - Browser)")
 	addBody(pdf, "1. Open recover.html in any modern browser (Chrome, Firefox, Safari, Edge)")
@@ -163,60 +213,6 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
 	pdf.Ln(2)
 	addBody(pdf, "Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age")
-	pdf.Ln(5)
-
-	// ============================================
-	// Page 2: QR Code + Share Data
-	// ============================================
-	pdf.AddPage()
-
-	// QR code section header
-	addSection(pdf, "YOUR SHARE")
-	pdf.Ln(2)
-
-	// Generate QR code PNG
-	qrContent := data.QRContent()
-	qrPNG, err := generateQRPNG(qrContent)
-	if err != nil {
-		return nil, fmt.Errorf("generating QR code: %w", err)
-	}
-
-	// Register QR image and place it centered
-	qrReader := bytes.NewReader(qrPNG)
-	opts := fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
-	pdf.RegisterImageOptionsReader("qrcode", opts, qrReader)
-	pageWidth, _ := pdf.GetPageSize()
-	leftMargin, _, rightMargin, _ := pdf.GetMargins()
-	contentWidth := pageWidth - leftMargin - rightMargin
-	qrX := leftMargin + (contentWidth-qrSizeMM)/2
-	pdf.ImageOptions("qrcode", qrX, pdf.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
-	pdf.SetY(pdf.GetY() + qrSizeMM + 3)
-
-	// Caption under QR code
-	pdf.SetFont(fontSans, "I", bodySize)
-	pdf.CellFormat(0, 5, "Scan this with your phone camera to import your share", "", 1, "C", false, 0, "")
-	pdf.Ln(2)
-
-	// Show the compact string below the QR for reference
-	pdf.SetFont(fontMono, "", smallMono)
-	pdf.SetFillColor(245, 245, 245)
-	pdf.CellFormat(0, 4, qrContent, "", 1, "C", true, 0, "")
-	pdf.Ln(8)
-
-	// PEM block (machine-readable format)
-	addSection(pdf, "MACHINE-READABLE FORMAT")
-	pdf.SetFont(fontMono, "", smallMono)
-	pdf.SetFillColor(245, 245, 245)
-
-	shareText := data.Share.Encode()
-	shareLines := strings.Split(shareText, "\n")
-	for _, line := range shareLines {
-		if line != "" {
-			pdf.CellFormat(0, 3.5, line, "", 1, "L", true, 0, "")
-		} else {
-			pdf.Ln(1.5)
-		}
-	}
 	pdf.Ln(5)
 
 	// Footer: Metadata

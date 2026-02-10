@@ -35,7 +35,7 @@ Run this command inside a project directory (created with 'rememory init').`,
 }
 
 func init() {
-	sealCmd.Flags().String("recovery-url", bundle.DefaultRecoveryURL, "Base URL for QR code in PDF")
+	sealCmd.Flags().String("recovery-url", core.DefaultRecoveryURL, "Base URL for QR code in PDF")
 	rootCmd.AddCommand(sealCmd)
 }
 
@@ -74,7 +74,7 @@ func runSeal(cmd *cobra.Command, args []string) error {
 
 // sealProject archives, encrypts, splits, verifies, saves, and generates bundles
 // for an already-loaded project. Both runSeal and runDemo share this logic.
-// recoveryURL is an optional base URL for QR codes in the PDF (empty = compact share only).
+// recoveryURL is the base URL for QR codes in the PDF. If empty, the PDF defaults to the production URL.
 func sealProject(p *project.Project, recoveryURL string) error {
 	// Check manifest directory exists and has content
 	manifestDir := p.ManifestPath()

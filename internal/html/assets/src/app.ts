@@ -54,6 +54,10 @@ declare const t: TranslationFunction;
     contactList: HTMLElement | null;
     step1Card: HTMLElement | null;
     step2Card: HTMLElement | null;
+    scanQrBtn: HTMLButtonElement | null;
+    qrScannerModal: HTMLElement | null;
+    qrVideo: HTMLVideoElement | null;
+    qrScannerClose: HTMLButtonElement | null;
   }
 
   // DOM elements
@@ -80,7 +84,11 @@ declare const t: TranslationFunction;
     contactListSection: document.getElementById('contact-list-section'),
     contactList: document.getElementById('contact-list'),
     step1Card: null,
-    step2Card: null
+    step2Card: null,
+    scanQrBtn: document.getElementById('scan-qr-btn') as HTMLButtonElement | null,
+    qrScannerModal: document.getElementById('qr-scanner-modal'),
+    qrVideo: document.getElementById('qr-video') as HTMLVideoElement | null,
+    qrScannerClose: document.getElementById('qr-scanner-close') as HTMLButtonElement | null
   };
 
   // Personalization data (embedded in HTML)
@@ -216,6 +224,7 @@ declare const t: TranslationFunction;
     setupDropZones();
     setupButtons();
     setupPaste();
+    setupScanner();
 
     // Render contact list immediately (doesn't need WASM)
     if (personalization?.otherFriends && personalization.otherFriends.length > 0) {
@@ -250,12 +259,33 @@ declare const t: TranslationFunction;
         state.threshold = share.threshold;
         state.total = share.total;
         state.shares.push(share);
+
+        // Now that we know the holder's index, assign share indices to contact items
+        assignContactIndices(share.index);
+
         updateSharesUI();
         updateContactList();
       }
     }
 
     checkRecoverReady();
+  }
+
+  // Assign share indices to contact list items so we can match compact shares (which lack holder names)
+  function assignContactIndices(holderIndex: number): void {
+    if (!personalization?.otherFriends || !elements.contactList) return;
+
+    const items = elements.contactList.querySelectorAll('.contact-item');
+    // otherFriends are in project order, skipping the holder.
+    // Share indices are 1-based: project friend[0] = share 1, friend[1] = share 2, etc.
+    let friendIdx = 0;
+    for (let shareIndex = 1; shareIndex <= state.total; shareIndex++) {
+      if (shareIndex === holderIndex) continue;
+      if (friendIdx < items.length) {
+        (items[friendIdx] as HTMLElement).dataset.shareIndex = String(shareIndex);
+        friendIdx++;
+      }
+    }
   }
 
   // ============================================
@@ -320,12 +350,16 @@ declare const t: TranslationFunction;
   function updateContactList(): void {
     if (!personalization?.otherFriends || !elements.contactList) return;
 
-    const collectedNames = new Set(state.shares.map(s => s.holder?.toLowerCase()));
+    const collectedNames = new Set(
+      state.shares.map(s => s.holder?.toLowerCase()).filter(Boolean)
+    );
+    const collectedIndices = new Set(state.shares.map(s => s.index));
 
     elements.contactList.querySelectorAll('.contact-item').forEach(item => {
       const el = item as HTMLElement;
       const name = el.dataset.name?.toLowerCase();
-      const isCollected = name ? collectedNames.has(name) : false;
+      const shareIndex = el.dataset.shareIndex ? parseInt(el.dataset.shareIndex, 10) : 0;
+      const isCollected = (name ? collectedNames.has(name) : false) || collectedIndices.has(shareIndex);
       el.classList.toggle('collected', isCollected);
       const checkbox = el.querySelector('.checkbox');
       if (checkbox) {
@@ -558,6 +592,121 @@ declare const t: TranslationFunction;
   }
 
   // ============================================
+  // QR Code Scanner (BarcodeDetector API)
+  // ============================================
+
+  let scannerStream: MediaStream | null = null;
+  let scannerAnimFrame: number | null = null;
+
+  function setupScanner(): void {
+    // Only show the button if BarcodeDetector is available
+    if (!('BarcodeDetector' in window)) return;
+
+    elements.scanQrBtn?.classList.remove('hidden');
+    elements.scanQrBtn?.addEventListener('click', () => {
+      if (!state.wasmReady) {
+        toast.warning(t('error_not_ready_title'), t('error_not_ready_message'), t('error_not_ready_guidance'));
+        return;
+      }
+      openScanner();
+    });
+
+    elements.qrScannerClose?.addEventListener('click', closeScanner);
+  }
+
+  async function openScanner(): Promise<void> {
+    elements.qrScannerModal?.classList.remove('hidden');
+
+    try {
+      scannerStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+    } catch (_err) {
+      toast.warning(t('scan_camera_error'), t('scan_camera_error'));
+      closeScanner();
+      return;
+    }
+
+    if (elements.qrVideo) {
+      elements.qrVideo.srcObject = scannerStream;
+    }
+
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+
+    function scanLoop(): void {
+      if (!scannerStream || !elements.qrVideo) return;
+
+      // Wait until video is playing and has dimensions
+      if (elements.qrVideo.readyState < 2 || elements.qrVideo.videoWidth === 0) {
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+        return;
+      }
+
+      detector.detect(elements.qrVideo).then(barcodes => {
+        if (!scannerStream) return; // Scanner was closed
+
+        for (const barcode of barcodes) {
+          const value = barcode.rawValue.trim();
+          // Check for compact share format directly or URL with fragment
+          let compact = '';
+          if (compactShareRegex.test(value)) {
+            compact = value;
+          } else {
+            // Check for URL with #share= fragment
+            try {
+              const url = new URL(value);
+              const hash = url.hash;
+              if (hash && hash.startsWith('#share=')) {
+                const decoded = decodeURIComponent(hash.slice('#share='.length));
+                if (compactShareRegex.test(decoded)) {
+                  compact = decoded;
+                }
+              }
+            } catch {
+              // Not a URL, ignore
+            }
+          }
+
+          if (compact) {
+            handleScannedShare(compact);
+            return;
+          }
+        }
+
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+      }).catch(() => {
+        // Detection error, keep trying
+        scannerAnimFrame = requestAnimationFrame(scanLoop);
+      });
+    }
+
+    scannerAnimFrame = requestAnimationFrame(scanLoop);
+  }
+
+  async function handleScannedShare(compact: string): Promise<void> {
+    closeScanner();
+    await parseAndAddShareFromPaste(compact);
+  }
+
+  function closeScanner(): void {
+    if (scannerAnimFrame !== null) {
+      cancelAnimationFrame(scannerAnimFrame);
+      scannerAnimFrame = null;
+    }
+
+    if (scannerStream) {
+      scannerStream.getTracks().forEach(track => track.stop());
+      scannerStream = null;
+    }
+
+    if (elements.qrVideo) {
+      elements.qrVideo.srcObject = null;
+    }
+
+    elements.qrScannerModal?.classList.add('hidden');
+  }
+
+  // ============================================
   // Share File Handling
   // ============================================
 
@@ -686,7 +835,6 @@ declare const t: TranslationFunction;
         <span class="icon">&#9989;</span>
         <div class="details">
           <div class="name">${escapeHtml(share.holder || 'Share ' + share.index)}${holderLabel}</div>
-          <div class="meta">${t('share_index', share.index, share.total)}</div>
         </div>
         ${showRemove ? `<button class="remove" data-idx="${idx}" title="${t('remove')}">&times;</button>` : ''}
       `;
@@ -717,8 +865,12 @@ declare const t: TranslationFunction;
         : `&#9989; ${t('ready')} (${t('shares_of', state.shares.length, state.threshold)})`;
       elements.thresholdInfo.className = 'threshold-info' + (needed === 0 ? ' ready' : '');
       elements.thresholdInfo.classList.remove('hidden');
+
+      // Collapse step 1 content when threshold is met
+      elements.step1Card?.classList.toggle('threshold-met', needed === 0);
     } else {
       elements.thresholdInfo?.classList.add('hidden');
+      elements.step1Card?.classList.remove('threshold-met');
     }
 
     updateContactList();

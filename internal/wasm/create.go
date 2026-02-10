@@ -283,7 +283,6 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
 			Anonymous:        config.Anonymous,
-			RecoveryURL:      bundle.DefaultRecoveryURL,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {

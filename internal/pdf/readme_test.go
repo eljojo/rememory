@@ -58,17 +58,11 @@ func TestGenerateReadmeAnonymous(t *testing.T) {
 func TestQRContent(t *testing.T) {
 	data := testReadmeData()
 
-	// Without RecoveryURL: just the compact share string
+	// Without RecoveryURL set: defaults to production URL
 	content := data.QRContent()
-	expected := data.Share.CompactEncode()
+	expected := core.DefaultRecoveryURL + "#share=" + data.Share.CompactEncode()
 	if content != expected {
 		t.Errorf("QRContent without URL: got %q, want %q", content, expected)
-	}
-
-	// Verify the compact string round-trips
-	_, err := core.ParseCompact(content)
-	if err != nil {
-		t.Fatalf("compact string from QRContent doesn't parse: %v", err)
 	}
 }
 
@@ -115,7 +109,7 @@ func TestQRCodeGeneratesValidPNG(t *testing.T) {
 }
 
 func TestQRCodeContentMatchesCompact(t *testing.T) {
-	// Verify the data encoded in the QR code is exactly the compact share string
+	// Verify the QR content is the default URL with compact share in fragment
 	share := core.NewShare(2, 5, 3, "Bob", []byte("another-share-data-for-testing"))
 	data := ReadmeData{
 		Share:     share,
@@ -126,13 +120,14 @@ func TestQRCodeContentMatchesCompact(t *testing.T) {
 
 	qrContent := data.QRContent()
 	compact := share.CompactEncode()
+	expected := core.DefaultRecoveryURL + "#share=" + compact
 
-	if qrContent != compact {
-		t.Errorf("QR content doesn't match compact encoding:\n  got:  %q\n  want: %q", qrContent, compact)
+	if qrContent != expected {
+		t.Errorf("QR content doesn't match expected URL:\n  got:  %q\n  want: %q", qrContent, expected)
 	}
 
-	// Verify the compact string correctly round-trips
-	parsed, err := core.ParseCompact(qrContent)
+	// Verify the compact portion correctly round-trips
+	parsed, err := core.ParseCompact(compact)
 	if err != nil {
 		t.Fatalf("ParseCompact: %v", err)
 	}

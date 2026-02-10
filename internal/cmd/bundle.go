@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/eljojo/rememory/internal/bundle"
+	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ Each bundle contains:
 }
 
 func init() {
-	bundleCmd.Flags().String("recovery-url", bundle.DefaultRecoveryURL, "Base URL for QR code in PDF")
+	bundleCmd.Flags().String("recovery-url", core.DefaultRecoveryURL, "Base URL for QR code in PDF")
 	rootCmd.AddCommand(bundleCmd)
 }
 
