@@ -111,6 +111,7 @@
             pkgs.nodejs
             pkgs.esbuild
             pkgs.playwright-test
+            pkgs.poppler-utils
           ];
           shellHook = ''
             export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
