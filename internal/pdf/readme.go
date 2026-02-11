@@ -124,6 +124,16 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 
 	// Section: Your Share (QR code + PEM block)
+	// Ensure the section header + QR code + caption + compact string stay together
+	qrBlockHeight := 10.0 + 2.0 + qrSizeMM + 3.0 + 5.0 + 2.0 + 4.0 // header + gap + QR + gap + caption + gap + compact
+	{
+		_, pageHeight := p.GetPageSize()
+		_, _, _, bottomMargin := p.GetMargins()
+		usableBottom := pageHeight - bottomMargin
+		if p.GetY()+qrBlockHeight > usableBottom {
+			p.AddPage()
+		}
+	}
 	addSection(p, t("your_share"))
 	p.Ln(2)
 
