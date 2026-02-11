@@ -55,8 +55,10 @@
   "lang_fr": "français",
   "lang_de": "allemand",
   "lang_sl": "slovène",
-  "machine_readable": "FORMAT LISIBLE PAR MACHINE (vous pouvez aussi télécharger ce fichier entier) :",
+  "machine_readable": "FORMAT LISIBLE PAR MACHINE (collez sur le site web) :",
   "metadata_footer": "PIED DE PAGE MÉTADONNÉES (analysable par machine)",
   "qr_caption": "Scannez ceci avec l'appareil photo de votre téléphone pour importer votre part",
+  "recovery_rule": "RÈGLE DE RÉCUPÉRATION",
+  "recovery_rule_count": "{0} sur {1} nécessaires",
   "readme_filename": "LISEZMOI"
 }

@@ -55,8 +55,10 @@
   "lang_fr": "Französisch",
   "lang_de": "Deutsch",
   "lang_sl": "Slowenisch",
-  "machine_readable": "MASCHINENLESBARES FORMAT (du kannst auch diese gesamte Datei hochladen):",
+  "machine_readable": "MASCHINENLESBARES FORMAT (auf der Webseite einfügen):",
   "metadata_footer": "METADATEN-FUSSZEILE (maschinenlesbar)",
   "qr_caption": "Scanne dies mit deiner Handykamera, um deinen Teil zu importieren",
+  "recovery_rule": "WIEDERHERSTELLUNGSREGEL",
+  "recovery_rule_count": "{0} von {1} erforderlich",
   "readme_filename": "LIESMICH"
 }

@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full update-pdf-png
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -150,3 +150,13 @@ bump-major:
 	else \
 		echo "Tag created locally. Push with: git push origin $$new"; \
 	fi
+
+# Generate PNG screenshots from demo PDF pages (requires pdftoppm from poppler)
+update-pdf-png: build
+	@rm -rf demo-recovery
+	./$(BINARY) demo
+	@mkdir -p docs/screenshots/demo-pdf
+	@rm -f docs/screenshots/demo-pdf/*.png
+	@unzip -o demo-recovery/output/bundles/bundle-alice.zip README.pdf -d demo-recovery/output/bundles/bundle-alice/
+	pdftoppm -png -r 200 demo-recovery/output/bundles/bundle-alice/README.pdf docs/screenshots/demo-pdf/page
+	@echo "Generated PDF page screenshots in docs/screenshots/demo-pdf/"

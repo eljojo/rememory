@@ -10,7 +10,7 @@
   "what_bundle_for": "Este kit te permite ayudar a recuperar secretos encriptados para: {0}",
   "what_one_of": "Eres uno de {0} amigos de confianza que guardan partes de la clave de recuperación.",
   "what_threshold": "Al menos {0} de ustedes deben cooperar para desencriptar el contenido.",
-  "other_holders": "OTROS PORTADORES (contactar para coordinar la recuperación)",
+  "other_holders": "OTROS CONTACTOS (para coordinar la recuperación)",
   "contact_label": "Contacto: {0}",
   "sharing_title": "ALGUIEN ME PIDIÓ MI PARTE — ¿QUÉ HAGO?",
   "sharing_verify": "Primero, asegúrate de que la solicitud es legítima. Si es posible, intenta llamar al dueño original de los datos para confirmar que la recuperación ha sido autorizada.",
@@ -58,5 +58,7 @@
   "machine_readable": "FORMATO DE COMPUTADOR (pega esto):",
   "metadata_footer": "PIE DE METADATOS (parseable por máquina)",
   "qr_caption": "Escanea esto con la cámara de tu teléfono para importar tu parte",
+  "recovery_rule": "REGLA DE RECUPERACIÓN",
+  "recovery_rule_count": "{0} de {1} necesarios",
   "readme_filename": "LEEME"
 }

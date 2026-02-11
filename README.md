@@ -94,6 +94,16 @@ Each friend gets a ZIP bundle containing:
 
 **A single share reveals absolutely nothing.** But tell your friends to keep their bundle safe—it's their responsibility to you.
 
+![Example README PDF — page 1](docs/screenshots/demo-pdf/page-1.png)
+
+<details>
+<summary>More pages</summary>
+
+![Example README PDF — page 2](docs/screenshots/demo-pdf/page-2.png)
+![Example README PDF — page 3](docs/screenshots/demo-pdf/page-3.png)
+
+</details>
+
 ---
 
 ## FAQ
