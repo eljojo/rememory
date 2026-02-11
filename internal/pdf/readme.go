@@ -32,6 +32,7 @@ type ReadmeData struct {
 	Anonymous        bool
 	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+	ManifestEmbedded bool   // true when manifest is embedded in recover.html
 }
 
 // Font sizes
@@ -222,9 +223,14 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.SetFont(fontSans, "B", bodySize)
 	p.MultiCell(0, 5, "   "+t("recover_share_loaded"), "", "L", false)
 	p.Ln(2)
-	addBody(p, t("recover_step2"))
-	addBody(p, "   "+t("recover_step2_drag"))
-	addBody(p, "   "+t("recover_step2_click"))
+	if data.ManifestEmbedded {
+		addBody(p, t("recover_step2_embedded"))
+		addBody(p, "   "+t("recover_step2_embedded_hint"))
+	} else {
+		addBody(p, t("recover_step2"))
+		addBody(p, "   "+t("recover_step2_drag"))
+		addBody(p, "   "+t("recover_step2_click"))
+	}
 	p.Ln(2)
 	if data.Anonymous {
 		addBody(p, t("recover_anon_step3"))

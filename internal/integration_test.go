@@ -458,7 +458,7 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	defer r.Close()
 
 	// Check expected files exist
-	var foundReadmeTxt, foundReadmePdf, foundManifest, foundRecover bool
+	var foundReadmeTxt, foundReadmePdf, foundRecover bool
 
 	var readmeContent string
 	var recoverContent string
@@ -480,8 +480,6 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 			readmeContent = string(data)
 		case translations.IsReadmeFile(f.Name, ".pdf"):
 			foundReadmePdf = true
-		case f.Name == "MANIFEST.age":
-			foundManifest = true
 		case f.Name == "recover.html":
 			foundRecover = true
 			recoverContent = string(data)
@@ -494,9 +492,9 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	if !foundReadmePdf {
 		t.Error("missing README .pdf file")
 	}
-	if !foundManifest {
-		t.Error("missing file: MANIFEST.age")
-	}
+	// MANIFEST.age is only in the ZIP when NOT embedded in recover.html.
+	// With a tiny fake WASM, manifests are small enough to embed, so it won't be in the ZIP.
+	// We still parse it if present, but don't require it.
 	if !foundRecover {
 		t.Error("missing file: recover.html")
 	}
@@ -712,16 +710,31 @@ func extractManifestFromBundle(t *testing.T, bundlePath string) []byte {
 	}
 	defer r.Close()
 
+	var recoverData []byte
 	for _, f := range r.File {
 		if f.Name == "MANIFEST.age" {
 			rc, _ := f.Open()
-			data := make([]byte, f.UncompressedSize64)
-			rc.Read(data)
+			data, _ := io.ReadAll(rc)
 			rc.Close()
 			return data
 		}
+		if f.Name == "recover.html" {
+			rc, _ := f.Open()
+			recoverData, _ = io.ReadAll(rc)
+			rc.Close()
+		}
 	}
-	t.Fatal("MANIFEST.age not found in bundle")
+
+	// Fall back to extracting manifest from recover.html personalization data
+	if len(recoverData) > 0 {
+		manifest, err := html.ExtractManifestFromHTML(recoverData)
+		if err != nil {
+			t.Fatalf("extracting manifest from recover.html: %v", err)
+		}
+		return manifest
+	}
+
+	t.Fatal("MANIFEST.age not found in bundle and no recover.html to extract from")
 	return nil
 }
 
@@ -1141,8 +1154,26 @@ func TestManifestEmbedding(t *testing.T) {
 		}
 	})
 
-	t.Run("MANIFEST.age still in ZIP when embedded", func(t *testing.T) {
+	t.Run("MANIFEST.age excluded from ZIP when embedded", func(t *testing.T) {
 		bundlesDir, _ := setup(t, 100, false)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		r, err := zip.OpenReader(bundlePath)
+		if err != nil {
+			t.Fatalf("opening bundle: %v", err)
+		}
+		defer r.Close()
+
+		for _, f := range r.File {
+			if f.Name == "MANIFEST.age" {
+				t.Error("MANIFEST.age should NOT be in ZIP when embedded in recover.html")
+			}
+		}
+	})
+
+	t.Run("MANIFEST.age included in ZIP when not embedded", func(t *testing.T) {
+		// NoEmbedManifest=true means manifest is NOT embedded, so MANIFEST.age must be in ZIP
+		bundlesDir, _ := setup(t, 100, true)
 		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
 
 		r, err := zip.OpenReader(bundlePath)
@@ -1159,7 +1190,7 @@ func TestManifestEmbedding(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Error("MANIFEST.age should still be in ZIP even when embedded in recover.html")
+			t.Error("MANIFEST.age should be in ZIP when not embedded in recover.html")
 		}
 	})
 }

@@ -944,6 +944,11 @@ declare const t: TranslationFunction;
         return;
       }
 
+      if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+        await handleManifestFromHTML(file);
+        return;
+      }
+
       if (!file.name.endsWith('.age')) {
         if (elements.manifestDropZone) {
           showError(
@@ -969,7 +974,84 @@ declare const t: TranslationFunction;
     }
   }
 
-  function showManifestLoaded(filename: string, size: number, source: 'file' | 'bundle' | 'embedded' = 'file'): void {
+  async function handleManifestFromHTML(file: File): Promise<void> {
+    const text = await readFileAsText(file);
+
+    // Extract PERSONALIZATION JSON from the HTML
+    const match = text.match(/window\.PERSONALIZATION\s*=\s*(\{[^\n]*\})\s*;/);
+    if (!match || !match[1]) {
+      if (elements.manifestDropZone) {
+        showError(
+          t('error_wrong_manifest_message', file.name),
+          {
+            title: t('error_wrong_manifest_title'),
+            guidance: t('error_html_no_manifest_guidance'),
+            inline: true,
+            targetElement: elements.manifestDropZone
+          }
+        );
+      }
+      return;
+    }
+
+    try {
+      const personalizationData = JSON.parse(match[1]);
+      if (!personalizationData.manifestB64) {
+        if (elements.manifestDropZone) {
+          showError(
+            t('error_wrong_manifest_message', file.name),
+            {
+              title: t('error_wrong_manifest_title'),
+              guidance: t('error_html_no_manifest_guidance'),
+              inline: true,
+              targetElement: elements.manifestDropZone
+            }
+          );
+        }
+        return;
+      }
+
+      const binary = atob(personalizationData.manifestB64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      state.manifest = bytes;
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'html');
+
+      // Also extract the share if present and we don't already have one
+      if (personalizationData.holderShare && state.wasmReady) {
+        const result = window.rememoryParseShare(personalizationData.holderShare);
+        if (!result.error && result.share) {
+          const share = result.share;
+          if (!state.shares.some(s => s.index === share.index)) {
+            if (state.shares.length === 0 || (state.threshold === 0 && share.threshold > 0)) {
+              state.threshold = share.threshold;
+              state.total = share.total;
+            }
+            state.shares.push(share);
+            updateSharesUI();
+          }
+        }
+      }
+
+      checkRecoverReady();
+    } catch {
+      if (elements.manifestDropZone) {
+        showError(
+          t('error_wrong_manifest_message', file.name),
+          {
+            title: t('error_wrong_manifest_title'),
+            guidance: t('error_html_no_manifest_guidance'),
+            inline: true,
+            targetElement: elements.manifestDropZone
+          }
+        );
+      }
+    }
+  }
+
+  function showManifestLoaded(filename: string, size: number, source: 'file' | 'bundle' | 'embedded' | 'html' = 'file'): void {
     elements.manifestDropZone?.classList.add('hidden');
 
     if (elements.manifestStatus) {
@@ -977,6 +1059,7 @@ declare const t: TranslationFunction;
         file: t('loaded'),
         bundle: t('manifest_loaded_bundle'),
         embedded: t('manifest_loaded_embedded'),
+        html: t('manifest_loaded_html'),
       };
       const sourceLabel = sourceLabels[source] || t('loaded');
       elements.manifestStatus.innerHTML = `

@@ -267,7 +267,8 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		}
 
 		// Embed manifest in recover.html when small enough
-		if len(manifestData) <= html.MaxEmbeddedManifestSize {
+		manifestEmbedded := len(manifestData) <= html.MaxEmbeddedManifestSize
+		if manifestEmbedded {
 			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
 		}
 
@@ -289,6 +290,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Created:          now,
 			Anonymous:        config.Anonymous,
 			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
 		}
 		readmeContent := bundle.GenerateReadme(readmeData)
 
@@ -308,20 +310,25 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Created:          now,
 			Anonymous:        config.Anonymous,
 			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {
 			return nil, fmt.Errorf("generating PDF for %s: %w", friend.Name, err)
 		}
 
-		// Create ZIP bundle
+		// Create ZIP bundle.
+		// When the manifest is embedded in recover.html, skip the separate MANIFEST.age
+		// file to avoid duplicating data and inflating the ZIP size.
 		readmeFileTxt := translations.ReadmeFilename(lang, ".txt")
 		readmeFilePdf := translations.ReadmeFilename(lang, ".pdf")
 		zipFiles := []bundle.ZipFile{
 			{Name: readmeFileTxt, Content: []byte(readmeContent), ModTime: now},
 			{Name: readmeFilePdf, Content: pdfContent, ModTime: now},
-			{Name: "MANIFEST.age", Content: manifestData, ModTime: now},
 			{Name: "recover.html", Content: []byte(recoverHTML), ModTime: now},
+		}
+		if !manifestEmbedded {
+			zipFiles = append(zipFiles, bundle.ZipFile{Name: "MANIFEST.age", Content: manifestData, ModTime: now})
 		}
 
 		zipData, err := createZipInMemory(zipFiles)

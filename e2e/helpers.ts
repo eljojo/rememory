@@ -175,12 +175,18 @@ export class RecoveryPage {
     await this.page.locator('#share-file-input').setInputFiles(readmePaths);
   }
 
-  // Add manifest file
+  // Add manifest file — tries MANIFEST.age first, falls back to recover.html
   async addManifest(bundleDir?: string): Promise<void> {
     const dir = bundleDir || this.bundleDir;
-    await this.page.locator('#manifest-file-input').setInputFiles(
-      path.join(dir, 'MANIFEST.age')
-    );
+    const manifestPath = path.join(dir, 'MANIFEST.age');
+    const recoverPath = path.join(dir, 'recover.html');
+    const filePath = fs.existsSync(manifestPath) ? manifestPath : recoverPath;
+    await this.page.locator('#manifest-file-input').setInputFiles(filePath);
+  }
+
+  // Add a specific file as the manifest source (e.g. a personalized recover.html)
+  async addManifestFile(filePath: string): Promise<void> {
+    await this.page.locator('#manifest-file-input').setInputFiles(filePath);
   }
 
   // Click recover button
@@ -208,7 +214,8 @@ export class RecoveryPage {
   }
 
   async expectManifestLoaded(): Promise<void> {
-    await expect(this.page.locator('#manifest-status')).toHaveClass(/loaded/);
+    // Longer timeout: reading large recover.html files via FileReader can be slow (especially Firefox)
+    await expect(this.page.locator('#manifest-status')).toHaveClass(/loaded/, { timeout: 15000 });
   }
 
   async expectManifestDropZoneVisible(): Promise<void> {
@@ -293,7 +300,8 @@ export class RecoveryPage {
   }
 
   async expectStepsCollapsed(): Promise<void> {
-    await expect(this.page.locator('.card.collapsed').first()).toBeAttached();
+    // Longer timeout: reading manifest from recover.html can be slow (especially Firefox)
+    await expect(this.page.locator('.card.collapsed').first()).toBeAttached({ timeout: 15000 });
   }
 }
 

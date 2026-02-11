@@ -27,6 +27,7 @@ type ReadmeData struct {
 	Created          time.Time
 	Anonymous        bool
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+	ManifestEmbedded bool   // true when manifest is embedded in recover.html
 }
 
 // writeWordGrid writes a two-column word grid to the string builder.
@@ -101,9 +102,14 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step1")))
 	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_share_loaded")))
-	sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
-	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
-	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
+	if data.ManifestEmbedded {
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2_embedded")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_embedded_hint")))
+	} else {
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
+		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
+	}
 	if data.Anonymous {
 		sb.WriteString(fmt.Sprintf("%s\n", t("recover_anon_step3")))
 		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_anon_step3_drag")))

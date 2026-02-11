@@ -402,6 +402,32 @@ test.describe('Generic recover.html (no personalization)', () => {
     await recovery.expectDownloadVisible();
   });
 
+  test('personalized recover.html can be used as manifest source on standalone tool', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, tmpDir);
+
+    await recovery.openFile(standaloneRecoverHtml);
+    await recovery.expectShareCount(0);
+
+    // Add Alice's and Bob's shares via README.txt files
+    await recovery.addShares(aliceDir, bobDir);
+    await recovery.expectShareCount(2);
+
+    // Explicitly load Alice's personalized recover.html as the manifest source
+    // (bundles no longer include a separate MANIFEST.age when the manifest is embedded)
+    const recoverHtmlPath = path.join(aliceDir, 'recover.html');
+    expect(fs.existsSync(recoverHtmlPath)).toBeTruthy();
+    expect(fs.existsSync(path.join(aliceDir, 'MANIFEST.age'))).toBeFalsy();
+
+    await recovery.addManifestFile(recoverHtmlPath);
+    await recovery.expectManifestLoaded();
+
+    // Recovery should complete automatically
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
+    await recovery.expectDownloadVisible();
+  });
+
   test('words-first entry recovers when second share provides threshold', async ({ page }) => {
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
     // Use a dummy bundleDir — we'll open the standalone HTML directly
