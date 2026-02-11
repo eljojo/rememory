@@ -6,6 +6,7 @@ import {
   getRememoryBin,
   createTestProject,
   createAnonymousTestProject,
+  cleanupProject,
   extractBundle,
   extractBundles,
   extractAnonymousBundles,
@@ -33,9 +34,7 @@ test.describe('Browser Recovery Tool', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
   });
 
   test('recover.html loads and shows UI', async ({ page }) => {
@@ -281,9 +280,7 @@ test.describe('Anonymous Bundle Recovery', () => {
   });
 
   test.afterAll(async () => {
-    if (anonProjectDir && fs.existsSync(anonProjectDir)) {
-      fs.rmSync(anonProjectDir, { recursive: true, force: true });
-    }
+    cleanupProject(anonProjectDir);
   });
 
   test('anonymous recover.html loads and shows UI without contact list', async ({ page }) => {
@@ -363,9 +360,7 @@ test.describe('Generic recover.html (no personalization)', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
     if (tmpDir && fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -484,9 +479,7 @@ test.describe('Embedded Manifest Recovery', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
   });
 
   test('embedded manifest auto-loads and recovery works without manual manifest upload', async ({ page }) => {
@@ -524,9 +517,7 @@ test.describe('--no-embed-manifest flag', () => {
   });
 
   test.afterAll(async () => {
-    if (noEmbedProjectDir && fs.existsSync(noEmbedProjectDir)) {
-      fs.rmSync(noEmbedProjectDir, { recursive: true, force: true });
-    }
+    cleanupProject(noEmbedProjectDir);
   });
 
   test('manifest is not pre-loaded when --no-embed-manifest is used', async ({ page }) => {

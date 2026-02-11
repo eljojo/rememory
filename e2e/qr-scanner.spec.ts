@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
   getRememoryBin,
   createTestProject,
+  cleanupProject,
   extractBundle,
   extractBundles,
   findReadmeFile,
@@ -26,9 +27,7 @@ test.describe('QR Scanner', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
   });
 
   test('scan button is visible when BarcodeDetector is available', async ({ page }) => {
