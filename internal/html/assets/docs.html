@@ -406,7 +406,8 @@
           <li><a href="#recovering">Recovering Files</a></li>
           <li class="indent"><a href="#bundle-contents">What Friends Receive</a></li>
           <li class="indent"><a href="#recovery-bundle">Path A: Bundle ZIP</a></li>
-          <li class="indent"><a href="#recovery-pdf">Path B: Printed PDF</a></li>
+          <li class="indent"><a href="#recovery-words">Path B: Printed PDF with Words</a></li>
+          <li class="indent"><a href="#recovery-pdf">Path C: Printed PDF with QR</a></li>
           <li><a href="#best-practices">Best Practices</a></li>
           <li class="indent"><a href="#revoking-access">Revoking Access</a></li>
           <li><a href="#cli">CLI Alternative</a></li>
@@ -567,7 +568,7 @@
 
       <p style="margin-top: 1rem;">
         Each bundle is personalized: the <code>recover.html</code> has the friend's share pre-loaded
-        and shows a contact list of other friends who hold shares.
+        and shows a contact list of other friends who hold shares. Often, it also includes the MANIFEST.age to simplify recovery.
       </p>
 
       <h3 id="recovery-bundle">Path A: I Have the Bundle ZIP</h3>
@@ -632,14 +633,74 @@
         <figcaption>Once threshold is met, files are decrypted and ready to download</figcaption>
       </figure>
 
-      <h3 id="recovery-pdf">Path B: I Have a Printed PDF</h3>
+      <h3 id="recovery-words">Path B: I Have a Printed PDF with Words</h3>
       <p>
-        Some people prefer to keep just the PDF printout in a safe or filing cabinet and store the
-        <code>MANIFEST.age</code> file separately (e.g. cloud storage, email, USB drive). Since
-        the manifest is encrypted, it's safe to keep copies anywhere—nobody can open it without
-        combining enough shares.
+        Each printed PDF includes your share encoded as a list of numbered words. You can type these
+        words into the recovery tool to get started—no QR code scanner or camera needed.
       </p>
-      <p>If you're starting from a printed PDF:</p>
+      <p>If you're starting from a printed PDF with recovery words:</p>
+
+      <div class="step-guide">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h4>Open the recovery tool</h4>
+          <p>Visit the URL printed on the PDF, or open <code>recover.html</code> from any friend's bundle.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h4>Type in your recovery words</h4>
+          <p>Find the numbered word list on your printed PDF and type the words into the recovery tool's text area. The words don't need to be separated by numbers—just type or paste them separated by spaces.</p>
+        </div>
+      </div>
+
+      <figure class="screenshot">
+        <img src="screenshots/recovery-words-typing.png" alt="Typing recovery words from a printed PDF into the recovery tool" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Typing recovery words from a printed PDF into the recovery tool</div>'">
+        <figcaption>Type the numbered words from your printed PDF into the text area</figcaption>
+      </figure>
+
+      <figure class="screenshot">
+        <img src="screenshots/recovery-words-recognized.png" alt="Recovery tool after words have been entered, showing the share was recognized" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Recovery tool after words have been entered, showing the share was recognized</div>'">
+        <figcaption>The recovery tool recognizes the words and loads your share</figcaption>
+      </figure>
+
+      <div class="step-guide">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h4>Load the encrypted manifest</h4>
+          <p>You might need the <code>MANIFEST.age</code> file—drag it onto the page or click to browse. If you don't have it, ask one of the other friends to send it from their bundle. Every bundle contains the same copy.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h4>Collect shares from other friends</h4>
+          <p>Contact other friends and ask them to send their shares. They can send their <code>README.txt</code>, share text, read their words over the phone, or you can scan the QR code from their printed PDF.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h4>Recovery happens automatically</h4>
+          <p>Once the threshold is met, decryption starts immediately.</p>
+        </div>
+      </div>
+
+      <div class="tip">
+        <strong>Tip:</strong> Words are easier to read over the phone than QR codes or raw share text.
+        If a friend can't send their share digitally, they can read the words aloud and you can type them in.
+      </div>
+
+      <h3 id="recovery-pdf">Path C: I Have a Printed PDF with QR Code</h3>
+      <p>
+        If your device has a camera, you can scan the QR code on the printed PDF to import your
+        share directly—no typing required.
+      </p>
+      <p>If you're starting from a printed PDF and want to use the QR code:</p>
 
       <div class="step-guide">
         <div class="step-number">1</div>
@@ -663,7 +724,7 @@
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Load the encrypted manifest</h4>
-          <p>You need the <code>MANIFEST.age</code> file—drag it onto the page or click to browse. If you don't have it, ask one of the other friends to send it from their bundle. Every bundle contains the same copy.</p>
+          <p>You might need the <code>MANIFEST.age</code> file—drag it onto the page or click to browse. If you don't have it, ask one of the other friends to send it from their bundle. Every bundle contains the same copy.</p>
         </div>
       </div>
 
@@ -693,7 +754,7 @@
         <ul>
           <li>Works completely offline—no internet required</li>
           <li>No data leaves the browser</li>
-          <li>Works on Chrome, Firefox, Safari, Edge</li>
+          <li>Works on Chrome, Firefox, Safari, Edge -- (QR only in Chrome, Edge, Opera)</li>
           <li>Friends can be in different locations; they just share their README.txt files</li>
         </ul>
       </div>
@@ -838,21 +899,20 @@
         <li>Friends can always switch languages in recover.html regardless of the default</li>
       </ul>
 
-      <h3>CLI Usage</h3>
-      <p>Set the project-level default language:</p>
-      <pre><code>rememory init my-recovery --language es</code></pre>
-      <p>Override per friend using the extended <code>--friend</code> format:</p>
-      <pre><code>rememory init my-recovery --language es \
-  --friend "Alice,alice@example.com,en" \
-  --friend "Roberto,roberto@example.com,es"</code></pre>
-      <p>Or set it directly in <code>project.yml</code>:</p>
-      <pre><code>language: es
-friends:
-  - name: Alice
-    contact: alice@example.com
-    language: en
-  - name: Roberto
-    contact: roberto@example.com</code></pre>
+      <figure class="screenshot">
+        <img src="screenshots/multilingual-language-dropdown.png" alt="Friend entry showing the bundle language dropdown in the web UI" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Friend entry showing the bundle language dropdown in the web UI</div>'">
+        <figcaption>Each friend has a language dropdown to set their bundle language</figcaption>
+      </figure>
+
+      <figure class="screenshot">
+        <img src="screenshots/multilingual-recover-spanish-1.png" alt="recover.html opened in Spanish" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: recover.html opened in a non-English language (e.g. Spanish)</div>'">
+        <figcaption>The recovery tool opens in the friend's selected language</figcaption>
+      </figure>
+
+      <figure class="screenshot">
+        <img src="screenshots/multilingual-recover-spanish-2.png" alt="recover.html opened in Spanish" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: recover.html opened in a non-English language (e.g. Spanish)</div>'">
+        <figcaption>Word lists are translated too (both languages work)</figcaption>
+      </figure>
     </section>
 
     <footer class="docs-footer">

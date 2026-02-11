@@ -862,6 +862,24 @@ declare const t: TranslationFunction;
   // Shares UI
   // ============================================
 
+  // Resolve a display name for a share: use holder if set, otherwise look up
+  // the friend name from personalization data by share index, fall back to generic.
+  function resolveShareName(share: import('./types').ParsedShare): string {
+    if (share.holder) return share.holder;
+    if (personalization) {
+      if (personalization.holder) {
+        // Check if this matches the bundle holder's own share index
+        const holderShare = state.shares.find(s => s.isHolder);
+        if (holderShare && holderShare.index === share.index) {
+          return personalization.holder;
+        }
+      }
+      const friend = personalization.otherFriends.find(f => f.shareIndex === share.index);
+      if (friend) return friend.name;
+    }
+    return 'Share ' + share.index;
+  }
+
   function updateSharesUI(): void {
     if (!elements.sharesList) return;
 
@@ -870,6 +888,8 @@ declare const t: TranslationFunction;
     state.shares.forEach((share, idx) => {
       const item = document.createElement('div');
       item.className = 'share-item valid';
+
+      const displayName = resolveShareName(share);
 
       const isHolderShare = share.isHolder ||
         (personalization && share.holder &&
@@ -881,7 +901,7 @@ declare const t: TranslationFunction;
       item.innerHTML = `
         <span class="icon">&#9989;</span>
         <div class="details">
-          <div class="name">${escapeHtml(share.holder || 'Share ' + share.index)}${holderLabel}</div>
+          <div class="name">${escapeHtml(displayName)}${holderLabel}</div>
         </div>
         ${showRemove ? `<button class="remove" data-idx="${idx}" title="${t('remove')}">&times;</button>` : ''}
       `;
