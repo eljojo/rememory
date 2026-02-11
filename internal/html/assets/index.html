@@ -17,24 +17,33 @@
   <meta name="twitter:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <style>{{STYLES}}</style>
   <style>
+    a {
+      color: var(--dusty-blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
     /* Landing page specific styles - personal tool feel */
     .intro {
-      background: white;
+      background: var(--paper-light);
       padding: 2rem;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(46,42,38,0.08);
       margin-bottom: 1.5rem;
     }
 
     .intro h1 {
       font-size: 1.75rem;
-      color: #2c3e50;
+      color: var(--text);
       margin-bottom: 0.75rem;
     }
 
     .intro .summary {
       font-size: 1.05rem;
-      color: #495057;
+      color: var(--text);
       line-height: 1.7;
       margin-bottom: 1rem;
     }
@@ -46,32 +55,23 @@
       font-size: 0.95rem;
     }
 
-    .intro .links a {
-      color: #3498db;
-      text-decoration: none;
-    }
-
-    .intro .links a:hover {
-      text-decoration: underline;
-    }
-
-    /* How It Works - Animated Diagram */
+/* How It Works - Animated Diagram */
     .how-it-works {
-      background: white;
+      background: var(--paper-light);
       border-radius: 8px;
       padding: 1.5rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(46,42,38,0.08);
       margin-bottom: 1.5rem;
     }
 
     .how-it-works h2 {
       font-size: 1.25rem;
-      color: #2c3e50;
+      color: var(--text);
       margin-bottom: 0.5rem;
     }
 
     .how-it-works .subtitle {
-      color: #6c757d;
+      color: var(--text-secondary);
       margin-bottom: 1rem;
       font-size: 0.95rem;
       line-height: 1.6;
@@ -92,7 +92,7 @@
 
     .dataflow-caption {
       text-align: center;
-      color: #95a5a6;
+      color: var(--text-muted);
       font-size: 0.8rem;
       font-style: italic;
     }
@@ -111,7 +111,7 @@
       display: none;
       text-align: center;
       padding: 2rem;
-      color: #5a6c7d;
+      color: var(--text-secondary);
     }
 
     .reduced-motion-fallback .flow-text {
@@ -121,16 +121,16 @@
 
     /* What this is / isn't */
     .what-is {
-      background: white;
+      background: var(--paper-light);
       border-radius: 8px;
       padding: 1.5rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(46,42,38,0.08);
       margin-bottom: 1.5rem;
     }
 
     .what-is h2 {
       font-size: 1.25rem;
-      color: #2c3e50;
+      color: var(--text);
       margin-bottom: 1rem;
     }
 
@@ -142,7 +142,7 @@
 
     .what-is-col h3 {
       font-size: 1rem;
-      color: #495057;
+      color: var(--text);
       margin-bottom: 0.5rem;
     }
 
@@ -150,7 +150,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      color: #6c757d;
+      color: var(--text-secondary);
       font-size: 0.95rem;
       line-height: 1.8;
     }
@@ -161,32 +161,32 @@
 
     .what-is-col.is-col ul li::before {
       content: "•";
-      color: #27ae60;
+      color: var(--sage);
     }
 
     .what-is-col.isnt-col ul li::before {
       content: "•";
-      color: #95a5a6;
+      color: var(--text-muted);
     }
 
     /* Try it section */
     .try-it {
-      background: white;
+      background: var(--paper-light);
       border-radius: 8px;
       padding: 1.5rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(46,42,38,0.08);
       margin-bottom: 1.5rem;
     }
 
     .try-it h2 {
       font-size: 1.25rem;
-      color: #2c3e50;
+      color: var(--text);
       margin-bottom: 1rem;
     }
 
     .try-it ol {
       padding-left: 1.25rem;
-      color: #495057;
+      color: var(--text);
       line-height: 1.8;
       margin-bottom: 1rem;
     }
@@ -195,15 +195,15 @@
       margin-bottom: 0.5rem;
     }
 
-    .try-it .note {
-      color: #6c757d;
+.try-it .note {
+      color: var(--text-secondary);
       font-size: 0.9rem;
       font-style: italic;
     }
 
     /* Trust section */
     .trust {
-      background: #f8f9fa;
+      background: var(--sand);
       border-radius: 8px;
       padding: 1.5rem 2rem;
       margin-bottom: 1.5rem;
@@ -211,7 +211,7 @@
 
     .trust h2 {
       font-size: 1.1rem;
-      color: #495057;
+      color: var(--text);
       margin-bottom: 0.75rem;
     }
 
@@ -219,7 +219,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      color: #6c757d;
+      color: var(--text-secondary);
       font-size: 0.9rem;
       line-height: 1.8;
     }
@@ -227,35 +227,26 @@
     .trust ul li::before {
       content: "→";
       margin-right: 0.5rem;
-      color: #95a5a6;
+      color: var(--text-muted);
     }
 
-    .trust ul li a {
-      color: #3498db;
-      text-decoration: none;
-    }
-
-    .trust ul li a:hover {
-      text-decoration: underline;
-    }
-
-    /* Background note */
+/* Background note */
     .background {
-      background: white;
+      background: var(--paper-light);
       border-radius: 8px;
       padding: 1.5rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(46,42,38,0.08);
       margin-bottom: 1.5rem;
     }
 
     .background h2 {
       font-size: 1.1rem;
-      color: #495057;
+      color: var(--text);
       margin-bottom: 0.75rem;
     }
 
     .background p {
-      color: #6c757d;
+      color: var(--text-secondary);
       font-size: 0.95rem;
       line-height: 1.7;
       margin: 0;
@@ -264,12 +255,12 @@
     footer {
       text-align: center;
       padding: 1.5rem;
-      color: #95a5a6;
+      color: var(--text-muted);
       font-size: 0.85rem;
     }
 
     footer a {
-      color: #7f8c8d;
+      color: var(--text-secondary);
       text-decoration: none;
     }
 
@@ -279,7 +270,7 @@
 
     footer .version {
       font-size: 0.75rem;
-      color: #bdc3c7;
+      color: var(--text-muted);
       margin-top: 0.5rem;
     }
 

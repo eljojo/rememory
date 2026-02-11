@@ -75,6 +75,15 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	// Register embedded UTF-8 TrueType fonts (DejaVu Sans)
 	registerUTF8Fonts(p)
 
+	// Page numbers — small, centered, low-key
+	p.SetFooterFunc(func() {
+		p.SetY(-15)
+		p.SetFont(fontSans, "", 7)
+		p.SetTextColor(180, 180, 180)
+		p.CellFormat(0, 10, fmt.Sprintf("%d", p.PageNo()), "", 0, "C", false, 0, "")
+		p.SetTextColor(0, 0, 0)
+	})
+
 	p.AddPage()
 
 	// Page dimensions (used throughout for centered elements)
@@ -99,12 +108,12 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 
 	// ── Warning stamps — high contrast, centered, stamp-like ──
 	// Stamp 1: Cannot use alone
-	p.SetFillColor(180, 40, 50)
+	p.SetFillColor(85, 115, 90)
 	p.SetTextColor(255, 255, 255)
 	p.SetFont(fontSans, "B", headingSize)
 	p.CellFormat(0, 11, t("warning_cannot_alone"), "", 1, "C", true, 0, "")
 	p.SetTextColor(0, 0, 0)
-	p.SetFillColor(255, 230, 232)
+	p.SetFillColor(232, 242, 234)
 	p.SetFont(fontSans, "", 9)
 	if data.Anonymous {
 		p.CellFormat(0, 7, t("warning_need_shares"), "", 1, "C", true, 0, "")
@@ -113,12 +122,12 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 	p.Ln(4)
 	// Stamp 2: Confidential
-	p.SetFillColor(180, 40, 50)
+	p.SetFillColor(85, 115, 90)
 	p.SetTextColor(255, 255, 255)
 	p.SetFont(fontSans, "B", headingSize)
 	p.CellFormat(0, 11, t("warning_confidential"), "", 1, "C", true, 0, "")
 	p.SetTextColor(0, 0, 0)
-	p.SetFillColor(255, 230, 232)
+	p.SetFillColor(232, 242, 234)
 	p.SetFont(fontSans, "", 9)
 	p.CellFormat(0, 7, t("warning_keep_safe"), "", 1, "C", true, 0, "")
 	p.Ln(8)
