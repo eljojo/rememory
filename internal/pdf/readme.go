@@ -9,9 +9,11 @@ import (
 
 	"github.com/go-pdf/fpdf"
 	qrcode "github.com/skip2/go-qrcode"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // ReadmeData contains all data needed to generate README.pdf
@@ -29,6 +31,7 @@ type ReadmeData struct {
 	Created          time.Time
 	Anonymous        bool
 	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
+	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
 }
 
 // Font sizes
@@ -56,72 +59,72 @@ func (d ReadmeData) QRContent() string {
 
 // GenerateReadme creates the README.pdf content.
 func GenerateReadme(data ReadmeData) ([]byte, error) {
-	pdf := fpdf.New("P", "mm", "A4", "")
-	pdf.SetMargins(20, 20, 20)
-	pdf.SetAutoPageBreak(true, 20)
+	lang := data.Language
+	if lang == "" {
+		lang = "en"
+	}
+	t := func(key string, args ...any) string {
+		return translations.T("readme", lang, key, args...)
+	}
+
+	p := fpdf.New("P", "mm", "A4", "")
+	p.SetMargins(20, 20, 20)
+	p.SetAutoPageBreak(true, 20)
 
 	// Register embedded UTF-8 TrueType fonts (DejaVu Sans)
-	registerUTF8Fonts(pdf)
+	registerUTF8Fonts(p)
 
-	pdf.AddPage()
+	p.AddPage()
 
 	// Title
-	pdf.SetFont(fontSans, "B", titleSize)
-	pdf.CellFormat(0, 10, "REMEMORY RECOVERY BUNDLE", "", 1, "C", false, 0, "")
-	pdf.SetFont(fontSans, "", headingSize)
-	pdf.CellFormat(0, 8, fmt.Sprintf("For: %s", data.Holder), "", 1, "C", false, 0, "")
-	pdf.Ln(5)
+	p.SetFont(fontSans, "B", titleSize)
+	p.CellFormat(0, 10, t("title"), "", 1, "C", false, 0, "")
+	p.SetFont(fontSans, "", headingSize)
+	p.CellFormat(0, 8, t("for", data.Holder), "", 1, "C", false, 0, "")
+	p.Ln(5)
 
 	// Warning box
-	pdf.SetFillColor(255, 240, 240)
-	pdf.SetFont(fontSans, "B", bodySize)
-	pdf.CellFormat(0, 7, "  !! YOU CANNOT USE THIS FILE ALONE", "", 1, "L", true, 0, "")
-	pdf.SetFont(fontSans, "", bodySize)
+	p.SetFillColor(255, 240, 240)
+	p.SetFont(fontSans, "B", bodySize)
+	p.CellFormat(0, 7, "  !! "+t("warning_cannot_alone"), "", 1, "L", true, 0, "")
+	p.SetFont(fontSans, "", bodySize)
 	if data.Anonymous {
-		pdf.CellFormat(0, 5, "  You will need to combine this with other shares.", "", 1, "L", true, 0, "")
+		p.CellFormat(0, 5, "  "+t("warning_need_shares"), "", 1, "L", true, 0, "")
 	} else {
-		pdf.CellFormat(0, 5, "  You will need help from other friends listed below.", "", 1, "L", true, 0, "")
+		p.CellFormat(0, 5, "  "+t("warning_need_friends"), "", 1, "L", true, 0, "")
 	}
-	pdf.Ln(2)
-	pdf.SetFont(fontSans, "B", bodySize)
-	pdf.CellFormat(0, 7, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
-	pdf.SetFont(fontSans, "", bodySize)
-	pdf.CellFormat(0, 5, "  This document contains your secret share. Keep it safe.", "", 1, "L", true, 0, "")
-	pdf.Ln(3)
-
-	// Spanish AI help note (green background, right after warning)
-	pdf.SetFillColor(220, 245, 220)
-	pdf.SetFont(fontSans, "B", bodySize)
-	pdf.CellFormat(0, 6, "  NOTA PARA HISPANOHABLANTES", "", 1, "L", true, 0, "")
-	pdf.SetFont(fontSans, "I", bodySize)
-	pdf.MultiCell(0, 5, "  Si no entiendes inglés, puedes usar ChatGPT u otra inteligencia artificial para que te ayude a entender estas instrucciones y recuperar los datos. Copia este documento completo y pídele a la IA que te explique los pasos. La herramienta recover.html también está disponible en español.", "", "L", true)
-	pdf.Ln(5)
+	p.Ln(2)
+	p.SetFont(fontSans, "B", bodySize)
+	p.CellFormat(0, 7, "  !! "+t("warning_confidential"), "", 1, "L", true, 0, "")
+	p.SetFont(fontSans, "", bodySize)
+	p.CellFormat(0, 5, "  "+t("warning_keep_safe"), "", 1, "L", true, 0, "")
+	p.Ln(5)
 
 	// Section: What is this?
-	addSection(pdf, "WHAT IS THIS?")
-	addBody(pdf, fmt.Sprintf("This bundle allows you to help recover encrypted secrets for: %s", data.ProjectName))
-	addBody(pdf, fmt.Sprintf("You are one of %d trusted friends who hold pieces of the recovery key.", data.Total))
-	addBody(pdf, fmt.Sprintf("At least %d of you must cooperate to decrypt the contents.", data.Threshold))
-	pdf.Ln(5)
+	addSection(p, t("what_is_this"))
+	addBody(p, t("what_bundle_for", data.ProjectName))
+	addBody(p, t("what_one_of", data.Total))
+	addBody(p, t("what_threshold", data.Threshold))
+	p.Ln(5)
 
-	// Section: Other share holders (right after What is this?) - skip for anonymous mode
+	// Section: Other share holders - skip for anonymous mode
 	if !data.Anonymous {
-		addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
+		addSection(p, t("other_holders"))
 		for _, friend := range data.OtherFriends {
-			pdf.SetFont(fontSans, "B", bodySize)
-			pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
-			pdf.SetFont(fontSans, "", bodySize)
+			p.SetFont(fontSans, "B", bodySize)
+			p.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
+			p.SetFont(fontSans, "", bodySize)
 			if friend.Contact != "" {
-				pdf.CellFormat(0, 5, fmt.Sprintf("    Contact: %s", friend.Contact), "", 1, "L", false, 0, "")
+				p.CellFormat(0, 5, "    "+t("contact_label", friend.Contact), "", 1, "L", false, 0, "")
 			}
-			pdf.Ln(2)
+			p.Ln(2)
 		}
-		pdf.Ln(5)
+		p.Ln(5)
 	}
 
 	// Section: Your Share (QR code + PEM block)
-	addSection(pdf, "YOUR SHARE")
-	pdf.Ln(2)
+	addSection(p, t("your_share"))
+	p.Ln(2)
 
 	// Generate QR code PNG
 	qrContent := data.QRContent()
@@ -133,110 +136,188 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	// Register QR image and place it centered
 	qrReader := bytes.NewReader(qrPNG)
 	opts := fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
-	pdf.RegisterImageOptionsReader("qrcode", opts, qrReader)
-	pageWidth, _ := pdf.GetPageSize()
-	leftMargin, _, rightMargin, _ := pdf.GetMargins()
+	p.RegisterImageOptionsReader("qrcode", opts, qrReader)
+	pageWidth, _ := p.GetPageSize()
+	leftMargin, _, rightMargin, _ := p.GetMargins()
 	contentWidth := pageWidth - leftMargin - rightMargin
 	qrX := leftMargin + (contentWidth-qrSizeMM)/2
-	pdf.ImageOptions("qrcode", qrX, pdf.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
-	pdf.SetY(pdf.GetY() + qrSizeMM + 3)
+	p.ImageOptions("qrcode", qrX, p.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
+	p.SetY(p.GetY() + qrSizeMM + 3)
 
 	// Caption under QR code
-	pdf.SetFont(fontSans, "I", bodySize)
-	pdf.CellFormat(0, 5, "Scan this with your phone camera to import your share", "", 1, "C", false, 0, "")
-	pdf.Ln(2)
+	p.SetFont(fontSans, "I", bodySize)
+	p.CellFormat(0, 5, t("qr_caption"), "", 1, "C", false, 0, "")
+	p.Ln(2)
 
 	// Show the compact string below the QR for manual entry
 	compact := data.Share.CompactEncode()
-	pdf.SetFont(fontMono, "", smallMono)
-	pdf.SetFillColor(245, 245, 245)
-	pdf.CellFormat(0, 4, compact, "", 1, "C", true, 0, "")
-	pdf.Ln(8)
+	p.SetFont(fontMono, "", smallMono)
+	p.SetFillColor(245, 245, 245)
+	p.CellFormat(0, 4, compact, "", 1, "C", true, 0, "")
+	p.Ln(8)
 
-	// PEM block (machine-readable format)
-	addSection(pdf, "MACHINE-READABLE FORMAT")
-	pdf.SetFont(fontMono, "", smallMono)
-	pdf.SetFillColor(245, 245, 245)
+	// Word grids (recovery words in two columns)
+	nativeWords, _ := data.Share.WordsForLang(core.Lang(lang))
+	if len(nativeWords) > 0 {
+		if lang != "en" {
+			// Non-English: show native language grid first, then English
+			langName := t("lang_" + lang)
+			renderWordGridPDF(p, nativeWords, t("recovery_words_title_lang", len(nativeWords), langName), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_hint"), "", "L", false)
+			p.Ln(5)
 
-	shareText := data.Share.Encode()
-	shareLines := strings.Split(shareText, "\n")
-	for _, line := range shareLines {
-		if line != "" {
-			pdf.CellFormat(0, 3.5, line, "", 1, "L", true, 0, "")
+			// English fallback grid
+			englishWords, _ := data.Share.Words()
+			renderWordGridPDF(p, englishWords, t("recovery_words_title_english", len(englishWords)), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_dual_hint"), "", "L", false)
+			p.Ln(5)
 		} else {
-			pdf.Ln(1.5)
+			// English only: single grid
+			renderWordGridPDF(p, nativeWords, t("recovery_words_title", len(nativeWords)), leftMargin, contentWidth)
+			p.SetFont(fontSans, "I", bodySize)
+			p.MultiCell(0, 5, t("recovery_words_hint"), "", "L", false)
+			p.Ln(5)
 		}
 	}
-	pdf.Ln(5)
+
+	// PEM block (machine-readable format)
+	// Ensure PEM block starts on a page with enough room for the header + content
+	shareText := data.Share.Encode()
+	shareLines := strings.Split(shareText, "\n")
+	pemHeight := 10.0 // section header
+	for _, line := range shareLines {
+		if line != "" {
+			pemHeight += 3.5
+		} else {
+			pemHeight += 1.5
+		}
+	}
+	{
+		_, pageHeight := p.GetPageSize()
+		_, _, _, bottomMargin := p.GetMargins()
+		usableBottom := pageHeight - bottomMargin
+		if p.GetY()+pemHeight > usableBottom {
+			p.AddPage()
+		}
+	}
+	addSection(p, t("machine_readable"))
+	p.SetFont(fontMono, "", smallMono)
+	p.SetFillColor(245, 245, 245)
+
+	for _, line := range shareLines {
+		if line != "" {
+			p.CellFormat(0, 3.5, line, "", 1, "L", true, 0, "")
+		} else {
+			p.Ln(1.5)
+		}
+	}
+	p.Ln(5)
 
 	// Section: Browser recovery
-	addSection(pdf, "HOW TO RECOVER (PRIMARY METHOD - Browser)")
-	addBody(pdf, "1. Open recover.html in any modern browser (Chrome, Firefox, Safari, Edge)")
-	pdf.Ln(2)
-	pdf.SetFont(fontSans, "B", bodySize)
-	pdf.MultiCell(0, 5, "   YOUR SHARE IS ALREADY LOADED!", "", "L", false)
-	pdf.SetFont(fontSans, "I", bodySize)
-	pdf.MultiCell(0, 5, "   The recovery tool is personalized for you.", "", "L", false)
-	pdf.Ln(2)
-	addBody(pdf, "2. Load the encrypted file (MANIFEST.age) from this bundle:")
-	addBody(pdf, "   - Drag and drop it onto the manifest area, OR click to browse")
-	pdf.Ln(2)
+	addSection(p, t("recover_browser"))
+	addBody(p, t("recover_step1"))
+	p.Ln(2)
+	p.SetFont(fontSans, "B", bodySize)
+	p.MultiCell(0, 5, "   "+t("recover_share_loaded"), "", "L", false)
+	p.Ln(2)
+	addBody(p, t("recover_step2"))
+	addBody(p, "   "+t("recover_step2_drag"))
+	addBody(p, "   "+t("recover_step2_click"))
+	p.Ln(2)
 	if data.Anonymous {
-		addBody(pdf, "3. Add other shares as you receive them")
-		addBody(pdf, "   - Drag and drop README.txt files onto the page, OR")
-		addBody(pdf, "   - Click the clipboard button to paste share text")
-		pdf.Ln(2)
-		addBody(pdf, fmt.Sprintf("4. Once you have %d shares total, recovery happens AUTOMATICALLY!", data.Threshold))
-		pdf.Ln(2)
-		addBody(pdf, "5. Download the recovered files")
+		addBody(p, t("recover_anon_step3"))
+		addBody(p, "   "+t("recover_anon_step3_drag"))
+		addBody(p, "   "+t("recover_anon_step3_paste"))
+		p.Ln(2)
+		addBody(p, t("recover_anon_step4_auto", data.Threshold))
+		p.Ln(2)
+		addBody(p, t("recover_anon_step5"))
 	} else {
-		addBody(pdf, "3. You'll see a contact list showing other friends who hold shares.")
-		addBody(pdf, "   Contact them and ask them to send you their README.txt file.")
-		pdf.Ln(2)
-		addBody(pdf, "4. For each friend's README.txt you receive:")
-		addBody(pdf, "   - Drag and drop it onto the page, OR")
-		addBody(pdf, "   - Click the clipboard button to paste their share text")
-		pdf.Ln(2)
-		addBody(pdf, "5. As you add shares, checkmarks appear next to each friend's name.")
-		addBody(pdf, fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY!", data.Threshold))
-		pdf.Ln(2)
-		addBody(pdf, "6. Download the recovered files")
+		addBody(p, t("recover_step3_contact"))
+		addBody(p, "   "+t("recover_step3_ask"))
+		p.Ln(2)
+		addBody(p, t("recover_step4"))
+		addBody(p, "   "+t("recover_step4_drag"))
+		addBody(p, "   "+t("recover_step4_paste"))
+		p.Ln(2)
+		addBody(p, t("recover_step5_checkmarks"))
+		addBody(p, "   "+t("recover_step5_auto", data.Threshold))
+		p.Ln(2)
+		addBody(p, t("recover_step6"))
 	}
-	pdf.Ln(2)
-	pdf.SetFont(fontSans, "I", bodySize)
-	pdf.MultiCell(0, 5, "Works completely offline - no internet required!", "", "L", false)
-	pdf.Ln(5)
+	p.Ln(2)
+	p.SetFont(fontSans, "I", bodySize)
+	p.MultiCell(0, 5, t("recover_offline"), "", "L", false)
+	p.Ln(5)
 
 	// Section: CLI fallback
-	addSection(pdf, "HOW TO RECOVER (FALLBACK - Command Line)")
-	addBody(pdf, "If recover.html doesn't work, download the CLI tool from:")
-	pdf.SetFont(fontMono, "", monoSize)
-	pdf.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
-	pdf.Ln(2)
-	addBody(pdf, "Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age")
-	pdf.Ln(5)
+	addSection(p, t("recover_cli"))
+	addBody(p, t("recover_cli_hint"))
+	p.SetFont(fontMono, "", monoSize)
+	p.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
+	p.Ln(2)
+	addBody(p, t("recover_cli_usage"))
+	p.Ln(5)
 
 	// Footer: Metadata
-	pdf.SetFont(fontSans, "B", smallMono)
-	pdf.CellFormat(0, 5, "METADATA", "", 1, "L", false, 0, "")
-	pdf.SetFont(fontMono, "", smallMono)
-	pdf.SetFillColor(245, 245, 245)
-	addMeta(pdf, "rememory-version", data.Version)
-	addMeta(pdf, "created", data.Created.Format(time.RFC3339))
-	addMeta(pdf, "project", data.ProjectName)
-	addMeta(pdf, "threshold", fmt.Sprintf("%d", data.Threshold))
-	addMeta(pdf, "total", fmt.Sprintf("%d", data.Total))
-	addMeta(pdf, "github-release", data.GitHubReleaseURL)
-	addMeta(pdf, "checksum-manifest", data.ManifestChecksum)
-	addMeta(pdf, "checksum-recover-html", data.RecoverChecksum)
+	p.SetFont(fontSans, "B", smallMono)
+	p.CellFormat(0, 5, "METADATA", "", 1, "L", false, 0, "")
+	p.SetFont(fontMono, "", smallMono)
+	p.SetFillColor(245, 245, 245)
+	addMeta(p, "rememory-version", data.Version)
+	addMeta(p, "created", data.Created.Format(time.RFC3339))
+	addMeta(p, "project", data.ProjectName)
+	addMeta(p, "threshold", fmt.Sprintf("%d", data.Threshold))
+	addMeta(p, "total", fmt.Sprintf("%d", data.Total))
+	addMeta(p, "github-release", data.GitHubReleaseURL)
+	addMeta(p, "checksum-manifest", data.ManifestChecksum)
+	addMeta(p, "checksum-recover-html", data.RecoverChecksum)
 
 	// Write to buffer
 	var buf bytes.Buffer
-	if err := pdf.Output(&buf); err != nil {
+	if err := p.Output(&buf); err != nil {
 		return nil, fmt.Errorf("writing PDF: %w", err)
 	}
 
 	return buf.Bytes(), nil
+}
+
+// renderWordGridPDF renders a two-column word grid with page-break detection.
+func renderWordGridPDF(p *fpdf.Fpdf, words []string, title string, leftMargin, contentWidth float64) {
+	half := (len(words) + 1) / 2
+	rowHeight := 5.5
+	gridHeight := 10 + float64(half)*rowHeight + 2
+	_, pageHeight := p.GetPageSize()
+	_, _, _, bottomMargin := p.GetMargins()
+	usableBottom := pageHeight - bottomMargin
+
+	if p.GetY()+gridHeight > usableBottom {
+		p.AddPage()
+	}
+
+	addSection(p, title)
+	p.SetFont(fontMono, "", bodySize)
+
+	colWidth := contentWidth / 2
+	startY := p.GetY()
+
+	for i := 0; i < half; i++ {
+		y := startY + float64(i)*rowHeight
+
+		// NFC-normalize words so accented characters render as single glyphs
+		// (BIP39 word lists may store them in NFD form: ra + combining accent + pido)
+		p.SetXY(leftMargin, y)
+		p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+1, norm.NFC.String(words[i])), "", 0, "L", false, 0, "")
+
+		if i+half < len(words) {
+			p.SetXY(leftMargin+colWidth, y)
+			p.CellFormat(colWidth, 5, fmt.Sprintf("%2d. %s", i+half+1, norm.NFC.String(words[i+half])), "", 0, "L", false, 0, "")
+		}
+	}
+
+	p.SetY(startY + float64(half)*rowHeight + 2)
 }
 
 func addSection(pdf *fpdf.Fpdf, title string) {

@@ -6,6 +6,7 @@ import {
   createTestProject,
   extractBundle,
   extractBundles,
+  findReadmeFile,
   RecoveryPage
 } from './helpers';
 
@@ -106,7 +107,7 @@ test.describe('QR Scanner', () => {
     const recovery = new RecoveryPage(page, aliceDir);
 
     // Read Bob's PEM share
-    const bobReadme = fs.readFileSync(path.join(bobDir, 'README.txt'), 'utf8');
+    const bobReadme = fs.readFileSync(findReadmeFile(bobDir), 'utf8');
     const pemMatch = bobReadme.match(
       /-----BEGIN REMEMORY SHARE-----([\s\S]*?)-----END REMEMORY SHARE-----/
     );
@@ -183,7 +184,7 @@ test.describe('QR Scanner', () => {
   test('scanning a URL with fragment adds the share', async ({ page }) => {
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
 
-    const bobReadme = fs.readFileSync(path.join(bobDir, 'README.txt'), 'utf8');
+    const bobReadme = fs.readFileSync(findReadmeFile(bobDir), 'utf8');
     const pemMatch = bobReadme.match(
       /-----BEGIN REMEMORY SHARE-----([\s\S]*?)-----END REMEMORY SHARE-----/
     );

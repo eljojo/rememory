@@ -387,6 +387,7 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="maker.html">Create Bundles</a>
+      <a href="recover.html">Recover</a>
       <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
     </div>
   </nav>
@@ -409,6 +410,7 @@
           <li><a href="#best-practices">Best Practices</a></li>
           <li><a href="#cli">CLI Alternative</a></li>
           <li><a href="#anonymous">Anonymous Mode</a></li>
+          <li><a href="#multilingual">Multilingual Bundles</a></li>
         </ul>
       </nav>
     </aside>
@@ -788,6 +790,39 @@
         make sure share holders know how to reach each other (or you) when recovery is needed.
         You'll need to coordinate through other means.
       </div>
+    </section>
+
+    <section id="multilingual" class="doc-section">
+      <h2>Advanced: Multilingual Bundles</h2>
+      <p>
+        Each friend can receive their bundle (README.txt, README.pdf, and recover.html) in their preferred language.
+        ReMemory supports 5 languages: English, Spanish, German, French, and Slovenian.
+      </p>
+
+      <h3>How It Works</h3>
+      <ul>
+        <li>In the web UI, each friend entry has a <strong>Bundle language</strong> dropdown</li>
+        <li>If set to "Default", the friend's bundle uses the current UI language</li>
+        <li>Override per friend to generate bundles in different languages</li>
+        <li>The recover.html tool will open in the friend's selected language by default</li>
+        <li>Friends can always switch languages in recover.html regardless of the default</li>
+      </ul>
+
+      <h3>CLI Usage</h3>
+      <p>Set the project-level default language:</p>
+      <pre><code>rememory init my-recovery --language es</code></pre>
+      <p>Override per friend using the extended <code>--friend</code> format:</p>
+      <pre><code>rememory init my-recovery --language es \
+  --friend "Alice,alice@example.com,en" \
+  --friend "Roberto,roberto@example.com,es"</code></pre>
+      <p>Or set it directly in <code>project.yml</code>:</p>
+      <pre><code>language: es
+friends:
+  - name: Alice
+    contact: alice@example.com
+    language: en
+  - name: Roberto
+    contact: roberto@example.com</code></pre>
     </section>
 
     <footer class="docs-footer">

@@ -2,6 +2,8 @@ package html
 
 import (
 	"strings"
+
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // GenerateMakerHTML creates the complete maker.html with all assets embedded.
@@ -11,6 +13,9 @@ import (
 // githubURL is the URL to download CLI binaries.
 func GenerateMakerHTML(createWASMBytes []byte, version, githubURL string) string {
 	html := makerHTMLTemplate
+
+	// Embed translations
+	html = strings.Replace(html, "{{TRANSLATIONS}}", translations.GetTranslationsJS("maker"), 1)
 
 	// Embed styles
 	html = strings.Replace(html, "{{STYLES}}", stylesCSS, 1)

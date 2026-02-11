@@ -1,0 +1,11 @@
+-----BEGIN REMEMORY SHARE-----
+Version: 2
+Index: 1
+Total: 5
+Threshold: 3
+Holder: Alice
+Created: 2025-01-01 00:00
+Checksum: sha256:f18bb126ca180c0e94f79456fbf549ceff04bc2efa3d21555b785caf3ef43162
+
+u5B5hc+2vNeLJDOAKTP/DN7BG5eLun3A4TcIArENaOwx
+-----END REMEMORY SHARE-----

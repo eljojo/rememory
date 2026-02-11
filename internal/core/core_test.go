@@ -192,7 +192,7 @@ func TestValidateShamirParams(t *testing.T) {
 }
 
 func TestShareEncodeDecode(t *testing.T) {
-	original := NewShare(1, 5, 3, "Alice", []byte("test-share-data"))
+	original := NewShare(1, 1, 5, 3, "Alice", []byte("test-share-data"))
 
 	encoded := original.Encode()
 
@@ -225,7 +225,7 @@ func TestShareEncodeDecode(t *testing.T) {
 }
 
 func TestShareVerify(t *testing.T) {
-	share := NewShare(1, 5, 3, "Alice", []byte("test-data"))
+	share := NewShare(1, 1, 5, 3, "Alice", []byte("test-data"))
 
 	// Valid checksum
 	if err := share.Verify(); err != nil {
@@ -251,7 +251,7 @@ func TestShareFilename(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		share := NewShare(1, 3, 2, tt.holder, []byte("data"))
+		share := NewShare(1, 1, 3, 2, tt.holder, []byte("data"))
 		got := share.Filename()
 		if got != tt.expected {
 			t.Errorf("holder %q: got %q, want %q", tt.holder, got, tt.expected)
@@ -260,7 +260,7 @@ func TestShareFilename(t *testing.T) {
 }
 
 func TestCompactEncodeRoundTrip(t *testing.T) {
-	original := NewShare(1, 5, 3, "Alice", []byte("test-share-data-1234567890"))
+	original := NewShare(1, 1, 5, 3, "Alice", []byte("test-share-data-1234567890"))
 
 	compact := original.CompactEncode()
 
@@ -297,7 +297,7 @@ func TestCompactEncodeWithRealShares(t *testing.T) {
 	}
 
 	for i, shareData := range shares {
-		share := NewShare(i+1, 5, 3, "", shareData)
+		share := NewShare(1, i+1, 5, 3, "", shareData)
 		compact := share.CompactEncode()
 
 		decoded, err := ParseCompact(compact)
@@ -311,7 +311,7 @@ func TestCompactEncodeWithRealShares(t *testing.T) {
 }
 
 func TestCompactEncodeFormat(t *testing.T) {
-	share := NewShare(2, 5, 3, "Bob", []byte{0xDE, 0xAD, 0xBE, 0xEF})
+	share := NewShare(1, 2, 5, 3, "Bob", []byte{0xDE, 0xAD, 0xBE, 0xEF})
 	compact := share.CompactEncode()
 
 	if !strings.HasPrefix(compact, "RM1:") {
@@ -346,7 +346,7 @@ func TestCompactEncodeFormat(t *testing.T) {
 
 func TestParseCompactRejectsBadInput(t *testing.T) {
 	// Build a valid compact string to use as a base
-	share := NewShare(1, 5, 3, "Alice", []byte("valid-data"))
+	share := NewShare(1, 1, 5, 3, "Alice", []byte("valid-data"))
 	valid := share.CompactEncode()
 
 	tests := []struct {
@@ -381,7 +381,7 @@ func TestParseCompactRejectsBadInput(t *testing.T) {
 func TestCompactEncodeNoHolderOrCreated(t *testing.T) {
 	// Compact format intentionally omits Holder and Created metadata
 	// to keep the string short for QR codes
-	share := NewShare(3, 7, 4, "Carol with spaces", []byte("some-share-data"))
+	share := NewShare(1, 3, 7, 4, "Carol with spaces", []byte("some-share-data"))
 	compact := share.CompactEncode()
 	decoded, err := ParseCompact(compact)
 	if err != nil {

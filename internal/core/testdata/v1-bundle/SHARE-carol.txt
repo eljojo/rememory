@@ -1,0 +1,11 @@
+-----BEGIN REMEMORY SHARE-----
+Version: 1
+Index: 3
+Total: 5
+Threshold: 3
+Holder: Carol
+Created: 2025-01-01T00:00:00Z
+Checksum: sha256:d262a7d3dd0c6968724cc0c7210844125d97f80f36572553d61a7bb356df2e78
+
+GcYjMChcemOPWcW/8YGkNTTjaTNbqPy8T1zuPm9gQSw7fpQ4djbwTnS88lX6
+-----END REMEMORY SHARE-----

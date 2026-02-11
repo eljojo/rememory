@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -104,8 +105,8 @@ func sealProject(p *project.Project, recoveryURL string) error {
 		fmt.Printf("  Warning: %s\n", warning)
 	}
 
-	// Generate passphrase
-	passphrase, err := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+	// Generate passphrase (v2: split raw bytes, not the base64 string)
+	raw, passphrase, err := crypto.GenerateRawPassphrase(crypto.DefaultPassphraseBytes)
 	if err != nil {
 		return fmt.Errorf("generating passphrase: %w", err)
 	}
@@ -133,8 +134,8 @@ func sealProject(p *project.Project, recoveryURL string) error {
 
 	fmt.Printf("Splitting into %d shares (threshold: %d)...\n", len(p.Friends), p.Threshold)
 
-	// Split the passphrase
-	shares, err := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
+	// Split the raw bytes (v2: 32 bytes instead of 43-byte base64 string)
+	shares, err := core.Split(raw, len(p.Friends), p.Threshold)
 	if err != nil {
 		return fmt.Errorf("splitting passphrase: %w", err)
 	}
@@ -143,7 +144,7 @@ func sealProject(p *project.Project, recoveryURL string) error {
 	shareInfos := make([]project.ShareInfo, len(shares))
 	for i, shareData := range shares {
 		friend := p.Friends[i]
-		share := core.NewShare(i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
+		share := core.NewShare(2, i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
 
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
@@ -176,7 +177,7 @@ func sealProject(p *project.Project, recoveryURL string) error {
 		fmt.Println("FAILED")
 		return fmt.Errorf("verification failed: %w", err)
 	}
-	if string(recovered) != passphrase {
+	if base64.RawURLEncoding.EncodeToString(recovered) != passphrase {
 		fmt.Println("FAILED")
 		return fmt.Errorf("verification failed: reconstructed passphrase doesn't match")
 	}

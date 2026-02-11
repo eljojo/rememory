@@ -5,8 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // ReadmeData contains all data needed to generate README.txt
@@ -23,52 +26,70 @@ type ReadmeData struct {
 	RecoverChecksum  string
 	Created          time.Time
 	Anonymous        bool
+	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+}
+
+// writeWordGrid writes a two-column word grid to the string builder.
+// Words are NFC-normalized so accented characters are precomposed
+// (BIP39 word lists may store them in NFD form).
+func writeWordGrid(sb *strings.Builder, words []string) {
+	half := (len(words) + 1) / 2
+	for i := 0; i < half; i++ {
+		left := fmt.Sprintf("%2d. %-18s", i+1, norm.NFC.String(words[i]))
+		if i+half < len(words) {
+			right := fmt.Sprintf("%2d. %s", i+half+1, norm.NFC.String(words[i+half]))
+			sb.WriteString(fmt.Sprintf("%s%s\n", left, right))
+		} else {
+			sb.WriteString(left + "\n")
+		}
+	}
 }
 
 // GenerateReadme creates the README.txt content with all embedded information.
 func GenerateReadme(data ReadmeData) string {
+	lang := data.Language
+	if lang == "" {
+		lang = "en"
+	}
+	t := func(key string, args ...any) string {
+		return translations.T("readme", lang, key, args...)
+	}
+
 	var sb strings.Builder
 
 	// Header
 	sb.WriteString("================================================================================\n")
-	sb.WriteString("                          REMEMORY RECOVERY BUNDLE\n")
-	sb.WriteString(fmt.Sprintf("                              For: %s\n", data.Holder))
+	sb.WriteString(fmt.Sprintf("                          %s\n", t("title")))
+	sb.WriteString(fmt.Sprintf("                              %s\n", t("for", data.Holder)))
 	sb.WriteString("================================================================================\n\n")
 
 	// Warnings
-	sb.WriteString("!!  YOU CANNOT USE THIS FILE ALONE\n")
+	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_cannot_alone")))
 	if data.Anonymous {
-		sb.WriteString("    You will need to combine this with other shares.\n\n")
+		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_need_shares")))
 	} else {
-		sb.WriteString("    You will need help from other friends listed below.\n\n")
+		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_need_friends")))
 	}
-	sb.WriteString("!!  CONFIDENTIAL - DO NOT SHARE THIS FILE\n")
-	sb.WriteString("    This document contains your secret share. Keep it safe.\n\n")
-
-	// AI help note (in Spanish for non-English speakers) - right after warning
-	sb.WriteString("    NOTA PARA HISPANOHABLANTES:\n")
-	sb.WriteString("    Si no entiendes inglés, puedes usar ChatGPT u otra inteligencia artificial\n")
-	sb.WriteString("    para que te ayude a entender estas instrucciones y recuperar los datos.\n")
-	sb.WriteString("    Copia este documento completo y pídele a la IA que te explique los pasos.\n")
-	sb.WriteString("    La herramienta recover.html también está disponible en español.\n\n")
+	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_confidential")))
+	sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_keep_safe")))
 
 	// What is this
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("WHAT IS THIS?\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("what_is_this")))
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString(fmt.Sprintf("This bundle allows you to help recover encrypted secrets for: %s\n", data.ProjectName))
-	sb.WriteString(fmt.Sprintf("You are one of %d trusted friends who hold pieces of the recovery key.\n", data.Total))
-	sb.WriteString(fmt.Sprintf("At least %d of you must cooperate to decrypt the contents.\n\n", data.Threshold))
+	sb.WriteString(fmt.Sprintf("%s\n", t("what_bundle_for", data.ProjectName)))
+	sb.WriteString(fmt.Sprintf("%s\n", t("what_one_of", data.Total)))
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("what_threshold", data.Threshold)))
 
-	// Other share holders - right after What is this (skip for anonymous mode)
+	// Other share holders (skip for anonymous mode)
 	if !data.Anonymous {
 		sb.WriteString("--------------------------------------------------------------------------------\n")
-		sb.WriteString("OTHER SHARE HOLDERS (contact to coordinate recovery)\n")
+		sb.WriteString(fmt.Sprintf("%s\n", t("other_holders")))
 		sb.WriteString("--------------------------------------------------------------------------------\n")
 		for _, friend := range data.OtherFriends {
 			sb.WriteString(fmt.Sprintf("%s\n", friend.Name))
 			if friend.Contact != "" {
-				sb.WriteString(fmt.Sprintf("  Contact: %s\n", friend.Contact))
+				sb.WriteString(fmt.Sprintf("  %s\n", t("contact_label", friend.Contact)))
 			}
 			sb.WriteString("\n")
 		}
@@ -76,47 +97,73 @@ func GenerateReadme(data ReadmeData) string {
 
 	// Primary method - Browser
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("HOW TO RECOVER (PRIMARY METHOD - Browser)\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_browser")))
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("1. Open recover.html in any modern browser (Chrome, Firefox, Safari, Edge)\n\n")
-	sb.WriteString("   YOUR SHARE IS ALREADY LOADED! The recovery tool is personalized for you.\n\n")
-	sb.WriteString("2. Load the encrypted file (MANIFEST.age) from this bundle:\n")
-	sb.WriteString("   - Drag and drop it onto the manifest area, OR\n")
-	sb.WriteString("   - Click to browse and select it\n\n")
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step1")))
+	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_share_loaded")))
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
+	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
 	if data.Anonymous {
-		sb.WriteString("3. Add other shares as you receive them\n")
-		sb.WriteString("   - Drag and drop README.txt files onto the page, OR\n")
-		sb.WriteString("   - Click the clipboard button to paste share text\n\n")
-		sb.WriteString(fmt.Sprintf("4. Once you have %d shares total, recovery happens AUTOMATICALLY\n\n", data.Threshold))
-		sb.WriteString("5. Download the recovered files\n\n")
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_anon_step3")))
+		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_anon_step3_drag")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_anon_step3_paste")))
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_anon_step4_auto", data.Threshold)))
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_anon_step5")))
 	} else {
-		sb.WriteString("3. You'll see a contact list showing other friends who hold shares\n")
-		sb.WriteString("   Contact them and ask them to send you their README.txt file\n\n")
-		sb.WriteString("4. For each friend's README.txt you receive:\n")
-		sb.WriteString("   - Drag and drop it onto the page, OR\n")
-		sb.WriteString("   - Click the clipboard button to paste their share text\n\n")
-		sb.WriteString("5. As you add shares, checkmarks appear next to each friend's name\n")
-		sb.WriteString(fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY\n\n", data.Threshold))
-		sb.WriteString("6. Download the recovered files\n\n")
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step3_contact")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step3_ask")))
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step4")))
+		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step4_drag")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step4_paste")))
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step5_checkmarks")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step5_auto", data.Threshold)))
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step6")))
 	}
-	sb.WriteString("Works completely offline - no internet required!\n\n")
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_offline")))
 
 	// Fallback method - CLI
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("HOW TO RECOVER (FALLBACK - Command Line)\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli")))
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("If recover.html doesn't work, download the CLI tool from:\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli_hint")))
 	sb.WriteString(fmt.Sprintf("%s\n\n", data.GitHubReleaseURL))
-	sb.WriteString("Usage: rememory recover share1.txt share2.txt ... --manifest MANIFEST.age\n\n")
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_cli_usage")))
 
 	// Share block
 	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("YOUR SHARE (upload this file or copy-paste this block)\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("your_share")))
 	sb.WriteString("--------------------------------------------------------------------------------\n")
+
+	// Word list (primary human-readable format)
+	nativeWords, _ := data.Share.WordsForLang(core.Lang(lang))
+	if len(nativeWords) > 0 {
+		if lang != "en" {
+			// Non-English: show native language grid first, then English
+			langName := t("lang_" + lang)
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title_lang", len(nativeWords), langName)))
+			writeWordGrid(&sb, nativeWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_hint")))
+
+			// English fallback grid
+			englishWords, _ := data.Share.Words()
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title_english", len(englishWords))))
+			writeWordGrid(&sb, englishWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_dual_hint")))
+		} else {
+			// English only: single grid
+			sb.WriteString(fmt.Sprintf("%s\n\n", t("recovery_words_title", len(nativeWords))))
+			writeWordGrid(&sb, nativeWords)
+			sb.WriteString(fmt.Sprintf("\n%s\n\n", t("recovery_words_hint")))
+		}
+	}
+
+	// PEM block (machine-readable format)
+	sb.WriteString(fmt.Sprintf("%s\n", t("machine_readable")))
 	sb.WriteString(data.Share.Encode())
 	sb.WriteString("\n")
 
-	// Metadata footer
+	// Metadata footer (use fixed English marker for machine parsing)
 	sb.WriteString("================================================================================\n")
 	sb.WriteString("METADATA FOOTER (machine-parseable)\n")
 	sb.WriteString("================================================================================\n")

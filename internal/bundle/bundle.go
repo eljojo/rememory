@@ -14,6 +14,7 @@ import (
 	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/pdf"
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // Config holds configuration for bundle generation.
@@ -53,6 +54,15 @@ func GenerateAll(p *project.Project, cfg Config) error {
 	for i, friend := range p.Friends {
 		share := shares[i]
 
+		// Resolve language: friend override > project default > "en"
+		lang := friend.Language
+		if lang == "" {
+			lang = p.Language
+		}
+		if lang == "" {
+			lang = "en"
+		}
+
 		// Get other friends (excluding this one) - empty for anonymous mode
 		var otherFriends []project.Friend
 		var otherFriendsInfo []html.FriendInfo
@@ -78,6 +88,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			OtherFriends: otherFriendsInfo,
 			Threshold:    p.Threshold,
 			Total:        len(p.Friends),
+			Language:     lang,
 		}
 		recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
@@ -101,6 +112,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			SealedAt:         p.Sealed.At,
 			Anonymous:        p.Anonymous,
 			RecoveryURL:      cfg.RecoveryURL,
+			Language:         lang,
 		})
 		if err != nil {
 			return fmt.Errorf("generating bundle for %s: %w", friend.Name, err)
@@ -133,6 +145,7 @@ type BundleParams struct {
 	SealedAt         time.Time
 	Anonymous        bool
 	RecoveryURL      string
+	Language         string // Bundle language for this friend
 }
 
 // GenerateBundle creates a single bundle ZIP file for one friend.
@@ -151,6 +164,7 @@ func GenerateBundle(params BundleParams) error {
 		RecoverChecksum:  params.RecoverChecksum,
 		Created:          params.SealedAt,
 		Anonymous:        params.Anonymous,
+		Language:         params.Language,
 	}
 
 	// Generate README.txt
@@ -171,15 +185,18 @@ func GenerateBundle(params BundleParams) error {
 		Created:          readmeData.Created,
 		Anonymous:        readmeData.Anonymous,
 		RecoveryURL:      params.RecoveryURL,
+		Language:         params.Language,
 	})
 	if err != nil {
 		return fmt.Errorf("generating PDF: %w", err)
 	}
 
 	// Create ZIP with all files, using sealed date as modification time
+	readmeFileTxt := translations.ReadmeFilename(params.Language, ".txt")
+	readmeFilePdf := translations.ReadmeFilename(params.Language, ".pdf")
 	files := []ZipFile{
-		{Name: "README.txt", Content: []byte(readmeContent), ModTime: params.SealedAt},
-		{Name: "README.pdf", Content: pdfContent, ModTime: params.SealedAt},
+		{Name: readmeFileTxt, Content: []byte(readmeContent), ModTime: params.SealedAt},
+		{Name: readmeFilePdf, Content: pdfContent, ModTime: params.SealedAt},
 		{Name: "MANIFEST.age", Content: params.ManifestData, ModTime: params.SealedAt},
 		{Name: "recover.html", Content: []byte(params.RecoverHTML), ModTime: params.SealedAt},
 	}
@@ -240,23 +257,23 @@ func VerifyBundle(bundlePath string) error {
 			return fmt.Errorf("reading %s: %w", f.Name, err)
 		}
 
-		switch f.Name {
-		case "README.txt":
+		switch {
+		case translations.IsReadmeFile(f.Name, ".txt"):
 			readmeContent = string(data)
-		case "README.pdf":
+		case translations.IsReadmeFile(f.Name, ".pdf"):
 			pdfData = data
-		case "MANIFEST.age":
+		case f.Name == "MANIFEST.age":
 			manifestData = data
-		case "recover.html":
+		case f.Name == "recover.html":
 			recoverData = data
 		}
 	}
 
 	if readmeContent == "" {
-		return fmt.Errorf("README.txt not found in bundle")
+		return fmt.Errorf("README file (.txt) not found in bundle")
 	}
 	if len(pdfData) == 0 {
-		return fmt.Errorf("README.pdf not found in bundle")
+		return fmt.Errorf("README file (.pdf) not found in bundle")
 	}
 	if len(manifestData) == 0 {
 		return fmt.Errorf("MANIFEST.age not found in bundle")

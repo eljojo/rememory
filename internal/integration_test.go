@@ -16,6 +16,7 @@ import (
 	"github.com/eljojo/rememory/internal/crypto"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // TestFullWorkflow tests the complete init -> seal -> recover pipeline
@@ -74,7 +75,7 @@ func TestFullWorkflow(t *testing.T) {
 	// Create share objects with metadata
 	shareObjects := make([]*core.Share, len(shares))
 	for i, data := range shares {
-		shareObjects[i] = core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		shareObjects[i] = core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 	}
 
 	// Verify immediate reconstruction
@@ -181,7 +182,7 @@ func TestInsufficientShares(t *testing.T) {
 
 // TestCorruptedShare verifies that corrupted shares are detected
 func TestCorruptedShare(t *testing.T) {
-	share := core.NewShare(1, 5, 3, "Alice", []byte("test-data"))
+	share := core.NewShare(1, 1, 5, 3, "Alice", []byte("test-data"))
 	encoded := share.Encode()
 
 	// Parse and verify - should work
@@ -289,7 +290,7 @@ func TestAllThresholdCombinations(t *testing.T) {
 				// Create share objects and encode/decode them
 				shareObjs := make([]*core.Share, n)
 				for i, data := range shares {
-					shareObjs[i] = core.NewShare(i+1, n, k, "", data)
+					shareObjs[i] = core.NewShare(1, i+1, n, k, "", data)
 					encoded := shareObjs[i].Encode()
 					parsed, err := core.ParseShare([]byte(encoded))
 					if err != nil {
@@ -381,7 +382,7 @@ func TestBundleGeneration(t *testing.T) {
 
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0644); err != nil {
 			t.Fatalf("writing share: %v", err)
@@ -453,21 +454,12 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	defer r.Close()
 
 	// Check expected files exist
-	expectedFiles := map[string]bool{
-		"README.txt":   false,
-		"README.pdf":   false,
-		"MANIFEST.age": false,
-		"recover.html": false,
-	}
+	var foundReadmeTxt, foundReadmePdf, foundManifest, foundRecover bool
 
 	var readmeContent string
 	var recoverContent string
 
 	for _, f := range r.File {
-		if _, ok := expectedFiles[f.Name]; ok {
-			expectedFiles[f.Name] = true
-		}
-
 		rc, err := f.Open()
 		if err != nil {
 			t.Fatalf("opening %s: %v", f.Name, err)
@@ -478,18 +470,31 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 			t.Fatalf("reading %s: %v", f.Name, err)
 		}
 
-		switch f.Name {
-		case "README.txt":
+		switch {
+		case translations.IsReadmeFile(f.Name, ".txt"):
+			foundReadmeTxt = true
 			readmeContent = string(data)
-		case "recover.html":
+		case translations.IsReadmeFile(f.Name, ".pdf"):
+			foundReadmePdf = true
+		case f.Name == "MANIFEST.age":
+			foundManifest = true
+		case f.Name == "recover.html":
+			foundRecover = true
 			recoverContent = string(data)
 		}
 	}
 
-	for name, found := range expectedFiles {
-		if !found {
-			t.Errorf("missing file: %s", name)
-		}
+	if !foundReadmeTxt {
+		t.Error("missing README .txt file")
+	}
+	if !foundReadmePdf {
+		t.Error("missing README .pdf file")
+	}
+	if !foundManifest {
+		t.Error("missing file: MANIFEST.age")
+	}
+	if !foundRecover {
+		t.Error("missing file: recover.html")
 	}
 
 	// Verify README.txt contains the share
@@ -598,7 +603,7 @@ func TestBundleRecovery(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(friends), threshold)
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{
@@ -677,7 +682,7 @@ func extractShareFromBundle(t *testing.T, bundlePath string) *core.Share {
 	defer r.Close()
 
 	for _, f := range r.File {
-		if f.Name == "README.txt" {
+		if translations.IsReadmeFile(f.Name, ".txt") {
 			rc, _ := f.Open()
 			data := make([]byte, f.UncompressedSize64)
 			rc.Read(data)
@@ -690,7 +695,7 @@ func extractShareFromBundle(t *testing.T, bundlePath string) *core.Share {
 			return share
 		}
 	}
-	t.Fatal("README.txt not found in bundle")
+	t.Fatal("README file not found in bundle")
 	return nil
 }
 
@@ -763,7 +768,7 @@ func TestAnonymousBundleGeneration(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
 	shareInfos := make([]project.ShareInfo, len(p.Friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{
@@ -823,7 +828,7 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 
 	var readmeContent string
 	for _, f := range r.File {
-		if f.Name == "README.txt" {
+		if translations.IsReadmeFile(f.Name, ".txt") {
 			rc, _ := f.Open()
 			data, _ := io.ReadAll(rc)
 			rc.Close()
@@ -833,7 +838,7 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 	}
 
 	if readmeContent == "" {
-		t.Fatal("README.txt not found")
+		t.Fatal("README file not found")
 	}
 
 	// Anonymous READMEs should NOT contain "OTHER SHARE HOLDERS" section
@@ -909,7 +914,7 @@ func TestAnonymousBundleRecovery(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
 	shareInfos := make([]project.ShareInfo, len(p.Friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{

@@ -14,16 +14,11 @@ func main() {
 	js.Global().Set("rememoryExtractTarGz", js.FuncOf(extractTarGzJS))
 	js.Global().Set("rememoryExtractBundle", js.FuncOf(extractBundleJS))
 	js.Global().Set("rememoryParseCompactShare", js.FuncOf(parseCompactShareJS))
+	js.Global().Set("rememoryDecodeWords", js.FuncOf(decodeWordsJS))
 
 	// Register bundle creation functions
 	js.Global().Set("rememoryCreateBundles", js.FuncOf(createBundlesJS))
 	js.Global().Set("rememoryParseProjectYAML", js.FuncOf(parseProjectYAMLJS))
-	js.Global().Set("rememoryGeneratePassphrase", js.FuncOf(generatePassphraseJS))
-	js.Global().Set("rememoryHashBytes", js.FuncOf(hashBytesJS))
-	js.Global().Set("rememoryEncryptAge", js.FuncOf(encryptAgeJS))
-	js.Global().Set("rememorySplitPassphrase", js.FuncOf(splitPassphraseJS))
-	js.Global().Set("rememoryCreateShare", js.FuncOf(createShareJS))
-	js.Global().Set("rememoryCreateTarGz", js.FuncOf(createTarGzJS))
 
 	// Signal that WASM is ready
 	js.Global().Set("rememoryReady", true)

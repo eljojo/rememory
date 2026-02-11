@@ -20,6 +20,7 @@ This guide walks you through using ReMemory to create encrypted recovery bundles
 - [Project Structure](#project-structure)
 - [Commands Reference](#commands-reference)
 - [Advanced: Anonymous Mode](#advanced-anonymous-mode)
+- [Advanced: Multilingual Bundles](#advanced-multilingual-bundles)
 
 ## Overview
 
@@ -506,3 +507,54 @@ Recovery works the same way, but:
 - Shares show generic labels like "Share 1" instead of names
 
 Since there's no built-in contact list, make sure share holders know how to reach each other (or you) when recovery is needed.
+
+## Advanced: Multilingual Bundles
+
+Each friend can receive their bundle (README.txt, README.pdf, and recover.html) in their preferred language. ReMemory supports 5 languages: English (en), Spanish (es), German (de), French (fr), and Slovenian (sl).
+
+### CLI Usage
+
+Set the project-level default language with `--language`:
+
+```bash
+# All bundles in Spanish
+rememory init my-recovery --language es
+
+# Per-friend language customization
+rememory init my-recovery --language es \
+  --friend "Alice,alice@example.com,en" \
+  --friend "Roberto,roberto@example.com,es" \
+  --friend "Hans,hans@example.com,de"
+```
+
+The `--friend` flag now accepts an optional third field for language: `"Name,contact,lang"`.
+
+### project.yml Format
+
+You can also set languages directly in `project.yml`:
+
+```yaml
+name: my-recovery-2026
+threshold: 3
+language: es          # default bundle language (optional, defaults to "en")
+friends:
+  - name: Alice
+    contact: alice@example.com
+    language: en      # override per friend
+  - name: Roberto
+    contact: roberto@example.com
+    # uses project language (es)
+  - name: Hans
+    contact: hans@example.com
+    language: de
+```
+
+### Web UI
+
+In the web-based bundle creator (maker.html), each friend entry has a **Bundle language** dropdown. The default is the current UI language. Friends can always switch languages in recover.html regardless of the bundle default.
+
+### What Gets Translated
+
+- **README.txt**: All instructions, warnings, and section headings
+- **README.pdf**: Same content as README.txt in PDF format
+- **recover.html**: Opens in the friend's language by default (they can still switch)

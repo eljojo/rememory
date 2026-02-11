@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +36,7 @@ var (
 	initFriends   []string
 	initAnonymous bool
 	initShares    int
+	initLanguage  string
 )
 
 const (
@@ -52,9 +54,25 @@ func init() {
 	initCmd.Flags().StringArrayVar(&initFriends, "friend", nil, "Friend in format 'Name' or 'Name,contact info' (repeatable)")
 	initCmd.Flags().BoolVar(&initAnonymous, "anonymous", false, "Anonymous mode (no contact info for shareholders)")
 	initCmd.Flags().IntVar(&initShares, "shares", 0, "Number of shares (for anonymous mode)")
+	initCmd.Flags().StringVar(&initLanguage, "language", "", "Default bundle language (en, es, de, fr, sl)")
+}
+
+// validLanguage returns true if the given language code is supported.
+func validLanguage(lang string) bool {
+	for _, l := range translations.Languages {
+		if l == lang {
+			return true
+		}
+	}
+	return false
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
+	// Validate language flag if provided
+	if initLanguage != "" && !validLanguage(initLanguage) {
+		return fmt.Errorf("unsupported language %q (supported: %s)", initLanguage, strings.Join(translations.Languages, ", "))
+	}
+
 	// Determine project directory from args
 	dirName := "recovery"
 	if len(args) > 0 {
@@ -240,6 +258,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("creating project: %w", err)
 	}
 
+	// Set project-level language if specified
+	if initLanguage != "" {
+		p.Language = initLanguage
+		if err := p.Save(); err != nil {
+			return fmt.Errorf("saving project with language: %w", err)
+		}
+	}
+
 	// Write the manifest README template
 	templateData := project.TemplateData{
 		ProjectName: name,
@@ -267,21 +293,28 @@ func friendNames(friends []project.Friend) string {
 	return strings.Join(names, ", ")
 }
 
-// parseFriendFlags parses --friend flags in format "Name" or "Name,contact info"
+// parseFriendFlags parses --friend flags in format "Name", "Name,contact", or "Name,contact,lang"
 func parseFriendFlags(flags []string) ([]project.Friend, error) {
 	friends := make([]project.Friend, len(flags))
 	for i, f := range flags {
-		// Split on the first comma only — everything after it is free-form contact
-		name := f
+		parts := strings.SplitN(f, ",", 3)
+		name := strings.TrimSpace(parts[0])
 		contact := ""
-		if idx := strings.Index(f, ","); idx >= 0 {
-			name = f[:idx]
-			contact = strings.TrimSpace(f[idx+1:])
+		lang := ""
+		if len(parts) >= 2 {
+			contact = strings.TrimSpace(parts[1])
+		}
+		if len(parts) >= 3 {
+			lang = strings.TrimSpace(parts[2])
+			if lang != "" && !validLanguage(lang) {
+				return nil, fmt.Errorf("friend %q: unsupported language %q (supported: %s)", name, lang, strings.Join(translations.Languages, ", "))
+			}
 		}
 
 		friends[i] = project.Friend{
-			Name:    strings.TrimSpace(name),
-			Contact: contact,
+			Name:     name,
+			Contact:  contact,
+			Language: lang,
 		}
 
 		if friends[i].Name == "" {

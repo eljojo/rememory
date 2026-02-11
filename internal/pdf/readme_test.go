@@ -12,7 +12,7 @@ import (
 )
 
 func testReadmeData() ReadmeData {
-	share := core.NewShare(1, 3, 2, "Alice", []byte("test-share-data-for-qr-code-12345"))
+	share := core.NewShare(1, 1, 3, 2, "Alice", []byte("test-share-data-for-qr-code-12345"))
 	return ReadmeData{
 		ProjectName:      "Test Project",
 		Holder:           "Alice",
@@ -109,9 +109,49 @@ func TestQRCodeGeneratesValidPNG(t *testing.T) {
 	}
 }
 
+func TestWordGridNotSplitAcrossPages(t *testing.T) {
+	// Use a 33-byte share (produces 25 recovery words) with many friends
+	// to push content down the page and trigger the page-break logic.
+	shareData := make([]byte, 33)
+	for i := range shareData {
+		shareData[i] = byte(i + 1)
+	}
+	share := core.NewShare(2, 1, 5, 3, "Alice", shareData)
+
+	data := ReadmeData{
+		ProjectName: "Test Project With a Long Name",
+		Holder:      "Alice Wonderland",
+		Share:       share,
+		OtherFriends: []project.Friend{
+			{Name: "Bob Builder", Contact: "bob@example.com"},
+			{Name: "Carol Danvers", Contact: "carol@example.com"},
+			{Name: "David Copperfield", Contact: "david@example.com"},
+			{Name: "Eve Polastri", Contact: "eve@example.com"},
+		},
+		Threshold:        3,
+		Total:            5,
+		Version:          "v0.0.1-test",
+		GitHubReleaseURL: "https://github.com/eljojo/rememory/releases",
+		ManifestChecksum: "sha256:abcdef1234567890",
+		RecoverChecksum:  "sha256:0987654321fedcba",
+		Created:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+
+	pdfBytes, err := GenerateReadme(data)
+	if err != nil {
+		t.Fatalf("GenerateReadme: %v", err)
+	}
+	if len(pdfBytes) == 0 {
+		t.Fatal("generated PDF is empty")
+	}
+	if !bytes.HasPrefix(pdfBytes, []byte("%PDF-")) {
+		t.Error("output does not start with PDF header")
+	}
+}
+
 func TestQRCodeContentMatchesCompact(t *testing.T) {
 	// Verify the QR content is the default URL with compact share in fragment
-	share := core.NewShare(2, 5, 3, "Bob", []byte("another-share-data-for-testing"))
+	share := core.NewShare(1, 2, 5, 3, "Bob", []byte("another-share-data-for-testing"))
 	data := ReadmeData{
 		Share:     share,
 		Holder:    "Bob",

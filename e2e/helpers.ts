@@ -98,6 +98,49 @@ export function extractAnonymousBundles(bundlesDir: string, shareNums: number[])
   return shareNums.map(num => extractAnonymousBundle(bundlesDir, num));
 }
 
+// Known README filenames across all supported languages
+const README_FILENAMES = ['README', 'LEEME', 'LIESMICH', 'LISEZMOI', 'PREBERI'];
+
+// Find the README .txt file in an extracted bundle directory (any language)
+export function findReadmeFile(bundleDir: string, ext: string = '.txt'): string {
+  for (const name of README_FILENAMES) {
+    const filePath = path.join(bundleDir, name + ext);
+    if (fs.existsSync(filePath)) return filePath;
+  }
+  throw new Error(`No README${ext} file found in ${bundleDir}`);
+}
+
+// Extract the 25 recovery words from a README file as a space-separated string
+export function extractWordsFromReadme(readmePath: string): string {
+  const readme = fs.readFileSync(readmePath, 'utf8');
+  // Match word grid: look for "25 RECOVERY WORDS" (any language) or numbered word lines
+  const wordsMatch = readme.match(/\b25\b[^\n]*:\n\n([\s\S]*?)\n\n/);
+  if (!wordsMatch) throw new Error('Could not find recovery words in ' + readmePath);
+
+  const wordLines = wordsMatch[1].trim().split('\n');
+  const leftWords: string[] = [];
+  const rightWords: string[] = [];
+  const half = 13; // 25 words: 13 left (1-13), 12 right (14-25)
+  for (const line of wordLines) {
+    const matches = line.match(/\d+\.\s+(\S+)/g);
+    if (matches) {
+      for (const m of matches) {
+        const wordMatch = m.match(/(\d+)\.\s+(\S+)/);
+        if (wordMatch) {
+          const idx = parseInt(wordMatch[1], 10);
+          const word = wordMatch[2];
+          if (idx <= half) {
+            leftWords.push(word);
+          } else {
+            rightWords.push(word);
+          }
+        }
+      }
+    }
+  }
+  return [...leftWords, ...rightWords].join(' ');
+}
+
 // Page helper class for recovery tool interactions
 export class RecoveryPage {
   constructor(private page: Page, private bundleDir: string) {}
@@ -111,9 +154,18 @@ export class RecoveryPage {
     );
   }
 
-  // Add shares from README.txt files
+  // Navigate to a standalone recover.html file (no personalization)
+  async openFile(htmlPath: string): Promise<void> {
+    await this.page.goto(`file://${htmlPath}`);
+    await this.page.waitForFunction(
+      () => (window as any).rememoryAppReady === true,
+      { timeout: 30000 }
+    );
+  }
+
+  // Add shares from README files (supports translated filenames)
   async addShares(...bundleDirs: string[]): Promise<void> {
-    const readmePaths = bundleDirs.map(dir => path.join(dir, 'README.txt'));
+    const readmePaths = bundleDirs.map(dir => findReadmeFile(dir, '.txt'));
     await this.page.locator('#share-file-input').setInputFiles(readmePaths);
   }
 

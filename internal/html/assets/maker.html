@@ -19,6 +19,9 @@
       border-radius: 4px;
       margin-bottom: 0.5rem;
     }
+    .custom-language-active .friend-entry {
+      grid-template-columns: auto 1fr 2fr 1fr auto;
+    }
     .friend-entry .field {
       display: flex;
       flex-direction: column;
@@ -28,11 +31,17 @@
       color: #6c757d;
       margin-bottom: 0.25rem;
     }
-    .friend-entry input {
+    .friend-entry input, .friend-entry select {
       padding: 0.375rem 0.5rem;
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 0.875rem;
+    }
+    .friend-entry .field-language {
+      display: none;
+    }
+    .custom-language-active .friend-entry .field-language {
+      display: flex;
     }
     .friend-entry .remove-btn {
       padding: 0.375rem 0.5rem;
@@ -59,11 +68,17 @@
       min-width: 2rem;
     }
 
+    /* Wider container when custom language is active */
+    .custom-language-active.container {
+      max-width: 960px;
+    }
+
     @media (max-width: 768px) {
       .friend-entry {
         grid-template-columns: auto 1fr auto;
       }
-      .friend-entry .field:nth-child(3) {
+      .friend-entry .field:nth-child(3),
+      .friend-entry .field-language {
         grid-column: 2 / 3;
       }
     }
@@ -358,6 +373,7 @@
       <div class="nav-links">
         <a href="index.html">About</a>
         <a href="docs.html">Guide</a>
+        <a href="recover.html">Recover</a>
         <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
       </div>
       <div class="lang-toggle">
@@ -411,10 +427,16 @@
     <div class="card">
       <div class="card-header">
         <h2><span class="step-number">1</span> <span data-i18n="step1_title">Friends</span></h2>
-        <label class="anonymous-toggle">
-          <input type="checkbox" id="anonymous-mode">
-          <span data-i18n="anonymous_label">Anonymous</span>
-        </label>
+        <div style="display:flex;gap:1rem;align-items:center">
+          <label class="anonymous-toggle">
+            <input type="checkbox" id="anonymous-mode">
+            <span data-i18n="anonymous_label">Anonymous</span>
+          </label>
+          <label class="anonymous-toggle">
+            <input type="checkbox" id="custom-language-mode">
+            <span data-i18n="custom_language_label">Custom language</span>
+          </label>
+        </div>
       </div>
       <p class="hint" id="friends-hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
 
@@ -497,422 +519,7 @@
 
   <!-- Translations -->
   <script>
-    const translations = {
-      en: {
-        loading: "Preparing the bundle creator...",
-        title: "🧠 ReMemory - Create Bundles",
-        page_title: "Create Bundles",
-        page_description: "Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later. Everything runs locally—your files never leave your browser.",
-        subtitle: "Make sure your important files are never lost.",
-        step1_title: "Friends",
-        friends_hint: "Add at least 2 friends who will each hold a piece of your recovery key",
-        anonymous_label: "Anonymous",
-        anonymous_hint: "Shareholders won't know each other",
-        num_shares_label: "Number of shares:",
-        add_friend: "Add Friend",
-        threshold_label: "Threshold:",
-        threshold_option: "{0} of {1}",
-        threshold_desc: "friends required to recover",
-        name_label: "Name",
-        contact_label: "Contact info (optional)",
-        import_summary: "Import contacts from an existing project.yml",
-        import_placeholder: "Paste your project.yml content here...",
-        import_btn: "Import Contacts",
-        step2_title: "Files to Protect",
-        files_drop: "Drag & drop a folder here, or click to select files",
-        files_hint: "These files will be encrypted and distributed among your friends",
-        files_summary: "{0} file(s), {1} total",
-        step3_title: "Generate Bundles",
-        generate_btn: "Generate Bundles",
-        download_all_btn: "Download All Bundles",
-        download_yaml_btn: "Save project.yml",
-        works_offline: "Works completely offline",
-        need_help: "Need help?",
-        download_cli: "Download the CLI tool from GitHub",
-        generating: "Generating bundles...",
-        archiving: "Archiving files...",
-        encrypting: "Encrypting archive...",
-        splitting: "Splitting secret...",
-        creating_bundle: "Creating bundle for {0}...",
-        complete: "All bundles created successfully!",
-        error: "Error: {0}",
-        validation_min_friends: "You need at least 2 friends",
-        validation_friend_name: "Friend {0}: name is required",
-        validation_no_files: "Please select at least one file",
-        download: "Download",
-        bundle_for: "Bundle for {0}",
-        import_success: "Imported {0} contacts",
-        import_error: "Failed to parse YAML: {0}",
-        // Error messages with guidance
-        error_title: "Something went wrong",
-        error_not_ready_title: "Not ready yet",
-        error_not_ready_message: "The bundle creator is still loading.",
-        error_not_ready_guidance: "Please wait a moment and try again.",
-        error_import_title: "Import failed",
-        error_import_guidance: "Make sure the YAML format is correct. Check for proper indentation and that all required fields (name) are present.",
-        error_min_friends_title: "Minimum friends required",
-        error_min_friends_guidance: "Recovery requires at least 2 friends to split the secret. Add more friends to continue.",
-        error_generate_title: "Bundle creation failed",
-        error_generate_guidance: "Check that all friends have names and that you've selected at least one file. Then try again.",
-        action_try_again: "Try again",
-        validation_title: "Some fields need attention",
-        validation_message: "Please fill in the highlighted fields before generating bundles.",
-        validation_guidance: "Required fields are marked with an asterisk (*). Make sure each friend has a name and you've added at least one file."
-      },
-
-      es: {
-        loading: "Preparando el creador de sobres...",
-        title: "🧠 ReMemory - Guarda lo Importante",
-        page_title: "Crear Sobres",
-        page_description: "Añade archivos, elige amigos y define un umbral. Cada amigo recibe una parte que puede usar para ayudar a recuperar tus archivos más adelante. Todo funciona de forma local: tus archivos nunca salen de tu navegador.",
-        subtitle: "Quien tiene un amigo, tiene un tesoro.",
-
-        step1_title: "Amigos",
-        friends_hint: "Agrega al menos 2 amigos que guardarán partes de tu clave de recuperación",
-        anonymous_label: "Anónimo",
-        anonymous_hint: "Los participantes no sabrán quiénes son los demás",
-        num_shares_label: "Número de partes:",
-        add_friend: "Agregar amigo",
-
-        threshold_label: "Umbral:",
-        threshold_option: "{0} of {1}",
-        threshold_desc: "amigos necesarios para recuperar",
-
-        name_label: "Nombre",
-        contact_label: "Contacto (opcional)",
-
-        import_summary: "Importar contactos desde un project.yml existente",
-        import_placeholder: "Pega aquí el contenido de tu project.yml...",
-        import_btn: "Importar contactos",
-
-        step2_title: "Archivos a proteger",
-        files_drop: "Arrastra una carpeta aquí o haz clic para seleccionar archivos",
-        files_hint: "Estos archivos serán cifrados y repartidos entre tus amigos",
-        files_summary: "{0} archivo(s), {1} en total",
-
-        step3_title: "Generar sobres",
-        generate_btn: "Generar sobres",
-        download_all_btn: "Descargar todos los sobres",
-        download_yaml_btn: "Guardar project.yml",
-
-        works_offline: "Funciona completamente sin conexión",
-        need_help: "¿Necesitas ayuda?",
-        download_cli: "Descarga la herramienta CLI desde GitHub",
-
-        generating: "Generando sobres...",
-        archiving: "Preparando archivos...",
-        encrypting: "Cifrando archivos...",
-        splitting: "Dividiendo la clave...",
-        creating_bundle: "Creando sobre para {0}...",
-
-        complete: "¡Todos los sobres fueron creados con éxito!",
-        error: "Error: {0}",
-
-        validation_min_friends: "Necesitas al menos 2 amigos",
-        validation_friend_name: "Amigo {0}: el nombre es obligatorio",
-        validation_no_files: "Por favor selecciona al menos un archivo",
-
-        download: "Descargar",
-        bundle_for: "Sobre para {0}",
-
-        import_success: "Se importaron {0} contactos",
-        import_error: "Error al leer el YAML: {0}",
-        error_title: "Algo salió mal",
-        error_not_ready_title: "Aún no está listo",
-        error_not_ready_message: "El creador de sobres todavía está cargando.",
-        error_not_ready_guidance: "Por favor espera un momento e intenta de nuevo.",
-        error_import_title: "Error en la importación",
-        error_import_guidance: "Asegúrate de que el formato YAML sea correcto. Verifica la indentación y que todos los campos requeridos (nombre) estén presentes.",
-        error_min_friends_title: "Mínimo de amigos requerido",
-        error_min_friends_guidance: "La recuperación requiere al menos 2 amigos para dividir el secreto. Agrega más amigos para continuar.",
-        error_generate_title: "Error al crear sobres",
-        error_generate_guidance: "Verifica que todos los amigos tengan nombre y que hayas seleccionado al menos un archivo. Luego intenta de nuevo.",
-        action_try_again: "Intentar de nuevo",
-        validation_title: "Algunos campos necesitan atención",
-        validation_message: "Por favor completa los campos resaltados antes de generar los sobres.",
-        validation_guidance: "Los campos obligatorios están marcados con un asterisco (*). Asegúrate de que cada amigo tenga nombre y de haber agregado al menos un archivo."
-      },
-
-      de: {
-        loading: "Umschläge werden vorbereitet...",
-        title: "🧠 ReMemory — Bewahre das Wichtige",
-        page_title: "Umschläge erstellen",
-        page_description: "Füge Dateien hinzu, wähle Freunde aus und lege einen Schwellenwert fest. Jeder Freund erhält einen Anteil, den er später zur Wiederherstellung deiner Dateien verwenden kann. Alles läuft lokal – deine Dateien verlassen deinen Browser niemals.",
-        subtitle: "Wer einen Freund hat, hat einen Schatz.",
-
-        step1_title: "Freunde",
-        friends_hint: "Füge mindestens 2 Freunde hinzu, die Teile deines Wiederherstellungsschlüssels aufbewahren",
-        anonymous_label: "Anonym",
-        anonymous_hint: "Teilnehmer kennen einander nicht",
-        num_shares_label: "Anzahl der Teile:",
-        add_friend: "Freund hinzufügen",
-
-        threshold_label: "Schwelle:",
-        threshold_option: "{0} of {1}",
-        threshold_desc: "Freunde, die zur Wiederherstellung benötigt werden",
-
-        name_label: "Name",
-        contact_label: "Kontakt (optional)",
-
-        import_summary: "Kontakte aus einer bestehenden project.yml importieren",
-        import_placeholder: "Füge hier den Inhalt deiner project.yml ein...",
-        import_btn: "Kontakte importieren",
-
-        step2_title: "Zu schützende Dateien",
-        files_drop: "Ziehe einen Ordner hierher oder klicke, um Dateien auszuwählen",
-        files_hint: "Diese Dateien werden verschlüsselt und unter deinen Freunden verteilt",
-        files_summary: "{0} Datei(en), {1} insgesamt",
-
-        step3_title: "Umschläge erstellen",
-        generate_btn: "Umschläge erstellen",
-        download_all_btn: "Alle Umschläge herunterladen",
-        download_yaml_btn: "project.yml speichern",
-
-        works_offline: "Funktioniert vollständig offline",
-        need_help: "Brauchst du Hilfe?",
-        download_cli: "CLI-Tool von GitHub herunterladen",
-
-        generating: "Umschläge werden erstellt...",
-        archiving: "Dateien werden vorbereitet...",
-        encrypting: "Dateien werden verschlüsselt...",
-        splitting: "Schlüssel wird aufgeteilt...",
-        creating_bundle: "Umschlag für {0} wird erstellt...",
-
-        complete: "Alle Umschläge wurden erfolgreich erstellt!",
-        error: "Fehler: {0}",
-
-        validation_min_friends: "Du brauchst mindestens 2 Freunde",
-        validation_friend_name: "Freund {0}: Name ist erforderlich",
-        validation_no_files: "Bitte wähle mindestens eine Datei aus",
-
-        download: "Herunterladen",
-        bundle_for: "Umschlag für {0}",
-
-        import_success: "{0} Kontakte importiert",
-        import_error: "YAML konnte nicht verarbeitet werden: {0}",
-        error_title: "Etwas ist schiefgelaufen",
-        error_not_ready_title: "Noch nicht bereit",
-        error_not_ready_message: "Der Umschlag-Ersteller wird noch geladen.",
-        error_not_ready_guidance: "Bitte warte einen Moment und versuche es erneut.",
-        error_import_title: "Import fehlgeschlagen",
-        error_import_guidance: "Stelle sicher, dass das YAML-Format korrekt ist. Überprüfe die Einrückung und ob alle erforderlichen Felder (Name) vorhanden sind.",
-        error_min_friends_title: "Mindestanzahl an Freunden erforderlich",
-        error_min_friends_guidance: "Für die Wiederherstellung werden mindestens 2 Freunde benötigt, um das Geheimnis aufzuteilen. Füge weitere Freunde hinzu, um fortzufahren.",
-        error_generate_title: "Umschlag-Erstellung fehlgeschlagen",
-        error_generate_guidance: "Überprüfe, ob alle Freunde Namen und E-Mail haben und ob du mindestens eine Datei ausgewählt hast. Versuche es dann erneut.",
-        action_try_again: "Erneut versuchen",
-        validation_title: "Einige Felder benötigen Aufmerksamkeit",
-        validation_message: "Bitte fülle die markierten Felder aus, bevor du Umschläge erstellst.",
-        validation_guidance: "Pflichtfelder sind mit einem Sternchen (*) gekennzeichnet. Stelle sicher, dass jeder Freund einen Namen und eine E-Mail hat und du mindestens eine Datei hinzugefügt hast."
-      },
-
-      fr: {
-        loading: "Préparation des enveloppes...",
-        title: "🧠 ReMemory — Gardez l'essentiel",
-        page_title: "Créer des enveloppes",
-        page_description: "Ajoutez des fichiers, choisissez des amis et définissez un seuil. Chaque ami reçoit une part qu’il pourra utiliser plus tard pour aider à récupérer vos fichiers. Tout fonctionne localement : vos fichiers ne quittent jamais votre navigateur.",
-        subtitle: "Qui a un ami a un trésor.",
-
-        step1_title: "Amis",
-        friends_hint: "Ajoutez au moins 2 amis qui garderont des parties de votre clé de récupération",
-        anonymous_label: "Anonyme",
-        anonymous_hint: "Les participants ne connaîtront pas les autres",
-        num_shares_label: "Nombre de parts :",
-        add_friend: "Ajouter un ami",
-
-        threshold_label: "Seuil :",
-        threshold_option: "{0} of {1}",
-        threshold_desc: "amis nécessaires pour récupérer",
-
-        name_label: "Nom",
-        contact_label: "Contact (optionnel)",
-
-        import_summary: "Importer des contacts depuis un project.yml existant",
-        import_placeholder: "Collez le contenu de votre project.yml ici...",
-        import_btn: "Importer les contacts",
-
-        step2_title: "Fichiers à protéger",
-        files_drop: "Déposez un dossier ici ou cliquez pour sélectionner des fichiers",
-        files_hint: "Ces fichiers seront chiffrés et répartis entre vos amis",
-        files_summary: "{0} fichier(s), {1} au total",
-
-        step3_title: "Créer les enveloppes",
-        generate_btn: "Créer les enveloppes",
-        download_all_btn: "Télécharger toutes les enveloppes",
-        download_yaml_btn: "Enregistrer project.yml",
-
-        works_offline: "Fonctionne entièrement hors ligne",
-        need_help: "Besoin d'aide ?",
-        download_cli: "Télécharger l'outil CLI depuis GitHub",
-
-        generating: "Création des enveloppes...",
-        archiving: "Préparation des fichiers...",
-        encrypting: "Chiffrement des fichiers...",
-        splitting: "Division de la clé...",
-        creating_bundle: "Création de l’enveloppe pour {0}...",
-
-        complete: "Toutes les enveloppes ont été créées avec succès !",
-        error: "Erreur : {0}",
-
-        validation_min_friends: "Vous avez besoin d'au moins 2 amis",
-        validation_friend_name: "Ami {0} : le nom est requis",
-        validation_no_files: "Veuillez sélectionner au moins un fichier",
-
-        download: "Télécharger",
-        bundle_for: "Enveloppe pour {0}",
-
-        import_success: "{0} contacts importés",
-        import_error: "Impossible d'analyser le YAML : {0}",
-        error_title: "Une erreur s'est produite",
-        error_not_ready_title: "Pas encore prêt",
-        error_not_ready_message: "Le créateur d'enveloppes est encore en cours de chargement.",
-        error_not_ready_guidance: "Veuillez patienter un moment et réessayer.",
-        error_import_title: "Échec de l'importation",
-        error_import_guidance: "Assurez-vous que le format YAML est correct. Vérifiez l'indentation et que tous les champs requis (nom) sont présents.",
-        error_min_friends_title: "Nombre minimum d'amis requis",
-        error_min_friends_guidance: "La récupération nécessite au moins 2 amis pour diviser le secret. Ajoutez plus d'amis pour continuer.",
-        error_generate_title: "Échec de la création des enveloppes",
-        error_generate_guidance: "Vérifiez que tous les amis ont un nom et que vous avez sélectionné au moins un fichier. Réessayez ensuite.",
-        action_try_again: "Réessayer",
-        validation_title: "Certains champs nécessitent votre attention",
-        validation_message: "Veuillez remplir les champs en surbrillance avant de créer les enveloppes.",
-        validation_guidance: "Les champs obligatoires sont marqués d'un astérisque (*). Assurez-vous que chaque ami a un nom et que vous avez ajouté au moins un fichier."
-      },
-
-      sl: {
-        loading: "Pripravljam ustvarjalca svežnjev ...",
-        title: "🧠 ReMemory - Ustvarjanje svežnjev",
-        page_title: "Ustvari svežnje",
-        page_description: "Dodajte datoteke, izberite prijatelje, nastavite prag. Vsak prijatelj dobi svoj sveženj, ki ga lahko uporabi za pomoč pri obnovitvi vaših datotek pozneje. Vse deluje lokalno - vaše datoteke nikoli ne zapustijo vašega brskalnika.",
-        subtitle: "Poskrbite, da vaši pomembni podatki nikoli ne bodo izgubljeni.",
-        step1_title: "Prijatelji",
-        friends_hint: "Dodajte vsaj 2 prijatelja, ki bosta vsak imela del vašega obnovitvenega ključa",
-        anonymous_label: "Anonimno",
-        anonymous_hint: "Prijatelji se ne bodo poznali med seboj",
-        num_shares_label: "Število prijateljev:",
-        add_friend: "Dodaj prijatelja",
-        threshold_label: "Prag:",
-        threshold_desc: "prijatelji potrebni za obnovitev",
-        name_label: "Ime",
-        contact_label: "Kontakt (neobvezno)",
-        import_summary: "Uvozi stike iz obstoječega project.yml",
-        import_placeholder: "Prilepite vsebino vašega project.yml tukaj ...",
-        import_btn: "Uvozi prijatelje",
-        step2_title: "Datoteke za zaščito",
-        files_drop: "Povlecite in spustite mapo sem ali kliknite za izbiro datotek",
-        files_hint: "Te datoteke bodo šifrirane in razdeljene med vaše prijatelje",
-        files_summary: "{0} datoteka(e), {1} skupaj",
-        step3_title: "Ustvari svežnje",
-        generate_btn: "Ustvari svežnje",
-        download_all_btn: "Prenesi vse svežnje",
-        download_yaml_btn: "Shrani project.yml",
-        works_offline: "Deluje popolnoma brez povezave",
-        need_help: "Potrebujete pomoč?",
-        download_cli: "Prenesite CLI orodje iz GitHub",
-        generating: "Ustvarjanje svežnjev ...",
-        archiving: "Arhiviranje datotek ...",
-        encrypting: "Šifriranje arhiva ...",
-        splitting: "Razdeljevanje skrivnosti ...",
-        creating_bundle: "Ustvarjanje svežnja za {0} ...",
-        complete: "Vsi svežnji so bili uspešno ustvarjeni!",
-        error: "Napaka: {0}",
-        validation_min_friends: "Potrebujete vsaj 2 prijatelja",
-        validation_friend_name: "Prijatelj {0}: ime je obvezno",
-        validation_no_files: "Izberite vsaj eno datoteko",
-        download: "Prenesi",
-        bundle_for: "Sveženj za {0}",
-        import_success: "Uvoženi {0} stiki",
-        import_error: "Neuspešno razčlenjevanje YAML: {0}",
-        // Error messages with guidance
-        error_title: "Nekaj je šlo narobe",
-        error_not_ready_title: "Proces še ni končan",
-        error_not_ready_message: "Ustvarjalec svežnjev še ni pripravljen.",
-        error_not_ready_guidance: "Počakajte trenutek in poskusite znova.",
-        error_import_title: "Uvoz ni uspel",
-        error_import_guidance: "Prepričajte se, da je format YAML pravilen. Preverite pravilno zamik in da so vsa obvezna polja (ime) prisotna.",
-        error_min_friends_title: "Potrebno je dodati vsaj 2 prijatelja",
-        error_min_friends_guidance: "Za obnovitev je potrebno vsaj dodati 2 prijatelja za razdelitev skrivnosti. Dodajte več prijateljev, da nadaljujete.",
-        error_generate_title: "Ustvarjanje svežnja ni uspelo",
-        error_generate_guidance: "Preverite, da imajo vsi prijatelji ime ter da ste izbrali vsaj eno datoteko. Nato poskusite znova.",
-        action_try_again: "Poskusi znova",
-        validation_title: "Nekatera polja je potrebno doplniti",
-        validation_message: "Izpolnite označena polja, preden ustvarite svežnje.",
-        validation_guidance: "Obvezna polja so označena z zvezdico (*). Prepričajte se, da ima vsak prijatelj ime ter da ste dodali vsaj eno datoteko."
-      },
-
-      zh_TW: {
-        loading: "正在準備包裹建立工具……",
-        title: "🧠 ReMemory - 建立包裹",
-        page_title: "建立包裹",
-        subtitle: "確保你的重要檔案永不遺失。",
-
-        step1_title: "朋友",
-        friends_hint: "加入最少 2 位朋友，每位朋友均會持有你的復原金鑰的一部份",
-        anonymous_label: "匿名",
-        anonymous_hint: "參與者不會知道其他參與者的身份",
-        num_shares_label: "分發數量：",
-        add_friend: "增加朋友",
-
-        threshold_label: "門檻：須要",
-        threshold_option: "{1} 個中的 {0} 個",
-        threshold_desc: "朋友方可進行復原",
-
-        name_label: "姓名",
-        contact_label: "聯絡資料 (選填)",
-
-        import_summary: "從現有的 project.yml 匯入聯絡人",
-        import_placeholder: "在這裡貼上你的 project.yml 內容……",
-        import_btn: "匯入聯絡人",
-
-        step2_title: "需要保護的檔案",
-        files_drop: "拖放一個資料夾到這裡，或點擊以選擇檔案",
-        files_hint: "這些檔案將會被加密並分發給你的朋友",
-        files_summary: "{0} 個檔案，共 {1}",
-
-        step3_title: "產生包裹",
-        generate_btn: "產生包裹",
-        download_all_btn: "下載所有包裹",
-        download_yaml_btn: "儲存 project.yml",
-
-        works_offline: "無須使用網絡",
-        need_help: "需要幫助？",
-        download_cli: "從 GitHub 下載命令列介面工具",
-
-        generating: "正在產生包裹……",
-        archiving: "正在歸檔包裹……",
-        encrypting: "正在加密歸檔……",
-        splitting: "正在分割密鑰……",
-        creating_bundle: "正在為 {0} 建立包裹……",
-
-        complete: "所冇包裹已成功建立！",
-        error: "錯誤：{0}",
-
-        validation_min_friends: "你需要最少 2 位朋友",
-        validation_friend_name: "朋友 {0}：請提供姓名",
-        validation_no_files: "選擇最少 1 個檔案",
-
-        download: "下載",
-        bundle_for: "{0} 的包裹",
-
-        import_success: "已匯入 {0} 個聯絡人",
-        import_error: "剖析 YAML 失敗：{0}",
-        
-        error_title: "出了點問題",
-        error_not_ready_title: "還沒準備好",
-        error_not_ready_message: "包裹建立工具還在載入中。",
-        error_not_ready_guidance: "請稍等片刻，然後重試。",
-        error_import_title: "匯入失敗",
-        error_import_guidance: "請確認 YAML 格式正確，請檢查縮排並確保所有必填欄位（姓名）都有填寫。",
-        error_min_friends_title: "未逹朋友數量要求",
-        error_min_friends_guidance: "復原金鑰須要由最少 2 位朋友分割持有，加入更多朋友以繼續。",
-        error_generate_title: "包裹建立失敗",
-        error_generate_guidance: "請確認所有朋友都有填寫姓名，並且已經選擇最少 1 個檔案，然後再試一次。",
-        action_try_again: "再試一次",
-        validation_title: "部份欄位需要注意",
-        validation_message: "請先填寫所有已標示的欄位，再開始產生包裹。",
-        validation_guidance: "必填欄位會以星號（*）標示。請確認每位朋友都有填寫姓名，並且已經選擇最少 1 個檔案。"
-      }
-    };
+    const translations = {{TRANSLATIONS}};
 
     let currentLang = 'en';
 

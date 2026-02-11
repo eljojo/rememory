@@ -7,8 +7,9 @@ import type {
   TranslationFunction
 } from './types';
 
-// Translation function (defined in HTML)
+// Translation function and language state (defined in HTML)
 declare const t: TranslationFunction;
+declare let currentLang: string;
 
 (function() {
   'use strict';
@@ -65,6 +66,7 @@ declare const t: TranslationFunction;
   interface Elements {
     loadingOverlay: HTMLElement | null;
     anonymousMode: HTMLInputElement | null;
+    customLanguageMode: HTMLInputElement | null;
     friendsHint: HTMLElement | null;
     sharesInput: HTMLElement | null;
     numShares: HTMLInputElement | null;
@@ -94,6 +96,7 @@ declare const t: TranslationFunction;
   const elements: Elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
     anonymousMode: document.getElementById('anonymous-mode') as HTMLInputElement | null,
+    customLanguageMode: document.getElementById('custom-language-mode') as HTMLInputElement | null,
     friendsHint: document.getElementById('friends-hint'),
     sharesInput: document.getElementById('shares-input'),
     numShares: document.getElementById('num-shares') as HTMLInputElement | null,
@@ -134,6 +137,7 @@ declare const t: TranslationFunction;
 
   async function init(): Promise<void> {
     setupAnonymousMode();
+    setupCustomLanguage();
     setupImport();
     setupFriends();
     setupFiles();
@@ -176,6 +180,14 @@ declare const t: TranslationFunction;
       if (elements.friendsHint) {
         elements.friendsHint.textContent = t('anonymous_hint');
       }
+      // Disable custom language (no per-friend languages in anonymous mode)
+      if (elements.customLanguageMode?.checked) {
+        elements.customLanguageMode.checked = false;
+        elements.customLanguageMode.dispatchEvent(new Event('change'));
+      }
+      if (elements.customLanguageMode) {
+        elements.customLanguageMode.disabled = true;
+      }
     } else {
       // Show friends list and hide shares input
       elements.friendsSection?.classList.remove('hidden');
@@ -184,7 +196,31 @@ declare const t: TranslationFunction;
       if (elements.friendsHint) {
         elements.friendsHint.textContent = t('friends_hint');
       }
+      if (elements.customLanguageMode) {
+        elements.customLanguageMode.disabled = false;
+      }
     }
+  }
+
+  function setupCustomLanguage(): void {
+    elements.customLanguageMode?.addEventListener('change', () => {
+      const container = document.querySelector('.container');
+      if (elements.customLanguageMode?.checked) {
+        container?.classList.add('custom-language-active');
+        // Disable anonymous mode (incompatible with per-friend languages)
+        if (elements.anonymousMode) {
+          elements.anonymousMode.disabled = true;
+        }
+      } else {
+        container?.classList.remove('custom-language-active');
+        // Reset all friend languages to project default
+        state.friends.forEach(f => { f.language = ''; });
+        renderFriendsList();
+        if (elements.anonymousMode) {
+          elements.anonymousMode.disabled = false;
+        }
+      }
+    });
   }
 
   async function waitForWasm(): Promise<void> {
@@ -240,8 +276,8 @@ declare const t: TranslationFunction;
       }
 
       if (project.friends && project.friends.length > 0) {
-        project.friends.forEach(f => {
-          addFriend(f.name, f.contact || '');
+        project.friends.forEach((f: any) => {
+          addFriend(f.name, f.contact || '', f.language || '');
         });
       }
 
@@ -268,9 +304,11 @@ declare const t: TranslationFunction;
     });
   }
 
-  function addFriend(name = '', contact = ''): void {
+  function addFriend(name = '', contact = '', language = ''): void {
     const index = state.friends.length;
-    state.friends.push({ name, contact });
+    // When custom language is active, show a concrete language; otherwise empty (uses project default)
+    const effectiveLang = language || (elements.customLanguageMode?.checked ? (currentLang || 'en') : '');
+    state.friends.push({ name, contact, language: effectiveLang });
 
     const entry = document.createElement('div');
     entry.className = 'friend-entry';
@@ -278,6 +316,17 @@ declare const t: TranslationFunction;
 
     const sampleName = getNextSampleName();
     const sampleContact = sampleName.toLowerCase() + '@example.com';
+
+    const langOptions = [
+      { code: 'en', label: 'English' },
+      { code: 'es', label: 'Español' },
+      { code: 'de', label: 'Deutsch' },
+      { code: 'fr', label: 'Français' },
+      { code: 'sl', label: 'Slovenščina' }
+    ];
+    const langOptionsHtml = langOptions.map(o =>
+      `<option value="${o.code}"${o.code === effectiveLang ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
+    ).join('');
 
     entry.innerHTML = `
       <div class="friend-number">#${index + 1}</div>
@@ -288,6 +337,10 @@ declare const t: TranslationFunction;
       <div class="field">
         <label>${t('contact_label')}</label>
         <input type="text" class="friend-contact" value="${escapeHtml(contact)}" placeholder="${sampleContact}">
+      </div>
+      <div class="field field-language">
+        <label>${t('language_label')}</label>
+        <select class="friend-language">${langOptionsHtml}</select>
       </div>
       <button type="button" class="remove-btn" title="${t('remove')}">&times;</button>
     `;
@@ -305,6 +358,12 @@ declare const t: TranslationFunction;
     contactInput?.addEventListener('input', (e) => {
       const target = e.target as HTMLInputElement;
       state.friends[index].contact = target.value.trim();
+    });
+
+    const langSelect = entry.querySelector('.friend-language') as HTMLSelectElement;
+    langSelect?.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      state.friends[index].language = target.value;
     });
 
     const removeBtn = entry.querySelector('.remove-btn');
@@ -337,7 +396,7 @@ declare const t: TranslationFunction;
     if (elements.friendsList) elements.friendsList.innerHTML = '';
     const friends = [...state.friends];
     state.friends = [];
-    friends.forEach(f => addFriend(f.name, f.contact || ''));
+    friends.forEach(f => addFriend(f.name, f.contact || '', f.language || ''));
   }
 
   function updateThresholdOptions(): void {
@@ -661,13 +720,15 @@ declare const t: TranslationFunction;
         for (let i = 0; i < state.numShares; i++) {
           friends.push({
             name: `Share ${i + 1}`,
-            contact: ''
+            contact: '',
+            language: ''
           });
         }
       } else {
         friends = state.friends.map(f => ({
           name: f.name,
-          contact: f.contact || ''
+          contact: f.contact || '',
+          language: f.language || ''
         }));
       }
 
@@ -678,7 +739,8 @@ declare const t: TranslationFunction;
         files: filesForWasm,
         version: window.VERSION || 'dev',
         githubURL: window.GITHUB_URL || 'https://github.com/eljojo/rememory',
-        anonymous: state.anonymous
+        anonymous: state.anonymous,
+        defaultLanguage: currentLang || 'en'
       };
 
       setProgress(10);
@@ -782,6 +844,9 @@ declare const t: TranslationFunction;
     if (state.anonymous) {
       yaml += `anonymous: true\n`;
     }
+    if (currentLang && currentLang !== 'en') {
+      yaml += `language: ${currentLang}\n`;
+    }
     yaml += `friends:\n`;
 
     if (state.anonymous) {
@@ -793,6 +858,9 @@ declare const t: TranslationFunction;
         yaml += `  - name: "${escapeYamlString(f.name)}"\n`;
         if (f.contact) {
           yaml += `    contact: "${escapeYamlString(f.contact)}"\n`;
+        }
+        if (f.language) {
+          yaml += `    language: ${f.language}\n`;
         }
       });
     }

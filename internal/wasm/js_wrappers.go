@@ -41,6 +41,7 @@ func combineSharesJS(this js.Value, args []js.Value) any {
 	for i := 0; i < length; i++ {
 		shareObj := sharesArray.Index(i)
 		shares[i] = ShareData{
+			Version: shareObj.Get("version").Int(),
 			Index:   shareObj.Get("index").Int(),
 			DataB64: shareObj.Get("dataB64").String(),
 		}
@@ -177,6 +178,41 @@ func parseCompactShareJS(this js.Value, args []js.Value) any {
 	return js.ValueOf(map[string]any{
 		"share": shareInfoToJS(share),
 		"error": nil,
+	})
+}
+
+// decodeWordsJS decodes 25 BIP39 words to raw share data bytes and share index.
+// The first 24 words encode the data; the 25th word packs 4 bits of index + 7 bits of checksum.
+// Returns index=0 if the share index was > 15 (sentinel for "unknown — UI should not highlight a specific contact").
+// Returns an error if the embedded checksum doesn't match (wrong word order, typos, etc.).
+// Args: words (string array)
+// Returns: { data: Uint8Array, index: number, checksum: string, error: string|null }
+func decodeWordsJS(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return errorResult("missing words argument")
+	}
+
+	wordsArray := args[0]
+	length := wordsArray.Length()
+	words := make([]string, length)
+	for i := 0; i < length; i++ {
+		words[i] = wordsArray.Index(i).String()
+	}
+
+	data, index, checksum, lang, err := decodeShareWords(words)
+	if err != nil {
+		return errorResult(err.Error())
+	}
+
+	jsData := js.Global().Get("Uint8Array").New(len(data))
+	js.CopyBytesToJS(jsData, data)
+
+	return js.ValueOf(map[string]any{
+		"data":     jsData,
+		"index":    index,
+		"checksum": checksum,
+		"lang":     lang,
+		"error":    nil,
 	})
 }
 

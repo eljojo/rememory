@@ -70,6 +70,9 @@ func runRecover(cmd *cobra.Command, args []string) error {
 
 	first := shares[0]
 	for i, share := range shares[1:] {
+		if share.Version != first.Version {
+			return fmt.Errorf("share %d has different version (v%d vs v%d) — all shares must be from the same bundle", i+2, share.Version, first.Version)
+		}
 		if share.Total != first.Total {
 			return fmt.Errorf("share %d has different total (%d vs %d)", i+2, share.Total, first.Total)
 		}
@@ -101,15 +104,17 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	// Reconstruct passphrase
-	passphrase, err := core.Combine(shareData)
+	recovered, err := core.Combine(shareData)
 	if err != nil {
 		return fmt.Errorf("combining shares: %w", err)
 	}
 
+	passphrase := core.RecoverPassphrase(recovered, first.Version)
+
 	if recoverPassphrase {
 		fmt.Println()
 		fmt.Println("Recovered passphrase:")
-		fmt.Println(string(passphrase))
+		fmt.Println(passphrase)
 		return nil
 	}
 
@@ -132,7 +137,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	var decryptedBuf bytes.Buffer
-	if err := core.Decrypt(&decryptedBuf, bytes.NewReader(encryptedData), string(passphrase)); err != nil {
+	if err := core.Decrypt(&decryptedBuf, bytes.NewReader(encryptedData), passphrase); err != nil {
 		return fmt.Errorf("decryption failed (shares may be corrupted or from different operation): %w", err)
 	}
 

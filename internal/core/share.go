@@ -24,7 +24,7 @@ const (
 
 // Share represents a single Shamir share with metadata.
 type Share struct {
-	Version   int       // Format version (currently 1)
+	Version   int       // Format version (1 or 2)
 	Index     int       // Which share (1-indexed for humans)
 	Total     int       // Total shares (N)
 	Threshold int       // Required shares (K)
@@ -35,9 +35,9 @@ type Share struct {
 }
 
 // NewShare creates a Share with the given parameters and computes its checksum.
-func NewShare(index, total, threshold int, holder string, data []byte) *Share {
+func NewShare(version, index, total, threshold int, holder string, data []byte) *Share {
 	return &Share{
-		Version:   1,
+		Version:   version,
 		Index:     index,
 		Total:     total,
 		Threshold: threshold,
@@ -46,6 +46,16 @@ func NewShare(index, total, threshold int, holder string, data []byte) *Share {
 		Data:      data,
 		Checksum:  HashBytes(data),
 	}
+}
+
+// RecoverPassphrase converts raw bytes from Combine() into the age passphrase.
+// V1 shares contain the passphrase string directly; v2+ shares contain raw bytes
+// that must be base64url-encoded.
+func RecoverPassphrase(recovered []byte, version int) string {
+	if version >= 2 {
+		return base64.RawURLEncoding.EncodeToString(recovered)
+	}
+	return string(recovered)
 }
 
 // Encode converts the share to a human-readable PEM-like format.
@@ -60,7 +70,13 @@ func (s *Share) Encode() string {
 	if s.Holder != "" {
 		sb.WriteString(fmt.Sprintf("Holder: %s\n", s.Holder))
 	}
-	sb.WriteString(fmt.Sprintf("Created: %s\n", s.Created.Format(time.RFC3339)))
+	// v1 used RFC3339; v2+ uses a shorter human-friendly format.
+	// Keep v1 encoding compatible with old recovery tools.
+	timeFormat := "2006-01-02 15:04"
+	if s.Version < 2 {
+		timeFormat = time.RFC3339
+	}
+	sb.WriteString(fmt.Sprintf("Created: %s\n", s.Created.Format(timeFormat)))
 	sb.WriteString(fmt.Sprintf("Checksum: %s\n", s.Checksum))
 	sb.WriteString("\n")
 	sb.WriteString(base64.StdEncoding.EncodeToString(s.Data))
@@ -141,7 +157,10 @@ func ParseShare(content []byte) (*Share, error) {
 		case "Holder":
 			share.Holder = value
 		case "Created":
-			t, err := time.Parse(time.RFC3339, value)
+			t, err := time.Parse("2006-01-02 15:04", value)
+			if err != nil {
+				t, err = time.Parse(time.RFC3339, value) // fallback for older shares
+			}
 			if err != nil {
 				return nil, fmt.Errorf("invalid created time: %w", err)
 			}

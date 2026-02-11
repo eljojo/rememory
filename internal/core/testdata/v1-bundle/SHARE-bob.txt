@@ -1,0 +1,11 @@
+-----BEGIN REMEMORY SHARE-----
+Version: 1
+Index: 2
+Total: 5
+Threshold: 3
+Holder: Bob
+Created: 2025-01-01T00:00:00Z
+Checksum: sha256:6db66089e82bff2ed01164cd5fa70f30bde33715a3542ae1142d068d4926b38f
+
+uSMgO8eVKQlBKaXRirWCDHx6A54VYUcpbWa5O7/xV4y3hCcZnr15muoTZuDx
+-----END REMEMORY SHARE-----

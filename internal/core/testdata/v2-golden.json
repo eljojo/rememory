@@ -1,0 +1,60 @@
+{
+  "version": 2,
+  "passphrase": "dGhpc19pc19hX3Rlc3RfcGFzc3BocmFzZV92Ml9nbGQ",
+  "total": 5,
+  "threshold": 3,
+  "created": "2025-01-01 00:00",
+  "shares": [
+    {
+      "index": 1,
+      "holder": "Alice",
+      "data_hex": "bb907985cfb6bcd78b2433802933ff0cdec11b978bba7dc0e1370802b10d68ec31",
+      "checksum": "sha256:f18bb126ca180c0e94f79456fbf549ceff04bc2efa3d21555b785caf3ef43162",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 1\nTotal: 5\nThreshold: 3\nHolder: Alice\nCreated: 2025-01-01 00:00\nChecksum: sha256:f18bb126ca180c0e94f79456fbf549ceff04bc2efa3d21555b785caf3ef43162\n\nu5B5hc+2vNeLJDOAKTP/DN7BG5eLun3A4TcIArENaOwx\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:1:5:3:u5B5hc-2vNeLJDOAKTP_DN7BG5eLun3A4TcIArENaOwx:f18b",
+      "words": "romance long gesture panda hint hint clutch major lens end zone boost ugly miss funny jar lava alpha evidence avoid climb mammal photo mail bullet"
+    },
+    {
+      "index": 2,
+      "holder": "Bob",
+      "data_hex": "e050a659f8101e391a1abb702cfa95e1607cd6ef997862997a48fbcae906dbecd8",
+      "checksum": "sha256:10c890d4d401e3674bb5c37d89489befa8152e597b71dcbc3c6137cd91b2b4ee",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 2\nTotal: 5\nThreshold: 3\nHolder: Bob\nCreated: 2025-01-01 00:00\nChecksum: sha256:10c890d4d401e3674bb5c37d89489befa8152e597b71dcbc3c6137cd91b2b4ee\n\n4FCmWfgQHjkaGrtwLPqV4WB81u+ZeGKZekj7yukG2+zY\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:2:5:3:4FCmWfgQHjkaGrtwLPqV4WB81u-ZeGKZekj7yukG2-zY:10c8",
+      "words": "theory lunch nose usual acid broken half first ice guitar pistol security amazing hidden salmon congress glad slim mutual wasp purse lock hurry only capital"
+    },
+    {
+      "index": 3,
+      "holder": "Carol",
+      "data_hex": "68aa1142fd6c873e94652017bd32c45e74b5cd24244d2de386a037fb4e86da39c0",
+      "checksum": "sha256:6ec02c2131511cd738e47591dc4415cd6677cfac403c569621f2035c066b4597",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 3\nTotal: 5\nThreshold: 3\nHolder: Carol\nCreated: 2025-01-01 00:00\nChecksum: sha256:6ec02c2131511cd738e47591dc4415cd6677cfac403c569621f2035c066b4597\n\naKoRQv1shz6UZSAXvTLEXnS1zSQkTS3jhqA3+06G2jnA\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:3:5:3:aKoRQv1shz6UZSAXvTLEXnS1zSQkTS3jhqA3-06G2jnA:6ec0",
+      "words": "hamster explain expose width silent palm face piano bless trumpet rain rude ensure track mountain meadow combine bring pool husband reject drop happy day differ"
+    },
+    {
+      "index": 4,
+      "holder": "David",
+      "data_hex": "50cc1767a380c857c8311d9ca5ad5f157fa67f855a026468a9fd7d1e4b9b5b5856",
+      "checksum": "sha256:0827ab3357b65539c83105624e3e9db428caf492ecfffe99d05c11ec54b6a69d",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 4\nTotal: 5\nThreshold: 3\nHolder: David\nCreated: 2025-01-01 00:00\nChecksum: sha256:0827ab3357b65539c83105624e3e9db428caf492ecfffe99d05c11ec54b6a69d\n\nUMwXZ6OAyFfIMR2cpa1fFX+mf4VaAmRoqf19HkubW1hW\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:4:5:3:UMwXZ6OAyFfIMR2cpa1fFX-mf4VaAmRoqf19HkubW1hW:0827",
+      "words": "express gaze supreme either arrive cloud camp casual original coin fit cliff whip divert betray doctor good earn leg when tool soap hope approve donate"
+    },
+    {
+      "index": 5,
+      "holder": "Eve",
+      "data_hex": "22123a357beb4a1ffd3fe7f1746a91ff54bdce48e712066dbe2b020e7348cd9c79",
+      "checksum": "sha256:9e774f3aaf85acf354e4e2880a9f48cb06a2adcc041e48cab499d6e4ad4fb637",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 5\nTotal: 5\nThreshold: 3\nHolder: Eve\nCreated: 2025-01-01 00:00\nChecksum: sha256:9e774f3aaf85acf354e4e2880a9f48cb06a2adcc041e48cab499d6e4ad4fb637\n\nIhI6NXvrSh/9P+fxdGqR/1S9zkjnEgZtvisCDnNIzZx5\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:5:5:3:IhI6NXvrSh_9P-fxdGqR_1S9zkjnEgZtvisCDnNIzZx5:9e77",
+      "words": "capital mushroom minute water regret avocado visual woman vapor person piece wrong envelope transfer castle time all hospital member advice transfer piece cushion monkey fatigue"
+    }
+  ],
+  "manifest": {
+    "files": {
+      "manifest/README.md": "# Golden Test Manifest\n\nThis is a test manifest for v1 golden fixtures.\n",
+      "manifest/secret.txt": "The secret passphrase is: correct-horse-battery-staple\n"
+    }
+  }
+}

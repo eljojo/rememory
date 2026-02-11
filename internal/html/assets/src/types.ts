@@ -6,6 +6,7 @@
 // ============================================
 
 export interface ParsedShare {
+  version: number;
   index: number;
   threshold: number;
   total: number;
@@ -16,6 +17,7 @@ export interface ParsedShare {
 }
 
 export interface ShareInput {
+  version: number;
   index: number;
   dataB64: string;
 }
@@ -97,6 +99,7 @@ export interface FriendInfo {
 export interface FriendInput {
   name: string;
   contact?: string;
+  language?: string;
 }
 
 export interface ProjectConfig {
@@ -120,6 +123,7 @@ export interface PersonalizationData {
   otherFriends: FriendInfo[];
   threshold: number;
   total: number;
+  language?: string;
 }
 
 // ============================================
@@ -187,6 +191,7 @@ declare global {
     rememoryExtractTarGz(data: Uint8Array): ExtractResult;
     rememoryExtractBundle(zipData: Uint8Array): BundleExtractResult;
     rememoryParseCompactShare(compact: string): ShareParseResult;
+    rememoryDecodeWords(words: string[]): { data: Uint8Array; index: number; checksum: string; error?: string };
 
     // Creation functions (create.wasm)
     rememoryCreateBundles(config: BundleConfig): BundleCreateResult;

@@ -7,7 +7,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
 	"fmt"
 	"syscall/js"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/pdf"
 	"github.com/eljojo/rememory/internal/project"
+	"github.com/eljojo/rememory/internal/translations"
 
 	"gopkg.in/yaml.v3"
 )
@@ -30,19 +30,21 @@ type FileEntry struct {
 
 // FriendInput represents friend data from JavaScript.
 type FriendInput struct {
-	Name    string
-	Contact string
+	Name     string
+	Contact  string
+	Language string
 }
 
 // CreateBundlesConfig holds all parameters for bundle creation.
 type CreateBundlesConfig struct {
-	ProjectName string
-	Threshold   int
-	Friends     []FriendInput
-	Files       []FileEntry
-	Version     string
-	GitHubURL   string
-	Anonymous   bool
+	ProjectName     string
+	Threshold       int
+	Friends         []FriendInput
+	Files           []FileEntry
+	Version         string
+	GitHubURL       string
+	Anonymous       bool
+	DefaultLanguage string // Default bundle language for all friends
 }
 
 // BundleOutput represents a generated bundle for JavaScript.
@@ -70,6 +72,9 @@ func createBundlesJS(this js.Value, args []js.Value) any {
 		GitHubURL:   configJS.Get("githubURL").String(),
 		Anonymous:   configJS.Get("anonymous").Bool(),
 	}
+	if defLang := configJS.Get("defaultLanguage"); !defLang.IsUndefined() && !defLang.IsNull() {
+		config.DefaultLanguage = defLang.String()
+	}
 
 	// Parse friends array
 	friendsJS := configJS.Get("friends")
@@ -82,6 +87,9 @@ func createBundlesJS(this js.Value, args []js.Value) any {
 		}
 		if contact := f.Get("contact"); !contact.IsUndefined() && !contact.IsNull() {
 			config.Friends[i].Contact = contact.String()
+		}
+		if lang := f.Get("language"); !lang.IsUndefined() && !lang.IsNull() {
+			config.Friends[i].Language = lang.String()
 		}
 	}
 
@@ -158,8 +166,8 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		return nil, fmt.Errorf("creating archive: %w", err)
 	}
 
-	// Generate random passphrase
-	passphrase, err := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+	// Generate random passphrase (v2: split raw bytes, not the base64 string)
+	raw, passphrase, err := crypto.GenerateRawPassphrase(crypto.DefaultPassphraseBytes)
 	if err != nil {
 		return nil, fmt.Errorf("generating passphrase: %w", err)
 	}
@@ -175,7 +183,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	// Split passphrase using Shamir's Secret Sharing
 	n := len(config.Friends)
 	k := config.Threshold
-	rawShares, err := core.Split([]byte(passphrase), n, k)
+	rawShares, err := core.Split(raw, n, k)
 	if err != nil {
 		return nil, fmt.Errorf("splitting passphrase: %w", err)
 	}
@@ -194,7 +202,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	// Create all shares first
 	for i, friend := range config.Friends {
 		share := &core.Share{
-			Version:   1,
+			Version:   2,
 			Index:     i + 1,
 			Total:     n,
 			Threshold: k,
@@ -210,14 +218,24 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	projectFriends := make([]project.Friend, len(config.Friends))
 	for i, f := range config.Friends {
 		projectFriends[i] = project.Friend{
-			Name:    f.Name,
-			Contact: f.Contact,
+			Name:     f.Name,
+			Contact:  f.Contact,
+			Language: f.Language,
 		}
 	}
 
 	// Generate bundle for each friend
 	for i, friend := range config.Friends {
 		share := shares[i]
+
+		// Resolve language: friend override > project default > "en"
+		lang := friend.Language
+		if lang == "" {
+			lang = config.DefaultLanguage
+		}
+		if lang == "" {
+			lang = "en"
+		}
 
 		// Get other friends (excluding this one) - empty for anonymous mode
 		var otherFriends []project.Friend
@@ -244,6 +262,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			OtherFriends: otherFriendsInfo,
 			Threshold:    k,
 			Total:        n,
+			Language:     lang,
 		}
 		recoverHTML := html.GenerateRecoverHTML(wasmBytes, config.Version, config.GitHubURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
@@ -262,6 +281,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
 			Anonymous:        config.Anonymous,
+			Language:         lang,
 		}
 		readmeContent := bundle.GenerateReadme(readmeData)
 
@@ -280,6 +300,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
 			Anonymous:        config.Anonymous,
+			Language:         lang,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {
@@ -287,9 +308,11 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		}
 
 		// Create ZIP bundle
+		readmeFileTxt := translations.ReadmeFilename(lang, ".txt")
+		readmeFilePdf := translations.ReadmeFilename(lang, ".pdf")
 		zipFiles := []bundle.ZipFile{
-			{Name: "README.txt", Content: []byte(readmeContent), ModTime: now},
-			{Name: "README.pdf", Content: pdfContent, ModTime: now},
+			{Name: readmeFileTxt, Content: []byte(readmeContent), ModTime: now},
+			{Name: readmeFilePdf, Content: pdfContent, ModTime: now},
 			{Name: "MANIFEST.age", Content: manifestData, ModTime: now},
 			{Name: "recover.html", Content: []byte(recoverHTML), ModTime: now},
 		}
@@ -422,8 +445,9 @@ func parseProjectYAMLJS(this js.Value, args []js.Value) any {
 	friends := make([]any, len(proj.Friends))
 	for i, f := range proj.Friends {
 		friends[i] = map[string]any{
-			"name":    f.Name,
-			"contact": f.Contact,
+			"name":     f.Name,
+			"contact":  f.Contact,
+			"language": f.Language,
 		}
 	}
 
@@ -431,6 +455,7 @@ func parseProjectYAMLJS(this js.Value, args []js.Value) any {
 		"project": map[string]any{
 			"name":      proj.Name,
 			"threshold": proj.Threshold,
+			"language":  proj.Language,
 			"friends":   friends,
 		},
 		"error": nil,
@@ -441,9 +466,11 @@ func parseProjectYAMLJS(this js.Value, args []js.Value) any {
 type ProjectYAML struct {
 	Name      string `yaml:"name"`
 	Threshold int    `yaml:"threshold"`
+	Language  string `yaml:"language,omitempty"`
 	Friends   []struct {
-		Name    string `yaml:"name"`
-		Contact string `yaml:"contact,omitempty"`
+		Name     string `yaml:"name"`
+		Contact  string `yaml:"contact,omitempty"`
+		Language string `yaml:"language,omitempty"`
 	} `yaml:"friends"`
 }
 
@@ -454,184 +481,6 @@ func parseProjectYAML(yamlText string) (*ProjectYAML, error) {
 		return nil, fmt.Errorf("parsing YAML: %w", err)
 	}
 	return &proj, nil
-}
-
-// generatePassphraseJS generates a random passphrase.
-// Args: numBytes (int, optional - defaults to 32)
-// Returns: { passphrase: string, error: string|null }
-func generatePassphraseJS(this js.Value, args []js.Value) any {
-	numBytes := crypto.DefaultPassphraseBytes
-	if len(args) > 0 && !args[0].IsUndefined() && !args[0].IsNull() {
-		numBytes = args[0].Int()
-	}
-
-	passphrase, err := crypto.GeneratePassphrase(numBytes)
-	if err != nil {
-		return errorResult(err.Error())
-	}
-
-	return js.ValueOf(map[string]any{
-		"passphrase": passphrase,
-		"error":      nil,
-	})
-}
-
-// hashBytesJS computes SHA-256 hash of bytes.
-// Args: data (Uint8Array)
-// Returns: string (sha256:...)
-func hashBytesJS(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		return ""
-	}
-
-	jsData := args[0]
-	dataLen := jsData.Get("length").Int()
-	data := make([]byte, dataLen)
-	js.CopyBytesToGo(data, jsData)
-
-	return core.HashBytes(data)
-}
-
-// encryptAgeJS encrypts data using age/scrypt.
-// Args: data (Uint8Array), passphrase (string)
-// Returns: { encrypted: Uint8Array, error: string|null }
-func encryptAgeJS(this js.Value, args []js.Value) any {
-	if len(args) < 2 {
-		return errorResult("missing arguments (need data, passphrase)")
-	}
-
-	jsData := args[0]
-	dataLen := jsData.Get("length").Int()
-	data := make([]byte, dataLen)
-	js.CopyBytesToGo(data, jsData)
-
-	passphrase := args[1].String()
-
-	var buf bytes.Buffer
-	if err := core.Encrypt(&buf, bytes.NewReader(data), passphrase); err != nil {
-		return errorResult(err.Error())
-	}
-
-	encrypted := buf.Bytes()
-	jsResult := js.Global().Get("Uint8Array").New(len(encrypted))
-	js.CopyBytesToJS(jsResult, encrypted)
-
-	return js.ValueOf(map[string]any{
-		"encrypted": jsResult,
-		"error":     nil,
-	})
-}
-
-// splitPassphraseJS splits a passphrase using Shamir's Secret Sharing.
-// Args: passphrase (string), n (int), k (int)
-// Returns: { shares: [{index, dataB64}], error: string|null }
-func splitPassphraseJS(this js.Value, args []js.Value) any {
-	if len(args) < 3 {
-		return errorResult("missing arguments (need passphrase, n, k)")
-	}
-
-	passphrase := args[0].String()
-	n := args[1].Int()
-	k := args[2].Int()
-
-	shares, err := core.Split([]byte(passphrase), n, k)
-	if err != nil {
-		return errorResult(err.Error())
-	}
-
-	jsShares := make([]any, len(shares))
-	for i, shareData := range shares {
-		jsShares[i] = map[string]any{
-			"index":   i + 1,
-			"dataB64": base64.StdEncoding.EncodeToString(shareData),
-		}
-	}
-
-	return js.ValueOf(map[string]any{
-		"shares": jsShares,
-		"error":  nil,
-	})
-}
-
-// createShareJS creates an encoded share.
-// Args: index, total, threshold (int), holder (string), dataB64 (string), created (string RFC3339)
-// Returns: { encoded: string, error: string|null }
-func createShareJS(this js.Value, args []js.Value) any {
-	if len(args) < 6 {
-		return errorResult("missing arguments")
-	}
-
-	index := args[0].Int()
-	total := args[1].Int()
-	threshold := args[2].Int()
-	holder := args[3].String()
-	dataB64 := args[4].String()
-	createdStr := args[5].String()
-
-	data, err := base64.StdEncoding.DecodeString(dataB64)
-	if err != nil {
-		return errorResult(fmt.Sprintf("invalid base64 data: %v", err))
-	}
-
-	created, err := time.Parse(time.RFC3339, createdStr)
-	if err != nil {
-		return errorResult(fmt.Sprintf("invalid created time: %v", err))
-	}
-
-	share := &core.Share{
-		Version:   1,
-		Index:     index,
-		Total:     total,
-		Threshold: threshold,
-		Holder:    holder,
-		Created:   created,
-		Data:      data,
-		Checksum:  core.HashBytes(data),
-	}
-
-	return js.ValueOf(map[string]any{
-		"encoded": share.Encode(),
-		"error":   nil,
-	})
-}
-
-// createTarGzJS creates a tar.gz archive from file entries.
-// Args: files (array of {name: string, data: Uint8Array})
-// Returns: { data: Uint8Array, error: string|null }
-func createTarGzJS(this js.Value, args []js.Value) any {
-	if len(args) < 1 {
-		return errorResult("missing files argument")
-	}
-
-	filesJS := args[0]
-	filesLen := filesJS.Length()
-	files := make([]FileEntry, filesLen)
-
-	for i := 0; i < filesLen; i++ {
-		f := filesJS.Index(i)
-		name := f.Get("name").String()
-		dataJS := f.Get("data")
-		dataLen := dataJS.Get("length").Int()
-		data := make([]byte, dataLen)
-		js.CopyBytesToGo(data, dataJS)
-		files[i] = FileEntry{
-			Name: name,
-			Data: data,
-		}
-	}
-
-	archiveData, err := createTarGz(files)
-	if err != nil {
-		return errorResult(err.Error())
-	}
-
-	jsResult := js.Global().Get("Uint8Array").New(len(archiveData))
-	js.CopyBytesToJS(jsResult, archiveData)
-
-	return js.ValueOf(map[string]any{
-		"data":  jsResult,
-		"error": nil,
-	})
 }
 
 // Functions are registered in main.go

@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"github.com/eljojo/rememory/internal/core"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // ShareInfo contains parsed share metadata for JS interop.
@@ -28,6 +29,7 @@ type ShareInfo struct {
 
 // ShareData is minimal data needed for combining.
 type ShareData struct {
+	Version int
 	Index   int
 	DataB64 string
 }
@@ -81,6 +83,13 @@ func combineShares(shares []ShareData) (string, error) {
 		return "", fmt.Errorf("need at least 2 shares, got %d", len(shares))
 	}
 
+	// Validate all shares have the same version
+	for i := 1; i < len(shares); i++ {
+		if shares[i].Version != shares[0].Version {
+			return "", fmt.Errorf("share %d has different version (v%d vs v%d) — all shares must be from the same bundle", i+1, shares[i].Version, shares[0].Version)
+		}
+	}
+
 	// Convert to raw bytes for core.Combine
 	rawShares := make([][]byte, len(shares))
 	for i, s := range shares {
@@ -97,7 +106,7 @@ func combineShares(shares []ShareData) (string, error) {
 		return "", fmt.Errorf("combining shares: %w", err)
 	}
 
-	return string(secret), nil
+	return core.RecoverPassphrase(secret, shares[0].Version), nil
 }
 
 // decryptManifest decrypts age-encrypted data using a passphrase.
@@ -110,6 +119,18 @@ func decryptManifest(encryptedData []byte, passphrase string) ([]byte, error) {
 // Uses core.ExtractTarGz for the actual extraction.
 func extractTarGz(tarGzData []byte) ([]core.ExtractedFile, error) {
 	return core.ExtractTarGz(tarGzData)
+}
+
+// decodeShareWords converts 25 BIP39 words to raw share data bytes and share index.
+// Auto-detects the word list language. The first 24 words encode the data;
+// the 25th word packs 4 bits of index + 7 bits of checksum.
+// Returns the decoded bytes, share index (0 if share >15), checksum, detected language, and any error.
+func decodeShareWords(words []string) ([]byte, int, string, string, error) {
+	data, index, lang, err := core.DecodeShareWordsAuto(words)
+	if err != nil {
+		return nil, 0, "", "", err
+	}
+	return data, index, core.HashBytes(data), string(lang), nil
 }
 
 // BundleContents represents extracted content from a bundle ZIP.
@@ -140,16 +161,16 @@ func extractBundle(zipData []byte) (*BundleContents, error) {
 			return nil, fmt.Errorf("reading %s: %w", f.Name, err)
 		}
 
-		switch f.Name {
-		case "README.txt":
+		switch {
+		case translations.IsReadmeFile(f.Name, ".txt"):
 			readmeContent = string(data)
-		case "MANIFEST.age":
+		case f.Name == "MANIFEST.age":
 			manifestData = data
 		}
 	}
 
 	if readmeContent == "" {
-		return nil, fmt.Errorf("README.txt not found in bundle")
+		return nil, fmt.Errorf("README file not found in bundle")
 	}
 
 	// Parse share from README

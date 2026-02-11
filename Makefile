@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -34,6 +34,7 @@ install: wasm
 	go install $(LDFLAGS) ./cmd/rememory
 
 test:
+	@test -f internal/html/assets/app.js && test -f $(BINARY) || $(MAKE) build
 	go test -v ./...
 
 test-cover:
@@ -59,6 +60,7 @@ clean:
 	rm -f internal/html/assets/recover.wasm internal/html/assets/create.wasm
 	rm -f internal/html/assets/app.js internal/html/assets/create-app.js internal/html/assets/shared.js internal/html/assets/types.js
 	rm -rf dist/ man/
+	go clean -testcache
 
 # Generate man pages
 man: build
@@ -86,6 +88,10 @@ demo: build
 	rm -rf demo-recovery
 	./$(BINARY) demo
 	open demo-recovery/output/bundles/bundle-alice.zip
+
+# Regenerate golden test fixtures (one-time, output is committed)
+generate-fixtures:
+	go test -v -run TestGenerateGoldenFixtures ./internal/core/ -args -generate
 
 # Cross-compile for all platforms (used by CI)
 build-all: wasm
