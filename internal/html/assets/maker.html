@@ -260,7 +260,7 @@
   <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <p style="margin-top: 1rem; color: var(--text-secondary);" data-i18n="loading">Loading bundle creator...</p>
+    <p style="margin-top: 1rem; color: var(--text-secondary);" data-i18n="loading">Loading...</p>
   </div>
 
   <div class="container">
@@ -283,10 +283,10 @@
 
     <div class="page-intro">
       <h1 data-i18n="page_title">Create Bundles</h1>
-      <p class="subtitle" data-i18n="subtitle">Make sure your important files are never lost.</p>
+      <p class="subtitle" data-i18n="subtitle">Keep your important files within reach — even if you can't reach them yourself.</p>
       <p data-i18n="page_description" class="summary">
-        Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later.
-        Everything runs locally—your files never leave your browser.
+        Add your files, choose who to trust, and set how many must agree for recovery. Each person gets a self-contained bundle.
+        Everything runs locally — nothing leaves your browser.
       </p>
 
       <details>
@@ -294,8 +294,8 @@
         <div class="details-content">
           <h3>Creating bundles (this page)</h3>
           <ul>
-            <li>Add your sensitive files and choose trusted friends</li>
-            <li>Set a threshold (e.g., "3 of 5 friends needed")</li>
+            <li>Add the files you want to protect and choose who to trust</li>
+            <li>Set how many friends must agree (e.g., 3 of 5)</li>
             <li>Generate a unique bundle for each friend</li>
             <li>Send each friend their bundle (email, USB, etc.)</li>
           </ul>
@@ -303,14 +303,14 @@
           <h3>Recovering files (when needed)</h3>
           <ul>
             <li>Friends open their bundle's <code>recover.html</code> in any browser</li>
-            <li>They combine their shares (threshold number required)</li>
-            <li>Files are decrypted and recovered—no server needed</li>
+            <li>They combine their pieces (enough must agree)</li>
+            <li>Files are decrypted and recovered — no server needed</li>
           </ul>
 
           <h3>Security notes</h3>
           <ul>
-            <li>Everything runs locally in your browser—no data leaves your device</li>
-            <li>You can save this page to your computer and use it offline</li>
+            <li>Everything runs in your browser — nothing leaves your device</li>
+            <li>This page can be saved and used offline</li>
             <li>Files are encrypted with <a href="https://github.com/FiloSottile/age" target="_blank">age</a></li>
             <li>Open source (Apache-2.0)</li>
           </ul>
@@ -333,7 +333,7 @@
           </label>
         </div>
       </div>
-      <p class="hint" id="friends-hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
+      <p class="hint" id="friends-hint" data-i18n="friends_hint">Each person here will hold one piece of your recovery key</p>
 
       <!-- Anonymous mode: shares input -->
       <div id="shares-input" class="shares-input hidden">
@@ -353,7 +353,7 @@
       <div class="threshold-selector">
         <label for="threshold-select" data-i18n="threshold_label">Threshold:</label>
         <select id="threshold-select"></select>
-        <span data-i18n="threshold_desc">friends needed to recover</span>
+        <span data-i18n="threshold_desc">must agree to recover</span>
       </div>
 
       <details id="import-section" class="import-section">
@@ -534,10 +534,9 @@
         document.getElementById('loading-overlay').innerHTML = `
           <div class="loading-error">
             <div class="loading-error-icon">⚠️</div>
-            <div class="loading-error-title">Failed to load bundle creator</div>
+            <div class="loading-error-title">Could not load the bundle creator</div>
             <div class="loading-error-message">
-              The bundle creation module couldn't be loaded in your browser.
-              This can happen with older browsers or certain privacy settings.
+              The bundle creator did not load. This can happen with older browsers or certain privacy settings.
             </div>
             <div class="loading-error-actions">
               <button class="btn btn-primary" onclick="window.location.reload()">Reload page</button>

@@ -261,7 +261,7 @@ export class RecoveryPage {
   }
 
   async expectNeedMoreShares(count: number): Promise<void> {
-    const expected = count === 1 ? 'Waiting for the last piece' : `Waiting for ${count} more pieces`;
+    const expected = count === 1 ? 'One more piece needed' : `${count} more pieces needed`;
     await expect(this.page.locator('#threshold-info')).toContainText(expected);
   }
 
@@ -283,7 +283,7 @@ export class RecoveryPage {
   }
 
   async expectRecoveryComplete(): Promise<void> {
-    await expect(this.page.locator('#status-message')).toContainText('All done', { timeout: 60000 });
+    await expect(this.page.locator('#status-message')).toContainText('recovered', { timeout: 60000 });
   }
 
   async expectFileCount(count: number): Promise<void> {

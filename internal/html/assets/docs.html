@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧠 ReMemory Guide - How to Create and Recover Bundles</title>
-  <meta name="description" content="Learn how to use ReMemory to create encrypted recovery bundles and recover your secrets.">
+  <title>🧠 ReMemory Guide</title>
+  <meta name="description" content="A guide to creating recovery bundles and recovering your files.">
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="🧠 ReMemory Guide - Split Your Secrets Among Friends">
-  <meta property="og:description" content="Learn how to use ReMemory to create encrypted recovery bundles and recover your secrets using Shamir's Secret Sharing.">
+  <meta property="og:title" content="🧠 ReMemory Guide">
+  <meta property="og:description" content="A guide to creating recovery bundles and recovering your files with ReMemory.">
   <meta property="og:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="🧠 ReMemory Guide - Split Your Secrets Among Friends">
-  <meta name="twitter:description" content="Learn how to use ReMemory to create encrypted recovery bundles and recover your secrets.">
+  <meta name="twitter:title" content="🧠 ReMemory Guide">
+  <meta name="twitter:description" content="A guide to creating recovery bundles and recovering your files with ReMemory.">
   <meta name="twitter:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <style>{{STYLES}}</style>
   <style>
@@ -419,78 +419,73 @@
 
     <div class="docs-main">
       <header class="docs-header">
-        <h1>🧠 ReMemory User Guide</h1>
-        <p>Learn how to create encrypted recovery bundles and recover your secrets</p>
+        <h1>🧠 ReMemory Guide</h1>
+        <p>How to create bundles and recover files</p>
         <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem;">
-          Prefer the command line? See the <a href="https://github.com/eljojo/rememory/blob/main/docs/guide.md">CLI guide</a>.
+          There is also a <a href="https://github.com/eljojo/rememory/blob/main/docs/guide.md">CLI guide</a>.
         </p>
       </header>
 
     <section id="overview" class="doc-section">
       <h2>Overview</h2>
       <p>
-        ReMemory helps you protect important files (passwords, crypto keys, documents) by:
+        ReMemory protects files by:
       </p>
       <ol>
-        <li>Encrypting your files with strong cryptography (age encryption)</li>
-        <li>Splitting the decryption key among trusted friends using Shamir's Secret Sharing</li>
-        <li>Creating self-contained bundles that friends can use to recover your secrets</li>
+        <li>Encrypting them with <a href="https://github.com/FiloSottile/age" target="_blank">age</a></li>
+        <li>Splitting the key among people you trust</li>
+        <li>Giving each person a self-contained bundle for recovery</li>
       </ol>
       <p>
-        The important part: recovery works <strong>entirely offline in a browser</strong>—no servers,
-        no internet, no need for this website to exist when recovery happens.
+        Recovery works entirely offline, in a browser. No servers, no internet, no need for this website to exist.
       </p>
 
       <div class="tip">
-        <strong>Tip:</strong> No single friend can access your data alone. They must work together,
-        combining their shares to reach the threshold you set (e.g., 3 of 5 friends).
+        <strong>Tip:</strong> No single person can access your data. They must combine their pieces — enough to reach the threshold you set (e.g., 3 of 5).
       </div>
     </section>
 
     <section id="creating" class="doc-section">
       <h2>Creating Bundles</h2>
       <p>
-        Creating bundles is a 3-step process. Everything happens in your browser—your files never
-        leave your device.
+        Three steps. Everything happens in your browser — your files never leave your device.
       </p>
 
       <h3 id="step1">Step 1: Add Friends</h3>
       <p>
-        Start by adding the friends who will hold pieces of your recovery key. For each friend,
-        provide their name and optionally contact information.
+        Add the people who will hold pieces of your recovery key. For each, provide a name and optionally contact information.
       </p>
 
       <figure class="screenshot">
         <img src="screenshots/friends.png" alt="Adding friends in Step 1" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Adding friends form</div>'">
-        <figcaption>Add at least 2 friends who will hold shares of your recovery key</figcaption>
+        <figcaption>Each person here will hold one piece of the key</figcaption>
       </figure>
 
       <p>
-        Then choose your <strong>threshold</strong>—how many friends must cooperate to recover your files.
+        Then choose your <strong>threshold</strong> — how many people must come together to recover your files.
       </p>
 
       <div class="tip">
-        <strong>Choosing the right threshold:</strong>
+        <strong>Choosing a threshold:</strong>
         <ul>
-          <li><strong>3 friends, threshold 2:</strong> Minimum viable setup</li>
-          <li><strong>5 friends, threshold 3:</strong> Good balance of security and availability</li>
-          <li><strong>7 friends, threshold 4-5:</strong> Higher security, requires more coordination</li>
+          <li><strong>3 people, threshold 2:</strong> The simplest setup</li>
+          <li><strong>5 people, threshold 3:</strong> A good balance</li>
+          <li><strong>7 people, threshold 4–5:</strong> More secure, more coordination</li>
         </ul>
-        Set threshold high enough that casual collusion is unlikely, but low enough that recovery
-        is possible if 1-2 friends are unavailable.
+        High enough that collusion is unlikely. Low enough that recovery works if one or two people are unavailable.
       </div>
 
       <h3 id="step2">Step 2: Add Files</h3>
       <p>
-        Drag and drop files or a folder containing the secrets you want to protect.
+        Drag and drop the files or folder you want to protect.
       </p>
 
       <figure class="screenshot">
         <img src="screenshots/files.png" alt="Adding files in Step 2" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: File upload area</div>'">
-        <figcaption>Drag and drop files or folders to protect</figcaption>
+        <figcaption>Add the files you want to protect</figcaption>
       </figure>
 
-      <p><strong>Good candidates for ReMemory:</strong></p>
+      <p><strong>Good candidates:</strong></p>
       <ul>
         <li>Password manager recovery codes</li>
         <li>Cryptocurrency seeds/keys</li>
@@ -501,27 +496,26 @@
       </ul>
 
       <div class="warning">
-        <strong>Note:</strong> Avoid files that change frequently. ReMemory is designed for
-        static secrets that you set and forget.
+        <strong>Note:</strong> Avoid files that change often. This is designed for secrets you set once and leave.
       </div>
 
       <h3 id="step3">Step 3: Generate Bundles</h3>
       <p>
-        Click "Generate Bundles" to encrypt your files and create personalized bundles for each friend.
+        Click "Generate Bundles" to encrypt your files and create a bundle for each person.
       </p>
 
       <figure class="screenshot">
         <img src="screenshots/bundles.png" alt="Generating bundles in Step 3" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Bundle generation</div>'">
-        <figcaption>Download individual bundles or all at once</figcaption>
+        <figcaption>Download each bundle, or all at once</figcaption>
       </figure>
 
       <p>
-        Each bundle is approximately 5 MB because it includes the complete recovery tool.
-        This ensures friends can recover your files even if this website no longer exists.
+        Each bundle is around 5 MB because it includes the full recovery tool.
+        Recovery works even if this website is gone.
       </p>
 
       <h3 id="distributing">Distributing to Friends</h3>
-      <p>Send each friend their specific bundle using any method you trust:</p>
+      <p>Send each person their bundle however you prefer:</p>
       <ul>
         <li><strong>Email:</strong> Attach the ZIP file</li>
         <li><strong>Cloud storage:</strong> Share via Dropbox, Google Drive, etc.</li>
@@ -530,12 +524,12 @@
       </ul>
 
       <div class="tip">
-        <strong>Tell your friends:</strong>
+        <strong>Tell them:</strong>
         <ol>
-          <li>Keep the bundle somewhere safe (cloud backup, USB drive, etc.)</li>
-          <li>They cannot use it alone—they'll need to coordinate with others</li>
-          <li>A single share reveals nothing, but they should still keep it private</li>
-          <li>Consider printing the <code>README.pdf</code> and keeping it in a safe—paper survives digital disasters. The <code>MANIFEST.age</code> file can be stored separately (cloud, email, USB) since it's just encrypted ciphertext.</li>
+          <li>Keep the bundle somewhere safe — cloud backup, USB drive, a drawer</li>
+          <li>They cannot use it alone; they will need to coordinate with others</li>
+          <li>A single piece reveals nothing, but it should still be kept private</li>
+          <li>Consider printing the <code>README.pdf</code> and keeping it in a safe. Paper survives digital disasters. The <code>MANIFEST.age</code> file can be stored separately since it's just encrypted data.</li>
         </ol>
       </div>
     </section>
@@ -544,44 +538,41 @@
       <h2>Recovering Files</h2>
 
       <h3 id="bundle-contents">What Friends Receive</h3>
-      <p>Each bundle contains everything needed for recovery:</p>
+      <p>Each bundle contains:</p>
 
       <div class="bundle-contents">
         <div class="file">
           <span class="file-name">README.txt</span>
-          <span class="file-desc">Instructions + unique share + contact list</span>
+          <span class="file-desc">Instructions, unique share, contact list</span>
         </div>
         <div class="file">
           <span class="file-name">README.pdf</span>
-          <span class="file-desc">Same content, formatted for printing. Also includes a <strong>QR code</strong>
-        that can be scanned to import the share directly.</span>
+          <span class="file-desc">Same content, formatted for printing. Includes a <strong>QR code</strong> for importing the share.</span>
         </div>
         <div class="file">
           <span class="file-name">MANIFEST.age</span>
-          <span class="file-desc">Your encrypted secrets. Only included when encrypted data is more than 5 MB.</span>
+          <span class="file-desc">Your encrypted files. Only included separately when data exceeds 5 MB.</span>
         </div>
         <div class="file">
           <span class="file-name">recover.html</span>
-          <span class="file-desc">Browser-based recovery tool (~1.8 MB)</span>
+          <span class="file-desc">Recovery tool (~1.8 MB), runs in any browser</span>
         </div>
       </div>
 
       <p style="margin-top: 1rem;">
-        Each bundle is personalized: the <code>recover.html</code> has the friend's share pre-loaded
-        and shows a contact list of other friends who hold shares. Often, it also includes the MANIFEST.age to simplify recovery.
+        Each bundle is personalized — the friend's share is pre-loaded, and a contact list shows who else holds pieces. When the encrypted data is small enough, it's embedded too.
       </p>
 
       <h3 id="recovery-bundle">Path A: I Have the Bundle ZIP</h3>
       <p>
-        This is the easiest path. If you have the bundle ZIP file (or the individual files from it),
-        here's what to do:
+        The simplest path. If you have the bundle ZIP (or the files from it):
       </p>
 
       <div class="step-guide">
         <div class="step-number">1</div>
         <div class="step-content">
           <h4>Extract the ZIP and open recover.html</h4>
-          <p>Open the recovery tool in any modern browser. Your share is automatically pre-loaded.</p>
+          <p>Open it in any modern browser. Your share is already loaded.</p>
         </div>
       </div>
 
@@ -589,8 +580,7 @@
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Load the encrypted manifest</h4>
-          <p>For small manifests (≤ 5 MB), this step is automatic—the manifest is already embedded in <code>recover.html</code>.
-          Otherwise, drag and drop <code>MANIFEST.age</code> from the bundle onto the manifest area.</p>
+          <p>For small archives (≤ 5 MB), this is automatic — the data is already embedded. Otherwise, drag <code>MANIFEST.age</code> from the bundle onto the page.</p>
         </div>
       </div>
 
@@ -598,7 +588,7 @@
         <div class="step-number">3</div>
         <div class="step-content">
           <h4>Coordinate with other friends</h4>
-          <p>The tool shows a contact list with other friends' names and contact information. Reach out and ask them to send their <code>README.txt</code> file or share text.</p>
+          <p>The tool shows a contact list with other friends' names and how to reach them. Ask them to send their <code>README.txt</code> or share text.</p>
         </div>
       </div>
 
@@ -606,7 +596,7 @@
         <div class="step-number">4</div>
         <div class="step-content">
           <h4>Add shares from other friends</h4>
-          <p>For each friend's share, you can: drag and drop their <code>README.txt</code> file, paste share text directly, or scan a QR code from their printed PDF. A checkmark appears next to each friend's name as their share is added.</p>
+          <p>For each friend's share: drag their <code>README.txt</code> onto the page, paste the share text, or scan a QR code from their PDF. A checkmark appears as each share is added.</p>
         </div>
       </div>
 
@@ -614,13 +604,12 @@
         <div class="step-number">5</div>
         <div class="step-content">
           <h4>Recovery happens automatically</h4>
-          <p>Once the threshold is met (e.g., 3 of 5 shares), decryption starts immediately—no button to click!</p>
+          <p>Once enough shares are gathered (e.g., 3 of 5), decryption starts on its own.</p>
         </div>
       </div>
 
       <div class="tip">
-        <strong>Pro tip:</strong> If a friend sends you their entire <code>.zip</code> bundle file,
-        you can drag it directly onto the page—the manifest and their share are both imported automatically.
+        <strong>Tip:</strong> If a friend sends their entire <code>.zip</code> bundle, drag it onto the page — both the share and the archive are imported at once.
       </div>
 
       <figure class="screenshot">
@@ -635,10 +624,8 @@
 
       <h3 id="recovery-words">Path B: I Have a Printed PDF with Words</h3>
       <p>
-        Each printed PDF includes your share encoded as a list of numbered words. You can type these
-        words into the recovery tool to get started—no QR code scanner or camera needed.
+        Each printed PDF includes your share as a list of numbered words. Type them into the recovery tool — no camera or scanner needed.
       </p>
-      <p>If you're starting from a printed PDF with recovery words:</p>
 
       <div class="step-guide">
         <div class="step-number">1</div>
@@ -652,7 +639,7 @@
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Type in your recovery words</h4>
-          <p>Find the numbered word list on your printed PDF and type the words into the recovery tool's text area. The words don't need to be separated by numbers—just type or paste them separated by spaces.</p>
+          <p>Find the word list on your PDF and type the words into the text area. You don't need the numbers — just the words, separated by spaces.</p>
         </div>
       </div>
 
@@ -670,7 +657,7 @@
         <div class="step-number">3</div>
         <div class="step-content">
           <h4>Load the encrypted manifest</h4>
-          <p>You might need the <code>MANIFEST.age</code> file—drag it onto the page or click to browse. If you don't have it, ask one of the other friends to send it from their bundle. Every bundle contains the same copy.</p>
+          <p>You may need the <code>MANIFEST.age</code> file — drag it onto the page or click to browse. If you don't have it, any friend can send theirs. Every bundle has the same copy.</p>
         </div>
       </div>
 
@@ -678,7 +665,7 @@
         <div class="step-number">4</div>
         <div class="step-content">
           <h4>Collect shares from other friends</h4>
-          <p>Contact other friends and ask them to send their shares. They can send their <code>README.txt</code>, share text, read their words over the phone, or you can scan the QR code from their printed PDF.</p>
+          <p>Contact other friends and ask for their shares. They can send their <code>README.txt</code>, share text, read their words over the phone, or you can scan their QR code.</p>
         </div>
       </div>
 
@@ -691,22 +678,19 @@
       </div>
 
       <div class="tip">
-        <strong>Tip:</strong> Words are easier to read over the phone than QR codes or raw share text.
-        If a friend can't send their share digitally, they can read the words aloud and you can type them in.
+        <strong>Tip:</strong> Words are the easiest to share over the phone. If a friend can't send their share digitally, they can read the words aloud and you type them in.
       </div>
 
       <h3 id="recovery-pdf">Path C: I Have a Printed PDF with QR Code</h3>
       <p>
-        If your device has a camera, you can scan the QR code on the printed PDF to import your
-        share directly—no typing required.
+        If your device has a camera, scan the QR code on the PDF to import your share directly.
       </p>
-      <p>If you're starting from a printed PDF and want to use the QR code:</p>
 
       <div class="step-guide">
         <div class="step-number">1</div>
         <div class="step-content">
           <h4>Open the recovery tool</h4>
-          <p>Scan the QR code on the PDF with your phone camera—it opens the recovery website with your share pre-filled. Alternatively, visit the URL printed on the PDF and type the short code (<code>RM1:...</code>) shown below the QR code into the paste area.</p>
+          <p>Scan the QR code with your phone camera — it opens the recovery tool with your share pre-filled. Or visit the URL on the PDF and type the short code shown below the QR code.</p>
         </div>
       </div>
 
@@ -724,7 +708,7 @@
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Load the encrypted manifest</h4>
-          <p>You might need the <code>MANIFEST.age</code> file—drag it onto the page or click to browse. If you don't have it, ask one of the other friends to send it from their bundle. Every bundle contains the same copy.</p>
+          <p>You may need the <code>MANIFEST.age</code> file — drag it onto the page or click to browse. If you don't have it, any friend can send theirs. Every bundle has the same copy.</p>
         </div>
       </div>
 
@@ -737,7 +721,7 @@
         <div class="step-number">3</div>
         <div class="step-content">
           <h4>Collect shares from other friends</h4>
-          <p>Contact other friends and ask them to send their shares. They can send their <code>README.txt</code>, share text, or you can scan the QR code from their printed PDF.</p>
+          <p>Contact other friends and ask for their shares. They can send their <code>README.txt</code>, share text, or you can scan their QR code.</p>
         </div>
       </div>
 
@@ -750,12 +734,12 @@
       </div>
 
       <div class="tip">
-        <strong>Key points about recovery:</strong>
+        <strong>About recovery:</strong>
         <ul>
-          <li>Works completely offline—no internet required</li>
-          <li>No data leaves the browser</li>
-          <li>Works on Chrome, Firefox, Safari, Edge -- (QR only in Chrome, Edge, Opera)</li>
-          <li>Friends can be in different locations; they just share their README.txt files</li>
+          <li>Works entirely offline</li>
+          <li>Nothing leaves the browser</li>
+          <li>Runs on Chrome, Firefox, Safari, Edge (camera scanning: Chrome, Edge, Opera)</li>
+          <li>Friends can be anywhere — they just need to share their README.txt files</li>
         </ul>
       </div>
     </section>
@@ -765,23 +749,23 @@
 
       <h3>Choosing Friends</h3>
       <ul>
-        <li><strong>Longevity:</strong> Pick people likely to be reachable in 5-10+ years</li>
-        <li><strong>Geographic diversity:</strong> Don't put all friends in the same disaster zone</li>
-        <li><strong>Technical ability:</strong> Mix is fine; the tool is designed for everyone</li>
-        <li><strong>Relationships:</strong> Consider if they'll cooperate with each other</li>
-        <li><strong>Trust:</strong> While a single share reveals nothing, you're trusting them with responsibility</li>
+        <li><strong>Longevity:</strong> People likely to be reachable in 5–10 years</li>
+        <li><strong>Geographic spread:</strong> Not all in the same place</li>
+        <li><strong>Technical ability:</strong> Any mix is fine — the tool is designed for everyone</li>
+        <li><strong>Relationships:</strong> Will they cooperate with each other?</li>
+        <li><strong>Trust:</strong> A single share reveals nothing, but you're trusting them with responsibility</li>
       </ul>
 
       <h3>Security Considerations</h3>
       <ul>
-        <li>Don't keep all bundles together—that defeats the purpose of splitting</li>
-        <li>Consider printing <code>README.pdf</code>—paper backups survive digital disasters</li>
+        <li>Don't keep all bundles together — that defeats the point of splitting</li>
+        <li>Consider printing <code>README.pdf</code> — paper survives digital disasters</li>
         <li>Save <code>project.yml</code> if you want to regenerate bundles later</li>
       </ul>
 
       <h3>Rotation</h3>
       <p>
-        Consider creating new bundles every 2-3 years:
+        Consider creating new bundles every few years:
       </p>
       <ul>
         <li>Friends' contact info changes</li>
@@ -792,12 +776,10 @@
 
       <h3 id="revoking-access">Revoking Access</h3>
       <p>
-        There is no way to remotely revoke a share once it has been distributed. This is by design —
-        the system is offline and serverless, so there is no central authority that can invalidate a share.
+        Once a share has been distributed, it cannot be revoked. This is by design — there is no server, no central authority.
       </p>
       <p>
-        If you need to remove someone from your recovery group (e.g., a falling out, or you simply want
-        to change who holds shares), the only option is:
+        If you need to change who holds shares:
       </p>
       <ol>
         <li><strong>Create new bundles</strong> with a new set of friends and a fresh passphrase</li>
@@ -806,24 +788,18 @@
       </ol>
 
       <div class="warning">
-        <strong>Important:</strong> Old shares can still decrypt old manifests, so friends must not keep
-        old bundles "just in case." When you send someone a new bundle, be clear: delete the old one,
-        keep only the new one. No version history, no archives — just the latest bundle.
+        <strong>Important:</strong> Old shares still work with old archives. When you send a new bundle, be clear: delete the old one, keep only the new one. No version history, no "just in case."
       </div>
 
       <p>
-        The same applies when you update your secrets (e.g., a password changed). Creating new bundles
-        generates a completely new passphrase and new shares. The old shares become useless for the new
-        manifest, but they still work with the old <code>MANIFEST.age</code>. Make sure friends aren't
-        holding on to old copies.
+        The same applies when secrets change. New bundles mean a new key and new shares. Old shares won't open the new archive, but they still work with the old one. Make sure friends aren't holding on to old copies.
       </p>
     </section>
 
     <section id="cli" class="doc-section">
       <h2>CLI Alternative</h2>
       <p>
-        ReMemory also offers a command-line tool for advanced users who prefer working in a terminal
-        or need to automate bundle creation.
+        There is also a command-line tool for those who prefer a terminal or need to automate bundle creation.
       </p>
 
       <p>
@@ -831,72 +807,64 @@
       </p>
 
       <p style="margin-top: 1rem;">
-        The CLI provides the same functionality plus features like importing contacts from
-        a <code>project.yml</code> file and batch operations.
+        The CLI provides the same functionality, plus importing contacts from a <code>project.yml</code> file and batch operations.
       </p>
     </section>
 
     <section id="anonymous" class="doc-section">
       <h2>Advanced: Anonymous Mode</h2>
       <p>
-        For situations where you don't want shareholders to know each other's identities,
-        ReMemory offers an <strong>anonymous mode</strong>. In this mode:
+        When holders should not know each other's identities, use <strong>anonymous mode</strong>:
       </p>
       <ul>
-        <li>Friends are labeled generically as "Share 1", "Share 2", etc.</li>
+        <li>People are labeled as "Share 1", "Share 2", etc.</li>
         <li>No contact information is collected or stored</li>
         <li>READMEs skip the "Other Share Holders" section</li>
         <li>Bundle filenames use numbers instead of names</li>
       </ul>
 
       <h3>When to Use Anonymous Mode</h3>
-      <p>Anonymous mode is useful when:</p>
+      <p>This is useful when:</p>
       <ul>
-        <li>You want to distribute shares to people who shouldn't know each other</li>
-        <li>You're testing the system quickly without entering contact details</li>
-        <li>You have a separate out-of-band method for coordinating recovery</li>
+        <li>Holders should not know each other</li>
+        <li>You're testing quickly without entering names</li>
+        <li>You have another way to coordinate recovery</li>
         <li>Privacy is a higher priority than ease of coordination</li>
       </ul>
 
       <h3>How to Enable</h3>
       <p>
-        In the <a href="maker.html">bundle creator</a>, look for the <strong>Anonymous</strong> toggle
-        in the top-right corner of the Friends section. When enabled:
+        In the <a href="maker.html">bundle creator</a>, enable the <strong>Anonymous</strong> toggle in the Friends section:
       </p>
       <ul>
-        <li>The friend list disappears</li>
-        <li>A "Number of shares" input appears instead</li>
-        <li>Set how many shares you want and the threshold</li>
-        <li>Generated bundles will be named <code>bundle-share-1.zip</code>, <code>bundle-share-2.zip</code>, etc.</li>
+        <li>The friend list is replaced by a share count</li>
+        <li>Set how many shares and the threshold</li>
+        <li>Bundles are named <code>bundle-share-1.zip</code>, <code>bundle-share-2.zip</code>, etc.</li>
       </ul>
 
       <h3>Recovery in Anonymous Mode</h3>
       <p>
-        Recovery works the same way, but the contact list section won't appear in <code>recover.html</code>.
-        Share holders will see generic labels like "Share 1" instead of names.
+        Recovery works the same way, but without the contact list. Holders see generic labels like "Share 1" instead of names.
       </p>
 
       <div class="warning">
-        <strong>Important:</strong> Since there's no built-in contact list in anonymous mode,
-        make sure share holders know how to reach each other (or you) when recovery is needed.
-        You'll need to coordinate through other means.
+        <strong>Important:</strong> Without a built-in contact list, make sure holders know how to reach each other when recovery is needed.
       </div>
     </section>
 
     <section id="multilingual" class="doc-section">
       <h2>Advanced: Multilingual Bundles</h2>
       <p>
-        Each friend can receive their bundle (README.txt, README.pdf, and recover.html) in their preferred language.
-        ReMemory supports 5 languages: English, Spanish, German, French, and Slovenian.
+        Each person can receive their bundle in their preferred language. Five languages are supported: English, Spanish, German, French, and Slovenian.
       </p>
 
       <h3>How It Works</h3>
       <ul>
-        <li>In the web UI, each friend entry has a <strong>Bundle language</strong> dropdown</li>
-        <li>If set to "Default", the friend's bundle uses the current UI language</li>
-        <li>Override per friend to generate bundles in different languages</li>
-        <li>The recover.html tool will open in the friend's selected language by default</li>
-        <li>Friends can always switch languages in recover.html regardless of the default</li>
+        <li>Each friend entry has a <strong>Bundle language</strong> dropdown</li>
+        <li>"Default" uses the current UI language</li>
+        <li>Override per person to mix languages</li>
+        <li>recover.html opens in the selected language</li>
+        <li>Anyone can switch languages at any time</li>
       </ul>
 
       <figure class="screenshot">

@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReMemory - Split a recovery key among friends</title>
-  <meta name="description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
+  <title>ReMemory - Split a secret among people you trust</title>
+  <meta name="description" content="Encrypt files and split the key among people you trust. No servers, no accounts. Recovery works offline, forever.">
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="ReMemory - Split a recovery key among friends">
-  <meta property="og:description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
+  <meta property="og:title" content="ReMemory - Split a secret among people you trust">
+  <meta property="og:description" content="Encrypt files and split the key among people you trust. No servers, no accounts. Recovery works offline, forever.">
   <meta property="og:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ReMemory - Split a recovery key among friends">
-  <meta name="twitter:description" content="An offline tool that encrypts files and splits the decryption key among trusted friends using Shamir's Secret Sharing. Open source.">
+  <meta name="twitter:title" content="ReMemory - Split a secret among people you trust">
+  <meta name="twitter:description" content="Encrypt files and split the key among people you trust. No servers, no accounts. Recovery works offline, forever.">
   <meta name="twitter:image" content="https://eljojo.github.io/rememory/screenshots/recovery-1.png">
   <style>{{STYLES}}</style>
   <style>
@@ -295,15 +295,14 @@
     <section class="intro">
       <h1>🧠 ReMemory</h1>
       <p class="summary">
-        This is a tool that encrypts files and splits the decryption key among trusted friends
-        using <a href="https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing" target="_blank">Shamir's Secret Sharing</a>.
-        For example, you can give pieces to 5 friends and require any 3 of them to cooperate to recover the key.
-        No single friend can access your data alone. The threshold is up to you—from 3-of-5 for a group of friends
-        to 2-of-2 for couples with shared private content that neither partner can access alone.
+        ReMemory encrypts your files and splits the key among people you trust using
+        <a href="https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing" target="_blank">Shamir's Secret Sharing</a>.
+        You decide how many must come together to unlock them — three of five friends, two of two partners, whatever fits.
+        No single person can access anything alone.
       </p>
       <p class="summary">
-        Each friend receives a self-contained bundle with <code>recover.html</code>—a browser-based tool that works
-        offline, with no servers or internet required. If this website disappears, recovery still works.
+        Each person receives a self-contained bundle with everything needed to recover.
+        It works in any browser, offline, with no servers. If this website disappears, recovery still works.
       </p>
       <div class="links">
         <a href="maker.html">Create bundles</a>
@@ -315,13 +314,13 @@
 
     <section class="how-it-works">
       <h2>How it works</h2>
-      <p class="subtitle">Your file is encrypted, the key is split into shares, and friends combine shares to recover it.</p>
+      <p class="subtitle">Your files are encrypted. The key is split into pieces. When enough people bring their pieces together, the files are unlocked.</p>
 
       <div class="dataflow-container">
         <canvas id="dataflow-canvas"></canvas>
       </div>
 
-      <p class="dataflow-caption">Different friend combinations can recover the file (any 3 of 5)</p>
+      <p class="dataflow-caption">Any three of five can recover the files</p>
 
       <div class="reduced-motion-fallback">
         <p class="flow-text">
@@ -338,10 +337,10 @@
         <div class="what-is-col is-col">
           <h3>It is:</h3>
           <ul>
-            <li>An offline tool that runs in your browser</li>
-            <li>A way to split a recovery key among friends</li>
+            <li>A tool that runs in your browser, offline</li>
+            <li>A way to split a secret key among people you trust</li>
             <li>Open source (Apache-2.0)</li>
-            <li>Self-contained—recovery works without this site</li>
+            <li>Self-contained — recovery works without this website</li>
           </ul>
         </div>
         <div class="what-is-col isnt-col">
@@ -357,34 +356,33 @@
     </section>
 
     <section class="try-it">
-      <h2>Try it in 2 minutes</h2>
+      <h2>See how it works</h2>
       <ol>
-        <li><a href="https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip">Download the demo bundles</a> (contains 3 sample bundles)</li>
+        <li><a href="https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip">Download the demo bundles</a></li>
         <li>Open <code>bundle-alice/recover.html</code> in your browser</li>
-        <li>Add Bob's and Carol's shares (drag their README.txt files onto the page)</li>
-        <li>Watch the automatic decryption when threshold is met</li>
+        <li>Drag Bob's and Carol's README.txt files onto the page</li>
+        <li>When enough pieces are added, the files unlock</li>
       </ol>
-      <p class="note">This is the best way to understand what your friends would experience during a real recovery.</p>
+      <p class="note">This is the closest thing to what a real recovery feels like.</p>
     </section>
 
     <section class="trust">
       <h2>On trust and verification</h2>
       <ul>
-        <li>The code is open source—you can <a href="https://github.com/eljojo/rememory" target="_blank">read it on GitHub</a></li>
-        <li>There's a <a href="https://github.com/eljojo/rememory/blob/main/docs/security-audit.md" target="_blank">self-audit document</a> explaining the cryptographic choices</li>
-        <li>Everything runs locally in your browser; your files don't leave your device</li>
-        <li>Try the demo bundles first to see exactly how it works before using it with real secrets</li>
-        <li>Uses <a href="https://github.com/FiloSottile/age" target="_blank">age</a> for encryption—a well-regarded modern tool</li>
+        <li>The code is open source — <a href="https://github.com/eljojo/rememory" target="_blank">read it on GitHub</a></li>
+        <li>A <a href="https://github.com/eljojo/rememory/blob/main/docs/security-audit.md" target="_blank">self-audit document</a> explains the cryptographic choices</li>
+        <li>Everything runs locally. Your files never leave your device</li>
+        <li>Try the demo bundles before using it with real secrets</li>
+        <li>Encryption uses <a href="https://github.com/FiloSottile/age" target="_blank">age</a> — a modern, well-regarded tool</li>
       </ul>
     </section>
 
     <section class="background">
       <h2>Why I built this</h2>
       <p>
-        I wanted a way to ensure trusted friends could access important files if something happened to me—without
-        trusting any single person or service with everything. Shamir's Secret Sharing seemed like the right approach,
-        but I couldn't find a tool that gave friends a simple, self-contained way to recover files together.
-        So I built one. I'm sharing it in case it's useful to others.
+        I wanted people I trust to be able to access important files if something happened to me — without
+        giving everything to any one person or service. Shamir's Secret Sharing was the right idea,
+        but I couldn't find a tool that made recovery simple and self-contained. So I built one.
       </p>
     </section>
   </div>

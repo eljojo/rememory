@@ -864,7 +864,7 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 	}
 
 	// Should contain anonymous-specific warning text
-	if !strings.Contains(readmeContent, "combine this with other shares") {
+	if !strings.Contains(readmeContent, "combined with other shares") {
 		t.Error("anonymous README should mention combining with other shares")
 	}
 
@@ -874,12 +874,12 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 	}
 
 	// Should contain correct threshold info
-	thresholdText := fmt.Sprintf("At least %d of you must cooperate", threshold)
+	thresholdText := fmt.Sprintf("At least %d of you must come together", threshold)
 	if !strings.Contains(readmeContent, thresholdText) {
 		t.Errorf("README should contain threshold info: %s", thresholdText)
 	}
 
-	totalText := fmt.Sprintf("one of %d trusted friends", total)
+	totalText := fmt.Sprintf("one of %d people", total)
 	if !strings.Contains(readmeContent, totalText) {
 		t.Errorf("README should contain total info: %s", totalText)
 	}
