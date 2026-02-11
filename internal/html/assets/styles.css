@@ -987,6 +987,101 @@ footer a:hover {
   font-size: 0.875rem;
 }
 
+/* Site navigation bar - shared across pages */
+.site-nav {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.site-nav .logo {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #2c3e50;
+  text-decoration: none;
+}
+.site-nav .nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.site-nav .nav-links a {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.site-nav .nav-links a:hover {
+  text-decoration: underline;
+}
+.site-nav .lang-toggle {
+  position: static;
+  margin-left: auto;
+}
+
+/* Page intro section - shared across pages */
+.page-intro {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+.page-intro h1 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+.page-intro .subtitle {
+  color: #7f8c8d;
+  margin-bottom: 1rem;
+}
+.page-intro .summary {
+  color: #495057;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+.page-intro details {
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+.page-intro summary {
+  cursor: pointer;
+  color: #3498db;
+  font-size: 0.95rem;
+}
+.page-intro summary:hover {
+  text-decoration: underline;
+}
+.page-intro .details-content {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+.page-intro .details-content h3 {
+  font-size: 1rem;
+  color: #2c3e50;
+  margin: 1rem 0 0.5rem;
+}
+.page-intro .details-content h3:first-child {
+  margin-top: 0;
+}
+.page-intro .details-content ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+.page-intro .details-content li {
+  margin: 0.25rem 0;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {
@@ -1004,5 +1099,13 @@ footer a:hover {
   .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .site-nav {
+    flex-direction: column;
+    text-align: center;
+  }
+  .site-nav .lang-toggle {
+    margin-left: 0;
   }
 }

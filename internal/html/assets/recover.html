@@ -32,7 +32,17 @@
   </div>
 
   <div class="container">
-    <header>
+    <nav class="site-nav">
+      <a href="index.html" class="logo">🧠 ReMemory</a>
+      <div class="nav-links" id="nav-links-standalone">
+        <a href="index.html">About</a>
+        <a href="maker.html">Create Bundles</a>
+        <a href="docs.html#recovering">Guide</a>
+        <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
+      </div>
+      <div class="nav-links hidden" id="nav-links-bundle">
+        <a href="https://eljojo.github.io/rememory/docs#recovering" target="_blank">Guide</a>
+      </div>
       <div class="lang-toggle">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="es">ES</button>
@@ -40,9 +50,13 @@
         <button data-lang="fr">FR</button>
         <button data-lang="sl">SL</button>
       </div>
-      <h1 data-i18n="title">🧠 ReMemory Recovery</h1>
-      <p data-i18n="subtitle">Recover your encrypted files using Shamir's Secret Sharing</p>
-    </header>
+    </nav>
+
+    <div class="page-intro">
+      <h1 data-i18n="title">Recover Files</h1>
+      <p class="subtitle" data-i18n="subtitle">Combine the pieces your friends kept safe to unlock your files.</p>
+      <p class="summary" data-i18n="page_description">Each friend received a bundle with their piece of the key. Gather enough pieces below, add the encrypted archive, and your files will be decrypted right here in the browser. Nothing is uploaded anywhere.</p>
+    </div>
 
     <!-- Step 1: Collect Shares -->
     <div class="card">
@@ -85,7 +99,7 @@
         <p data-i18n="step2_drop">Drag & drop MANIFEST.age here, or click to browse</p>
         <small data-i18n="step2_hint">This is the encrypted file containing your secrets</small>
       </div>
-      <input type="file" id="manifest-file-input" accept=".age">
+      <input type="file" id="manifest-file-input" accept=".age,.html,.htm,.zip">
 
       <div id="manifest-status" class="manifest-status hidden">
         <span class="icon">&#128196;</span>
@@ -122,7 +136,7 @@
     <p>ReMemory {{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
     <p>
       <span data-i18n="need_help">Need help?</span>
-      <a href="https://eljojo.github.io/rememory/docs.html" target="_blank">Docs</a> ·
+      <a href="https://eljojo.github.io/rememory/docs#recovering" target="_blank">Docs</a> ·
       <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI tool from GitHub</a>
     </p>
   </footer>
@@ -179,6 +193,13 @@
       if (window.PERSONALIZATION && window.PERSONALIZATION.language && !localStorage.getItem('rememory-lang')) {
         currentLang = window.PERSONALIZATION.language;
       }
+
+      // Toggle nav links: bundle mode shows only Guide (absolute), standalone shows all (relative)
+      if (window.PERSONALIZATION) {
+        document.getElementById('nav-links-standalone')?.classList.add('hidden');
+        document.getElementById('nav-links-bundle')?.classList.remove('hidden');
+      }
+
       setLanguage(currentLang);
 
       // Add click handlers

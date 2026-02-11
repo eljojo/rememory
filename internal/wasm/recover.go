@@ -140,6 +140,9 @@ type BundleContents struct {
 }
 
 // extractBundle extracts share and manifest from a bundle ZIP file.
+// When MANIFEST.age is not present in the ZIP (manifest is embedded in recover.html),
+// the Manifest field will be nil — the caller should try extracting from the
+// recover.html personalization data instead.
 func extractBundle(zipData []byte) (*BundleContents, error) {
 	r, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {

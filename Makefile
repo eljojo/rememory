@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -50,6 +50,9 @@ test-e2e: build
 test-e2e-headed: build
 	@if [ ! -d node_modules ]; then echo "Run 'npm install' first"; exit 1; fi
 	REMEMORY_BIN=./$(BINARY) npx playwright test --headed
+
+# Clean rebuild + all tests (unit + e2e)
+full: clean build test test-e2e
 
 lint:
 	go vet ./...

@@ -32,6 +32,7 @@ type ReadmeData struct {
 	Anonymous        bool
 	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+	ManifestEmbedded bool   // true when manifest is embedded in recover.html
 }
 
 // Font sizes
@@ -123,6 +124,16 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 
 	// Section: Your Share (QR code + PEM block)
+	// Ensure the section header + QR code + caption + compact string stay together
+	qrBlockHeight := 10.0 + 2.0 + qrSizeMM + 3.0 + 5.0 + 2.0 + 4.0 // header + gap + QR + gap + caption + gap + compact
+	{
+		_, pageHeight := p.GetPageSize()
+		_, _, _, bottomMargin := p.GetMargins()
+		usableBottom := pageHeight - bottomMargin
+		if p.GetY()+qrBlockHeight > usableBottom {
+			p.AddPage()
+		}
+	}
 	addSection(p, t("your_share"))
 	p.Ln(2)
 
@@ -222,9 +233,14 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.SetFont(fontSans, "B", bodySize)
 	p.MultiCell(0, 5, "   "+t("recover_share_loaded"), "", "L", false)
 	p.Ln(2)
-	addBody(p, t("recover_step2"))
-	addBody(p, "   "+t("recover_step2_drag"))
-	addBody(p, "   "+t("recover_step2_click"))
+	if data.ManifestEmbedded {
+		addBody(p, t("recover_step2_embedded"))
+		addBody(p, "   "+t("recover_step2_embedded_hint"))
+	} else {
+		addBody(p, t("recover_step2"))
+		addBody(p, "   "+t("recover_step2_drag"))
+		addBody(p, "   "+t("recover_step2_click"))
+	}
 	p.Ln(2)
 	if data.Anonymous {
 		addBody(p, t("recover_anon_step3"))
