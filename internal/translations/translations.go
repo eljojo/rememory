@@ -18,7 +18,7 @@ var makerFS embed.FS
 var readmeFS embed.FS
 
 // Languages lists all supported language codes.
-var Languages = []string{"en", "es", "de", "fr", "sl"}
+var Languages = []string{"en", "es", "de", "fr", "sl", "zh_TW"}
 
 // GetTranslationsJS builds the JavaScript translations object for injection into HTML templates.
 // component must be "recover", "maker", or "readme".

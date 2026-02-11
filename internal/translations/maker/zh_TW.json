@@ -2,6 +2,7 @@
   "loading": "正在準備包裹建立工具……",
   "title": "🧠 ReMemory - 建立包裹",
   "page_title": "建立包裹",
+  "page_description": "加入檔案、選擇朋友、設定門檻，每位朋友都會獲得一個日後協助你復原檔案的包裹。所有操作均在本機執行，你的檔案永遠不會離開你的瀏覽器。",
   "subtitle": "確保你的重要檔案永不遺失。",
   "step1_title": "朋友",
   "friends_hint": "加入最少 2 位朋友，每位朋友均會持有你的復原金鑰的一部份",
@@ -25,14 +26,13 @@
   "generate_btn": "產生包裹",
   "download_all_btn": "下載所有包裹",
   "download_yaml_btn": "儲存 project.yml",
-  "works_offline": "無須使用網絡",
+  "works_offline": "支援完全離線使用",
   "need_help": "需要幫助？",
   "download_cli": "從 GitHub 下載命令列介面工具",
   "generating": "正在產生包裹……",
   "archiving": "正在歸檔包裹……",
   "encrypting": "正在加密歸檔……",
   "splitting": "正在分割密鑰……",
-  "creating_bundle": "正在為 {0} 建立包裹……",
   
   "complete": "所冇包裹已成功建立！",
   "error": "錯誤：{0}",
@@ -56,5 +56,9 @@
   "action_try_again": "再試一次",
   "validation_title": "部份欄位需要注意",
   "validation_message": "請先填寫所有已標示的欄位，再開始產生包裹。",
-  "validation_guidance": "必填欄位會以星號（*）標示。請確認每位朋友都有填寫姓名，並且已經選擇最少 1 個檔案。"
+  "validation_guidance": "必填欄位會以星號（*）標示。請確認每位朋友都有填寫姓名，並且已經選擇最少 1 個檔案。",
+  "language_label": "包裹語言",
+
+  "custom_language_label": "自訂語言",
+  "remove": "移除"
 }
