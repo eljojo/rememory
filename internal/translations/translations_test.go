@@ -3,6 +3,7 @@ package translations
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -25,6 +26,9 @@ func TestAllJSONFilesParseCorrectly(t *testing.T) {
 }
 
 func TestAllLanguagesHaveSameKeys(t *testing.T) {
+	if os.Getenv("REMEMORY_CHECK_TRANSLATIONS") == "" {
+		t.Skip("Skipping translation parity check (set REMEMORY_CHECK_TRANSLATIONS=1 or run 'make check-translations')")
+	}
 	for _, component := range []string{"recover", "maker", "readme"} {
 		t.Run(component, func(t *testing.T) {
 			enKeys, err := GetComponentKeys(component)
