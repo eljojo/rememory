@@ -21,19 +21,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
           cache: true
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
@@ -49,15 +49,15 @@ jobs:
 
       - name: Generate HTML files
         run: |
-          mkdir -p _site/screenshots
+          mkdir -p _site
           ./rememory html index > _site/index.html
           ./rememory html create > _site/maker.html
           ./rememory html docs > _site/docs.html
           ./rememory html recover > _site/recover.html
-          cp docs/screenshots/* _site/screenshots/ 2>/dev/null || true
+          rsync -a docs/screenshots/ _site/screenshots/
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

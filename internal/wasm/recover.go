@@ -29,9 +29,10 @@ type ShareInfo struct {
 
 // ShareData is minimal data needed for combining.
 type ShareData struct {
-	Version int
-	Index   int
-	DataB64 string
+	Version   int
+	Index     int
+	Threshold int
+	DataB64   string
 }
 
 // parseShare extracts a share from text content (which might be a full README.txt).
@@ -90,6 +91,11 @@ func combineShares(shares []ShareData) (string, error) {
 		}
 	}
 
+	// Validate threshold is met (shares carry the threshold from parsing)
+	if shares[0].Threshold > 0 && len(shares) < shares[0].Threshold {
+		return "", fmt.Errorf("need at least %d shares to recover, got %d", shares[0].Threshold, len(shares))
+	}
+
 	// Convert to raw bytes for core.Combine
 	rawShares := make([][]byte, len(shares))
 	for i, s := range shares {
@@ -140,6 +146,9 @@ type BundleContents struct {
 }
 
 // extractBundle extracts share and manifest from a bundle ZIP file.
+// When MANIFEST.age is not present in the ZIP (manifest is embedded in recover.html),
+// the Manifest field will be nil — the caller should try extracting from the
+// recover.html personalization data instead.
 func extractBundle(zipData []byte) (*BundleContents, error) {
 	r, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
@@ -156,7 +165,9 @@ func extractBundle(zipData []byte) (*BundleContents, error) {
 		}
 
 		data, err := io.ReadAll(rc)
-		rc.Close()
+		if closeErr := rc.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", f.Name, err)
 		}

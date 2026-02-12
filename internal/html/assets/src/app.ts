@@ -265,6 +265,17 @@ declare const t: TranslationFunction;
       }
     }
 
+    // Load embedded manifest if available (included when MANIFEST.age is small enough)
+    if (personalization.manifestB64) {
+      const binary = atob(personalization.manifestB64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      state.manifest = bytes;
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'embedded');
+    }
+
     checkRecoverReady();
   }
 
@@ -807,7 +818,7 @@ declare const t: TranslationFunction;
 
     if (result.manifest && !state.manifest) {
       state.manifest = result.manifest;
-      showManifestLoaded('MANIFEST.age', state.manifest.length, true);
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'bundle');
     }
 
     checkRecoverReady();
@@ -851,6 +862,24 @@ declare const t: TranslationFunction;
   // Shares UI
   // ============================================
 
+  // Resolve a display name for a share: use holder if set, otherwise look up
+  // the friend name from personalization data by share index, fall back to generic.
+  function resolveShareName(share: import('./types').ParsedShare): string {
+    if (share.holder) return share.holder;
+    if (personalization) {
+      if (personalization.holder) {
+        // Check if this matches the bundle holder's own share index
+        const holderShare = state.shares.find(s => s.isHolder);
+        if (holderShare && holderShare.index === share.index) {
+          return personalization.holder;
+        }
+      }
+      const friend = personalization.otherFriends.find(f => f.shareIndex === share.index);
+      if (friend) return friend.name;
+    }
+    return 'Share ' + share.index;
+  }
+
   function updateSharesUI(): void {
     if (!elements.sharesList) return;
 
@@ -859,6 +888,8 @@ declare const t: TranslationFunction;
     state.shares.forEach((share, idx) => {
       const item = document.createElement('div');
       item.className = 'share-item valid';
+
+      const displayName = resolveShareName(share);
 
       const isHolderShare = share.isHolder ||
         (personalization && share.holder &&
@@ -870,7 +901,7 @@ declare const t: TranslationFunction;
       item.innerHTML = `
         <span class="icon">&#9989;</span>
         <div class="details">
-          <div class="name">${escapeHtml(share.holder || 'Share ' + share.index)}${holderLabel}</div>
+          <div class="name">${escapeHtml(displayName)}${holderLabel}</div>
         </div>
         ${showRemove ? `<button class="remove" data-idx="${idx}" title="${t('remove')}">&times;</button>` : ''}
       `;
@@ -933,6 +964,11 @@ declare const t: TranslationFunction;
         return;
       }
 
+      if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+        await handleManifestFromHTML(file);
+        return;
+      }
+
       if (!file.name.endsWith('.age')) {
         if (elements.manifestDropZone) {
           showError(
@@ -958,14 +994,98 @@ declare const t: TranslationFunction;
     }
   }
 
-  function showManifestLoaded(filename: string, size: number, fromBundle = false): void {
+  async function handleManifestFromHTML(file: File): Promise<void> {
+    const text = await readFileAsText(file);
+
+    // Extract PERSONALIZATION JSON from the HTML
+    const match = text.match(/window\.PERSONALIZATION\s*=\s*(\{[^\n]*\})\s*;/);
+    if (!match || !match[1]) {
+      if (elements.manifestDropZone) {
+        showError(
+          t('error_wrong_manifest_message', file.name),
+          {
+            title: t('error_wrong_manifest_title'),
+            guidance: t('error_html_no_manifest_guidance'),
+            inline: true,
+            targetElement: elements.manifestDropZone
+          }
+        );
+      }
+      return;
+    }
+
+    try {
+      const personalizationData = JSON.parse(match[1]);
+      if (!personalizationData.manifestB64) {
+        if (elements.manifestDropZone) {
+          showError(
+            t('error_wrong_manifest_message', file.name),
+            {
+              title: t('error_wrong_manifest_title'),
+              guidance: t('error_html_no_manifest_guidance'),
+              inline: true,
+              targetElement: elements.manifestDropZone
+            }
+          );
+        }
+        return;
+      }
+
+      const binary = atob(personalizationData.manifestB64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      state.manifest = bytes;
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'html');
+
+      // Also extract the share if present and we don't already have one
+      if (personalizationData.holderShare && state.wasmReady) {
+        const result = window.rememoryParseShare(personalizationData.holderShare);
+        if (!result.error && result.share) {
+          const share = result.share;
+          if (!state.shares.some(s => s.index === share.index)) {
+            if (state.shares.length === 0 || (state.threshold === 0 && share.threshold > 0)) {
+              state.threshold = share.threshold;
+              state.total = share.total;
+            }
+            state.shares.push(share);
+            updateSharesUI();
+          }
+        }
+      }
+
+      checkRecoverReady();
+    } catch {
+      if (elements.manifestDropZone) {
+        showError(
+          t('error_wrong_manifest_message', file.name),
+          {
+            title: t('error_wrong_manifest_title'),
+            guidance: t('error_html_no_manifest_guidance'),
+            inline: true,
+            targetElement: elements.manifestDropZone
+          }
+        );
+      }
+    }
+  }
+
+  function showManifestLoaded(filename: string, size: number, source: 'file' | 'bundle' | 'embedded' | 'html' = 'file'): void {
     elements.manifestDropZone?.classList.add('hidden');
 
     if (elements.manifestStatus) {
+      const sourceLabels: Record<string, string> = {
+        file: t('loaded'),
+        bundle: t('manifest_loaded_bundle'),
+        embedded: t('manifest_loaded_embedded'),
+        html: t('manifest_loaded_html'),
+      };
+      const sourceLabel = sourceLabels[source] || t('loaded');
       elements.manifestStatus.innerHTML = `
         <span class="icon">&#9989;</span>
         <div style="flex: 1;">
-          <strong>${escapeHtml(filename)}</strong> ${fromBundle ? t('manifest_loaded_bundle') : t('loaded')}
+          <strong>${escapeHtml(filename)}</strong> ${sourceLabel}
           <div style="font-size: 0.875rem; color: #6c757d;">${formatSize(size)}</div>
         </div>
         <button class="clear-manifest" title="${t('remove')}">&times;</button>
@@ -1038,6 +1158,7 @@ declare const t: TranslationFunction;
       const sharesForCombine: ShareInput[] = state.shares.map(s => ({
         version: s.version,
         index: s.index,
+        threshold: s.threshold,
         dataB64: s.dataB64
       }));
 

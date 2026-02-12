@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -16,21 +16,43 @@ export function generateStandaloneHTML(tmpDir: string, type: 'recover' | 'create
   const bin = getRememoryBin();
   const htmlPath = path.join(tmpDir, type === 'create' ? 'maker.html' : 'recover.html');
 
-  execSync(`${bin} html ${type} -o ${htmlPath}`, { stdio: 'inherit' });
+  execFileSync(bin, ['html', type, '-o', htmlPath], { stdio: 'inherit' });
 
   return htmlPath;
 }
 
-// Create a sealed test project with bundles
-export function createTestProject(): string {
+// Options for test project creation
+interface TestProjectOptions {
+  noEmbedManifest?: boolean;
+}
+
+// Cache for test projects within the same worker process.
+// Multiple describe blocks in the same spec file can share a project
+// instead of running init+seal+bundle repeatedly for identical configs.
+const projectCache = new Map<string, string>();
+const cachedPaths = new Set<string>();
+
+function cacheKey(options: TestProjectOptions): string {
+  return options.noEmbedManifest ? 'standard-no-embed' : 'standard';
+}
+
+// Create a sealed test project with bundles (cached per config within a worker)
+export function createTestProject(options: TestProjectOptions = {}): string {
+  const key = cacheKey(options);
+  const cached = projectCache.get(key);
+  if (cached && fs.existsSync(cached)) {
+    return cached;
+  }
+
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-e2e-'));
   const projectDir = path.join(tmpDir, 'test-project');
   const bin = getRememoryBin();
 
   // Create project with 3 friends, threshold 2
-  execSync(`${bin} init ${projectDir} --name "E2E Test" --threshold 2 --friend "Alice,alice@test.com" --friend "Bob,bob@test.com" --friend "Carol,carol@test.com"`, {
-    stdio: 'inherit'
-  });
+  execFileSync(bin, [
+    'init', projectDir, '--name', 'E2E Test', '--threshold', '2',
+    '--friend', 'Alice,alice@test.com', '--friend', 'Bob,bob@test.com', '--friend', 'Carol,carol@test.com',
+  ], { stdio: 'inherit' });
 
   // Add secret content
   const manifestDir = path.join(projectDir, 'manifest');
@@ -38,22 +60,31 @@ export function createTestProject(): string {
   fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Remember to feed the cat!');
 
   // Seal and generate bundles
-  execSync(`${bin} seal`, { cwd: projectDir, stdio: 'inherit' });
-  execSync(`${bin} bundle`, { cwd: projectDir, stdio: 'inherit' });
+  const extraFlags = options.noEmbedManifest ? ['--no-embed-manifest'] : [];
+  execFileSync(bin, ['seal', ...extraFlags], { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['bundle', ...extraFlags], { cwd: projectDir, stdio: 'inherit' });
 
+  projectCache.set(key, projectDir);
+  cachedPaths.add(projectDir);
   return projectDir;
 }
 
-// Create a sealed anonymous test project with bundles
+// Create a sealed anonymous test project with bundles (cached within a worker)
 export function createAnonymousTestProject(): string {
+  const key = 'anonymous';
+  const cached = projectCache.get(key);
+  if (cached && fs.existsSync(cached)) {
+    return cached;
+  }
+
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-e2e-anon-'));
   const projectDir = path.join(tmpDir, 'test-anon-project');
   const bin = getRememoryBin();
 
   // Create anonymous project with 3 shares, threshold 2
-  execSync(`${bin} init ${projectDir} --name "Anonymous E2E Test" --anonymous --shares 3 --threshold 2`, {
-    stdio: 'inherit'
-  });
+  execFileSync(bin, [
+    'init', projectDir, '--name', 'Anonymous E2E Test', '--anonymous', '--shares', '3', '--threshold', '2',
+  ], { stdio: 'inherit' });
 
   // Add secret content
   const manifestDir = path.join(projectDir, 'manifest');
@@ -61,11 +92,34 @@ export function createAnonymousTestProject(): string {
   fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Anonymous notes!');
 
   // Seal and generate bundles
-  execSync(`${bin} seal`, { cwd: projectDir, stdio: 'inherit' });
-  execSync(`${bin} bundle`, { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['seal'], { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['bundle'], { cwd: projectDir, stdio: 'inherit' });
 
+  projectCache.set(key, projectDir);
+  cachedPaths.add(projectDir);
   return projectDir;
 }
+
+// Safe cleanup: only removes the directory if it's not a cached project
+// that other describe blocks might still need.
+export function cleanupProject(projectDir: string): void {
+  if (!projectDir || !fs.existsSync(projectDir)) return;
+  if (cachedPaths.has(projectDir)) return; // shared project, leave it for process exit cleanup
+  fs.rmSync(projectDir, { recursive: true, force: true });
+}
+
+// Clean up all cached projects when the worker process exits
+process.on('exit', () => {
+  for (const dir of cachedPaths) {
+    try {
+      // Walk up to the tmpDir parent (projectDir is tmpDir/test-project)
+      const tmpDir = path.dirname(dir);
+      if (fs.existsSync(tmpDir)) {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    } catch { /* best effort */ }
+  }
+});
 
 // Extract a bundle ZIP and return the extracted directory path
 // Note: friendName is case-insensitive, bundle files are lowercase
@@ -73,6 +127,11 @@ export function extractBundle(bundlesDir: string, friendName: string): string {
   const lowerName = friendName.toLowerCase();
   const bundleZip = path.join(bundlesDir, `bundle-${lowerName}.zip`);
   const extractDir = path.join(bundlesDir, `bundle-${lowerName}`);
+
+  // Skip extraction if already done (same describe block reuses bundlesDir)
+  if (fs.existsSync(extractDir) && fs.readdirSync(extractDir).length > 0) {
+    return extractDir;
+  }
 
   fs.mkdirSync(extractDir, { recursive: true });
 
@@ -169,12 +228,18 @@ export class RecoveryPage {
     await this.page.locator('#share-file-input').setInputFiles(readmePaths);
   }
 
-  // Add manifest file
+  // Add manifest file — tries MANIFEST.age first, falls back to recover.html
   async addManifest(bundleDir?: string): Promise<void> {
     const dir = bundleDir || this.bundleDir;
-    await this.page.locator('#manifest-file-input').setInputFiles(
-      path.join(dir, 'MANIFEST.age')
-    );
+    const manifestPath = path.join(dir, 'MANIFEST.age');
+    const recoverPath = path.join(dir, 'recover.html');
+    const filePath = fs.existsSync(manifestPath) ? manifestPath : recoverPath;
+    await this.page.locator('#manifest-file-input').setInputFiles(filePath);
+  }
+
+  // Add a specific file as the manifest source (e.g. a personalized recover.html)
+  async addManifestFile(filePath: string): Promise<void> {
+    await this.page.locator('#manifest-file-input').setInputFiles(filePath);
   }
 
   // Click recover button
@@ -197,12 +262,13 @@ export class RecoveryPage {
   }
 
   async expectNeedMoreShares(count: number): Promise<void> {
-    const expected = count === 1 ? 'Waiting for the last piece' : `Waiting for ${count} more pieces`;
+    const expected = count === 1 ? 'One last piece needed' : `${count} more pieces needed`;
     await expect(this.page.locator('#threshold-info')).toContainText(expected);
   }
 
   async expectManifestLoaded(): Promise<void> {
-    await expect(this.page.locator('#manifest-status')).toHaveClass(/loaded/);
+    // Longer timeout: reading large recover.html files via FileReader can be slow (especially Firefox)
+    await expect(this.page.locator('#manifest-status')).toHaveClass(/loaded/, { timeout: 15000 });
   }
 
   async expectManifestDropZoneVisible(): Promise<void> {
@@ -218,7 +284,7 @@ export class RecoveryPage {
   }
 
   async expectRecoveryComplete(): Promise<void> {
-    await expect(this.page.locator('#status-message')).toContainText('All done', { timeout: 60000 });
+    await expect(this.page.locator('#status-message')).toContainText('recovered', { timeout: 60000 });
   }
 
   async expectFileCount(count: number): Promise<void> {
@@ -230,9 +296,9 @@ export class RecoveryPage {
   }
 
   async expectUIElements(): Promise<void> {
-    await expect(this.page.locator('h1')).toContainText('🧠 ReMemory Recovery');
+    await expect(this.page.locator('h1')).toContainText('Recover Files');
     await expect(this.page.locator('#share-drop-zone')).toBeVisible();
-    await expect(this.page.locator('#manifest-drop-zone')).toBeVisible();
+    // Manifest drop zone may be hidden when manifest is embedded in personalization
   }
 
   // Dismiss dialogs (for duplicate share tests)
@@ -287,7 +353,8 @@ export class RecoveryPage {
   }
 
   async expectStepsCollapsed(): Promise<void> {
-    await expect(this.page.locator('.card.collapsed').first()).toBeAttached();
+    // Longer timeout: reading manifest from recover.html can be slow (especially Firefox)
+    await expect(this.page.locator('.card.collapsed').first()).toBeAttached({ timeout: 15000 });
   }
 }
 
@@ -394,7 +461,7 @@ export class CreationPage {
   }
 
   async expectGenerationComplete(): Promise<void> {
-    await expect(this.page.locator('#status-message')).toContainText('successfully', { timeout: 120000 });
+    await expect(this.page.locator('#status-message')).toContainText('ready', { timeout: 120000 });
   }
 
   async expectBundleCount(count: number): Promise<void> {

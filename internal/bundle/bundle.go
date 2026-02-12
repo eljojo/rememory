@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"archive/zip"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +24,7 @@ type Config struct {
 	GitHubReleaseURL string // URL to GitHub release for CLI download
 	WASMBytes        []byte // Compiled recover.wasm binary
 	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
+	NoEmbedManifest  bool   // If true, do not embed MANIFEST.age in recover.html even when small enough
 }
 
 // GenerateAll creates bundles for all friends in the project.
@@ -90,6 +92,13 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Total:        len(p.Friends),
 			Language:     lang,
 		}
+
+		// Embed manifest in recover.html when small enough and not disabled
+		manifestEmbedded := !cfg.NoEmbedManifest && len(manifestData) <= html.MaxEmbeddedManifestSize
+		if manifestEmbedded {
+			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
+		}
+
 		recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 
@@ -105,6 +114,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Total:            len(p.Friends),
 			ManifestData:     manifestData,
 			ManifestChecksum: manifestChecksum,
+			ManifestEmbedded: manifestEmbedded,
 			RecoverHTML:      recoverHTML,
 			RecoverChecksum:  recoverChecksum,
 			Version:          cfg.Version,
@@ -138,6 +148,7 @@ type BundleParams struct {
 	Total            int
 	ManifestData     []byte
 	ManifestChecksum string
+	ManifestEmbedded bool // true when manifest is base64-embedded in recover.html
 	RecoverHTML      string
 	RecoverChecksum  string
 	Version          string
@@ -165,6 +176,7 @@ func GenerateBundle(params BundleParams) error {
 		Created:          params.SealedAt,
 		Anonymous:        params.Anonymous,
 		Language:         params.Language,
+		ManifestEmbedded: params.ManifestEmbedded,
 	}
 
 	// Generate README.txt
@@ -186,19 +198,24 @@ func GenerateBundle(params BundleParams) error {
 		Anonymous:        readmeData.Anonymous,
 		RecoveryURL:      params.RecoveryURL,
 		Language:         params.Language,
+		ManifestEmbedded: params.ManifestEmbedded,
 	})
 	if err != nil {
 		return fmt.Errorf("generating PDF: %w", err)
 	}
 
-	// Create ZIP with all files, using sealed date as modification time
+	// Create ZIP with all files, using sealed date as modification time.
+	// When the manifest is embedded in recover.html, skip the separate MANIFEST.age
+	// file to avoid duplicating data and inflating the ZIP size.
 	readmeFileTxt := translations.ReadmeFilename(params.Language, ".txt")
 	readmeFilePdf := translations.ReadmeFilename(params.Language, ".pdf")
 	files := []ZipFile{
 		{Name: readmeFileTxt, Content: []byte(readmeContent), ModTime: params.SealedAt},
 		{Name: readmeFilePdf, Content: pdfContent, ModTime: params.SealedAt},
-		{Name: "MANIFEST.age", Content: params.ManifestData, ModTime: params.SealedAt},
 		{Name: "recover.html", Content: []byte(params.RecoverHTML), ModTime: params.SealedAt},
+	}
+	if !params.ManifestEmbedded {
+		files = append(files, ZipFile{Name: "MANIFEST.age", Content: params.ManifestData, ModTime: params.SealedAt})
 	}
 
 	return CreateZip(params.OutputPath, files)
@@ -252,7 +269,9 @@ func VerifyBundle(bundlePath string) error {
 		}
 
 		data, err := io.ReadAll(rc)
-		rc.Close()
+		if closeErr := rc.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", f.Name, err)
 		}
@@ -275,11 +294,18 @@ func VerifyBundle(bundlePath string) error {
 	if len(pdfData) == 0 {
 		return fmt.Errorf("README file (.pdf) not found in bundle")
 	}
-	if len(manifestData) == 0 {
-		return fmt.Errorf("MANIFEST.age not found in bundle")
-	}
 	if len(recoverData) == 0 {
 		return fmt.Errorf("recover.html not found in bundle")
+	}
+
+	// When MANIFEST.age is not in the ZIP, the manifest is embedded in recover.html.
+	// Extract it from there for checksum verification.
+	if len(manifestData) == 0 {
+		extracted, err := html.ExtractManifestFromHTML(recoverData)
+		if err != nil {
+			return fmt.Errorf("MANIFEST.age not in bundle and could not extract from recover.html: %w", err)
+		}
+		manifestData = extracted
 	}
 
 	// Parse metadata from footer

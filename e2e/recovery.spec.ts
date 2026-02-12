@@ -6,6 +6,7 @@ import {
   getRememoryBin,
   createTestProject,
   createAnonymousTestProject,
+  cleanupProject,
   extractBundle,
   extractBundles,
   extractAnonymousBundles,
@@ -33,9 +34,7 @@ test.describe('Browser Recovery Tool', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
   });
 
   test('recover.html loads and shows UI', async ({ page }) => {
@@ -44,9 +43,11 @@ test.describe('Browser Recovery Tool', () => {
 
     await recovery.open();
     await recovery.expectUIElements();
+    // Manifest should be pre-loaded (embedded in personalization)
+    await recovery.expectManifestLoaded();
   });
 
-  test('personalized recover.html pre-loads holder share', async ({ page }) => {
+  test('personalized recover.html pre-loads holder share and manifest', async ({ page }) => {
     const bundleDir = extractBundle(bundlesDir, 'Alice');
     const recovery = new RecoveryPage(page, bundleDir);
 
@@ -57,8 +58,8 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectShareHolder('Alice');
     await recovery.expectHolderShareLabel();
 
-    // Manifest is NOT pre-loaded - user must load it
-    await recovery.expectManifestDropZoneVisible();
+    // Manifest is pre-loaded (embedded in recover.html for small manifests)
+    await recovery.expectManifestLoaded();
 
     // Still need 1 more share (threshold is 2)
     await recovery.expectNeedMoreShares(1);
@@ -279,9 +280,7 @@ test.describe('Anonymous Bundle Recovery', () => {
   });
 
   test.afterAll(async () => {
-    if (anonProjectDir && fs.existsSync(anonProjectDir)) {
-      fs.rmSync(anonProjectDir, { recursive: true, force: true });
-    }
+    cleanupProject(anonProjectDir);
   });
 
   test('anonymous recover.html loads and shows UI without contact list', async ({ page }) => {
@@ -290,6 +289,8 @@ test.describe('Anonymous Bundle Recovery', () => {
 
     await recovery.open();
     await recovery.expectUIElements();
+    // Manifest should be pre-loaded (embedded in personalization)
+    await recovery.expectManifestLoaded();
 
     // Share should be pre-loaded with synthetic name
     await recovery.expectShareCount(1);
@@ -359,9 +360,7 @@ test.describe('Generic recover.html (no personalization)', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
     if (tmpDir && fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
@@ -390,6 +389,32 @@ test.describe('Generic recover.html (no personalization)', () => {
 
     // Load manifest — recovery should auto-trigger (2 shares, threshold unknown)
     await recovery.addManifest(aliceDir);
+    await recovery.expectManifestLoaded();
+
+    // Recovery should complete automatically
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
+    await recovery.expectDownloadVisible();
+  });
+
+  test('personalized recover.html can be used as manifest source on standalone tool', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, tmpDir);
+
+    await recovery.openFile(standaloneRecoverHtml);
+    await recovery.expectShareCount(0);
+
+    // Add Alice's and Bob's shares via README.txt files
+    await recovery.addShares(aliceDir, bobDir);
+    await recovery.expectShareCount(2);
+
+    // Explicitly load Alice's personalized recover.html as the manifest source
+    // (bundles no longer include a separate MANIFEST.age when the manifest is embedded)
+    const recoverHtmlPath = path.join(aliceDir, 'recover.html');
+    expect(fs.existsSync(recoverHtmlPath)).toBeTruthy();
+    expect(fs.existsSync(path.join(aliceDir, 'MANIFEST.age'))).toBeFalsy();
+
+    await recovery.addManifestFile(recoverHtmlPath);
     await recovery.expectManifestLoaded();
 
     // Recovery should complete automatically
@@ -434,6 +459,93 @@ test.describe('Generic recover.html (no personalization)', () => {
     // Recovery should complete automatically (threshold backfilled from Bob's share)
     await recovery.expectRecoveryComplete();
     await recovery.expectFileCount(3); // secret.txt, notes.txt, README.md
+    await recovery.expectDownloadVisible();
+  });
+});
+
+test.describe('Embedded Manifest Recovery', () => {
+  let projectDir: string;
+  let bundlesDir: string;
+
+  test.beforeAll(async () => {
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      test.skip();
+      return;
+    }
+
+    projectDir = createTestProject();
+    bundlesDir = path.join(projectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    cleanupProject(projectDir);
+  });
+
+  test('embedded manifest auto-loads and recovery works without manual manifest upload', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+
+    await recovery.open();
+
+    // Alice's share is pre-loaded, manifest is embedded
+    await recovery.expectShareCount(1);
+    await recovery.expectManifestLoaded();
+
+    // Add Bob's share — recovery should auto-trigger since manifest is already loaded
+    await recovery.addShares(bobDir);
+
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
+    await recovery.expectDownloadVisible();
+  });
+});
+
+test.describe('--no-embed-manifest flag', () => {
+  let noEmbedProjectDir: string;
+  let noEmbedBundlesDir: string;
+
+  test.beforeAll(async () => {
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      test.skip();
+      return;
+    }
+
+    noEmbedProjectDir = createTestProject({ noEmbedManifest: true });
+    noEmbedBundlesDir = path.join(noEmbedProjectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    cleanupProject(noEmbedProjectDir);
+  });
+
+  test('manifest is not pre-loaded when --no-embed-manifest is used', async ({ page }) => {
+    const bundleDir = extractBundle(noEmbedBundlesDir, 'Alice');
+    const recovery = new RecoveryPage(page, bundleDir);
+
+    await recovery.open();
+
+    // Share is pre-loaded but manifest is NOT
+    await recovery.expectShareCount(1);
+    await recovery.expectManifestDropZoneVisible();
+  });
+
+  test('recovery still works with manual manifest when --no-embed-manifest is used', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(noEmbedBundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+
+    await recovery.open();
+
+    // Manifest must be loaded manually
+    await recovery.addManifest();
+    await recovery.expectManifestLoaded();
+
+    // Add Bob's share
+    await recovery.addShares(bobDir);
+
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
     await recovery.expectDownloadVisible();
   });
 });

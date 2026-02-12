@@ -8,11 +8,11 @@
     "test:e2e:debug": "playwright test --debug"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.58.2",
     "@types/adm-zip": "^0.5.5",
-    "@types/node": "^20.10.0",
+    "@types/node": "^25.2.3",
     "adm-zip": "^0.5.10",
-    "esbuild": "^0.27.2",
+    "esbuild": "^0.27.3",
     "typescript": "^5.3.0"
   }
 }

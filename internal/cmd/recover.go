@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/eljojo/rememory/internal/core"
+	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/spf13/cobra"
 )
@@ -121,19 +123,35 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	// Find manifest file
 	manifestPath := recoverManifest
 	if manifestPath == "" {
-		// Try to find MANIFEST.age in current directory
-		manifestPath = "MANIFEST.age"
-		if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
-			return fmt.Errorf("MANIFEST.age not found in current directory; use --manifest to specify path")
+		// Try to find MANIFEST.age in current directory, then recover.html
+		if _, err := os.Stat("MANIFEST.age"); err == nil {
+			manifestPath = "MANIFEST.age"
+		} else if _, err := os.Stat("recover.html"); err == nil {
+			manifestPath = "recover.html"
+		} else {
+			return fmt.Errorf("MANIFEST.age not found in current directory; use --manifest to specify path\n  (you can also pass a personalized recover.html file)")
 		}
 	}
 
 	fmt.Println("Decrypting manifest...")
 
-	// Read and decrypt manifest
-	encryptedData, err := os.ReadFile(manifestPath)
-	if err != nil {
-		return fmt.Errorf("reading manifest: %w", err)
+	// Read manifest data — either directly from .age file or extracted from .html
+	var encryptedData []byte
+	if strings.HasSuffix(strings.ToLower(manifestPath), ".html") || strings.HasSuffix(strings.ToLower(manifestPath), ".htm") {
+		htmlContent, err := os.ReadFile(manifestPath)
+		if err != nil {
+			return fmt.Errorf("reading %s: %w", manifestPath, err)
+		}
+		encryptedData, err = html.ExtractManifestFromHTML(htmlContent)
+		if err != nil {
+			return fmt.Errorf("extracting manifest from %s: %w", manifestPath, err)
+		}
+		fmt.Printf("Extracted manifest from %s\n", manifestPath)
+	} else {
+		encryptedData, err = os.ReadFile(manifestPath)
+		if err != nil {
+			return fmt.Errorf("reading manifest: %w", err)
+		}
 	}
 
 	var decryptedBuf bytes.Buffer

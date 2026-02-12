@@ -3,6 +3,9 @@ package integration_test
 import (
 	"archive/zip"
 	"bytes"
+	cryptorand "crypto/rand"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +17,7 @@ import (
 	"github.com/eljojo/rememory/internal/bundle"
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/crypto"
+	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/eljojo/rememory/internal/translations"
@@ -454,7 +458,7 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	defer r.Close()
 
 	// Check expected files exist
-	var foundReadmeTxt, foundReadmePdf, foundManifest, foundRecover bool
+	var foundReadmeTxt, foundReadmePdf, foundRecover bool
 
 	var readmeContent string
 	var recoverContent string
@@ -476,8 +480,6 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 			readmeContent = string(data)
 		case translations.IsReadmeFile(f.Name, ".pdf"):
 			foundReadmePdf = true
-		case f.Name == "MANIFEST.age":
-			foundManifest = true
 		case f.Name == "recover.html":
 			foundRecover = true
 			recoverContent = string(data)
@@ -490,9 +492,9 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	if !foundReadmePdf {
 		t.Error("missing README .pdf file")
 	}
-	if !foundManifest {
-		t.Error("missing file: MANIFEST.age")
-	}
+	// MANIFEST.age is only in the ZIP when NOT embedded in recover.html.
+	// With a tiny fake WASM, manifests are small enough to embed, so it won't be in the ZIP.
+	// We still parse it if present, but don't require it.
 	if !foundRecover {
 		t.Error("missing file: recover.html")
 	}
@@ -549,7 +551,7 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	}
 
 	// Verify recover.html contains expected elements
-	if !strings.Contains(recoverContent, "🧠 ReMemory Recovery") {
+	if !strings.Contains(recoverContent, "🧠 ReMemory") {
 		t.Error("recover.html missing title")
 	}
 	if !strings.Contains(recoverContent, "v1.0.0-test") {
@@ -708,16 +710,31 @@ func extractManifestFromBundle(t *testing.T, bundlePath string) []byte {
 	}
 	defer r.Close()
 
+	var recoverData []byte
 	for _, f := range r.File {
 		if f.Name == "MANIFEST.age" {
 			rc, _ := f.Open()
-			data := make([]byte, f.UncompressedSize64)
-			rc.Read(data)
+			data, _ := io.ReadAll(rc)
 			rc.Close()
 			return data
 		}
+		if f.Name == "recover.html" {
+			rc, _ := f.Open()
+			recoverData, _ = io.ReadAll(rc)
+			rc.Close()
+		}
 	}
-	t.Fatal("MANIFEST.age not found in bundle")
+
+	// Fall back to extracting manifest from recover.html personalization data
+	if len(recoverData) > 0 {
+		manifest, err := html.ExtractManifestFromHTML(recoverData)
+		if err != nil {
+			t.Fatalf("extracting manifest from recover.html: %v", err)
+		}
+		return manifest
+	}
+
+	t.Fatal("MANIFEST.age not found in bundle and no recover.html to extract from")
 	return nil
 }
 
@@ -857,12 +874,12 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 	}
 
 	// Should contain correct threshold info
-	thresholdText := fmt.Sprintf("At least %d of you must cooperate", threshold)
+	thresholdText := fmt.Sprintf("At least %d of you must come together", threshold)
 	if !strings.Contains(readmeContent, thresholdText) {
 		t.Errorf("README should contain threshold info: %s", thresholdText)
 	}
 
-	totalText := fmt.Sprintf("one of %d trusted friends", total)
+	totalText := fmt.Sprintf("one of %d people", total)
 	if !strings.Contains(readmeContent, totalText) {
 		t.Errorf("README should contain total info: %s", totalText)
 	}
@@ -977,4 +994,203 @@ func TestAnonymousBundleRecovery(t *testing.T) {
 	if string(recovered) != secretContent {
 		t.Errorf("content mismatch: got %q, want %q", recovered, secretContent)
 	}
+}
+
+// TestManifestEmbedding verifies that small manifests are embedded in recover.html
+// and that the NoEmbedManifest flag disables embedding.
+func TestManifestEmbedding(t *testing.T) {
+	// Helper to create a sealed project and generate bundles
+	setup := func(t *testing.T, secretSize int, noEmbed bool) (string, []byte) {
+		t.Helper()
+		baseDir := t.TempDir()
+		projectDir := filepath.Join(baseDir, "test-embed-project")
+
+		friends := []project.Friend{
+			{Name: "Alice", Contact: "alice@example.com"},
+			{Name: "Bob", Contact: "bob@example.com"},
+		}
+
+		p, err := project.New(projectDir, "test-embed", 2, friends)
+		if err != nil {
+			t.Fatalf("creating project: %v", err)
+		}
+
+		// Use random data so it doesn't compress well (important for large manifest tests)
+		secretData := make([]byte, secretSize)
+		if _, err := cryptorand.Read(secretData); err != nil {
+			t.Fatalf("generating random data: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(p.ManifestPath(), "data.bin"), secretData, 0644); err != nil {
+			t.Fatalf("writing secret: %v", err)
+		}
+
+		var archiveBuf bytes.Buffer
+		if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+			t.Fatalf("archiving: %v", err)
+		}
+
+		passphrase, _ := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+		os.MkdirAll(p.OutputPath(), 0755)
+		os.MkdirAll(p.SharesPath(), 0755)
+
+		manifestFile, _ := os.Create(p.ManifestAgePath())
+		core.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
+		manifestFile.Close()
+
+		shares, _ := core.Split([]byte(passphrase), len(friends), 2)
+		shareInfos := make([]project.ShareInfo, len(friends))
+		for i, data := range shares {
+			share := core.NewShare(1, i+1, len(friends), 2, friends[i].Name, data)
+			sharePath := filepath.Join(p.SharesPath(), share.Filename())
+			os.WriteFile(sharePath, []byte(share.Encode()), 0644)
+			shareInfos[i] = project.ShareInfo{
+				Friend:   friends[i].Name,
+				File:     share.Filename(),
+				Checksum: share.Checksum,
+			}
+		}
+
+		manifestData, _ := os.ReadFile(p.ManifestAgePath())
+		p.Sealed = &project.Sealed{
+			At:               time.Now(),
+			ManifestChecksum: core.HashBytes(manifestData),
+			VerificationHash: core.HashString(passphrase),
+			Shares:           shareInfos,
+		}
+		p.Save()
+
+		fakeWASM := []byte("fake-wasm")
+		cfg := bundle.Config{
+			Version:          "v1.0.0",
+			GitHubReleaseURL: "https://example.com",
+			WASMBytes:        fakeWASM,
+			NoEmbedManifest:  noEmbed,
+		}
+		if err := bundle.GenerateAll(p, cfg); err != nil {
+			t.Fatalf("generating bundles: %v", err)
+		}
+
+		bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+		return bundlesDir, manifestData
+	}
+
+	extractPersonalization := func(t *testing.T, bundlePath string) *html.PersonalizationData {
+		t.Helper()
+		r, err := zip.OpenReader(bundlePath)
+		if err != nil {
+			t.Fatalf("opening bundle: %v", err)
+		}
+		defer r.Close()
+
+		for _, f := range r.File {
+			if f.Name != "recover.html" {
+				continue
+			}
+			rc, _ := f.Open()
+			data, _ := io.ReadAll(rc)
+			rc.Close()
+
+			content := string(data)
+			start := strings.Index(content, "window.PERSONALIZATION = ")
+			if start == -1 {
+				t.Fatal("PERSONALIZATION not found in recover.html")
+			}
+			start += len("window.PERSONALIZATION = ")
+			end := strings.Index(content[start:], ";\n")
+			if end == -1 {
+				t.Fatal("PERSONALIZATION end not found")
+			}
+			jsonStr := content[start : start+end]
+
+			var pd html.PersonalizationData
+			if err := json.Unmarshal([]byte(jsonStr), &pd); err != nil {
+				t.Fatalf("parsing personalization JSON: %v", err)
+			}
+			return &pd
+		}
+		t.Fatal("recover.html not found in bundle")
+		return nil
+	}
+
+	t.Run("small manifest is embedded", func(t *testing.T) {
+		bundlesDir, manifestData := setup(t, 100, false)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		pd := extractPersonalization(t, bundlePath)
+		if pd.ManifestB64 == "" {
+			t.Fatal("expected ManifestB64 to be set for small manifest")
+		}
+
+		decoded, err := base64.StdEncoding.DecodeString(pd.ManifestB64)
+		if err != nil {
+			t.Fatalf("decoding ManifestB64: %v", err)
+		}
+		if !bytes.Equal(decoded, manifestData) {
+			t.Error("decoded ManifestB64 does not match original manifest data")
+		}
+	})
+
+	t.Run("NoEmbedManifest flag prevents embedding", func(t *testing.T) {
+		bundlesDir, _ := setup(t, 100, true)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		pd := extractPersonalization(t, bundlePath)
+		if pd.ManifestB64 != "" {
+			t.Error("expected ManifestB64 to be empty when NoEmbedManifest is true")
+		}
+	})
+
+	t.Run("large manifest is not embedded", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping large manifest test in short mode")
+		}
+		// 6MB secret -> encrypted manifest will exceed 5MB threshold
+		bundlesDir, _ := setup(t, 6*1024*1024, false)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		pd := extractPersonalization(t, bundlePath)
+		if pd.ManifestB64 != "" {
+			t.Error("expected ManifestB64 to be empty for large manifest")
+		}
+	})
+
+	t.Run("MANIFEST.age excluded from ZIP when embedded", func(t *testing.T) {
+		bundlesDir, _ := setup(t, 100, false)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		r, err := zip.OpenReader(bundlePath)
+		if err != nil {
+			t.Fatalf("opening bundle: %v", err)
+		}
+		defer r.Close()
+
+		for _, f := range r.File {
+			if f.Name == "MANIFEST.age" {
+				t.Error("MANIFEST.age should NOT be in ZIP when embedded in recover.html")
+			}
+		}
+	})
+
+	t.Run("MANIFEST.age included in ZIP when not embedded", func(t *testing.T) {
+		// NoEmbedManifest=true means manifest is NOT embedded, so MANIFEST.age must be in ZIP
+		bundlesDir, _ := setup(t, 100, true)
+		bundlePath := filepath.Join(bundlesDir, "bundle-alice.zip")
+
+		r, err := zip.OpenReader(bundlePath)
+		if err != nil {
+			t.Fatalf("opening bundle: %v", err)
+		}
+		defer r.Close()
+
+		found := false
+		for _, f := range r.File {
+			if f.Name == "MANIFEST.age" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("MANIFEST.age should be in ZIP when not embedded in recover.html")
+		}
+	})
 }

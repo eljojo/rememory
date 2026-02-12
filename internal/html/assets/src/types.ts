@@ -19,6 +19,7 @@ export interface ParsedShare {
 export interface ShareInput {
   version: number;
   index: number;
+  threshold: number;
   dataB64: string;
 }
 
@@ -124,6 +125,7 @@ export interface PersonalizationData {
   threshold: number;
   total: number;
   language?: string;
+  manifestB64?: string; // Base64-encoded MANIFEST.age (when small enough to embed)
 }
 
 // ============================================

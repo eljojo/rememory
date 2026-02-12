@@ -1,21 +1,19 @@
 # 🧠 ReMemory
 
-**Split your secrets among trusted friends. Recover them together when needed.**
+**Encrypt your files and split the key among people you trust.**
 
-ReMemory encrypts your files, splits the decryption key among friends using Shamir's Secret Sharing, and gives them a self-contained offline tool to reconstruct it together.
+ReMemory splits a decryption key using Shamir's Secret Sharing and gives each person a self-contained tool to recover the files together — offline, in any browser.
 
-## The Key Innovation
+## Recovery works without this project
 
-**Recovery works in any browser, fully offline, without ReMemory or the internet.**
+Each person receives a bundle containing `recover.html` — a browser-based recovery tool. No servers. No dependencies. No need for this project to exist when recovery happens.
 
-Each friend receives a bundle containing `recover.html`—a self-contained recovery tool. No servers. No dependencies. No need for this project to exist in 20 years.
-
-**[Download demo bundles](https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip)** to try the recovery process yourself — it's the best way to understand how ReMemory works.
+**[Download demo bundles](https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip)** to try the recovery process yourself.
 
 ```mermaid
 graph TB
     subgraph seal["① SEAL (you do this once)"]
-        A[Your Secrets] --> B[Encrypt with age]
+        A[Your Files] --> B[Encrypt with age]
         B --> C[Split key into 3 shares]
         C --> D1[Alice's bundle]
         C --> D2[Bob's bundle]
@@ -26,7 +24,7 @@ graph TB
         R1[Alice opens recover.html] --> R2[Her share is pre-loaded]
         R2 --> R3[Adds Bob's share]
         R3 --> R5{2 of 3 shares}
-        R5 -->|Threshold met| R6[Auto-decrypts!]
+        R5 -->|Threshold met| R6[Files unlocked]
         R6 --> R7[Download files]
     end
 
@@ -34,34 +32,40 @@ graph TB
     D2 -.-> R3
 ```
 
-The key insight: **any 2 shares can reconstruct the key, but a single share reveals nothing**—not "very little," mathematically zero information.
+Any 2 shares can reconstruct the key, but a single share reveals nothing — not "very little," mathematically zero information.
 
-Both the number of friends and the threshold are fully configurable: 2-of-3 for a small circle, 3-of-5 for a wider group, or even 2-of-2 for couples with shared private content that neither partner can access alone.
+The number of people and the threshold are up to you: 2-of-3 for a small circle, 3-of-5 for a wider group, or 2-of-2 for a couple.
 
 ---
 
 ## Two Ways to Use ReMemory
 
-### 🌐 Web UI (Recommended)
+### 🌐 Web UI (recommended)
 
-Create bundles entirely in your browser — no installation required.
+Create bundles in your browser — no installation required.
 
 | | |
 |---|---|
 | **Create Bundles** | [eljojo.github.io/rememory/maker.html](https://eljojo.github.io/rememory/maker.html) |
 | **Documentation** | [eljojo.github.io/rememory/docs.html](https://eljojo.github.io/rememory/docs.html) |
 
-Everything runs locally in your browser. Your files never leave your device.
+Everything runs locally. Your files never leave your device.
 
-### 💻 CLI (Power Users)
+### 💻 CLI
 
-For automation, scripting, or if you prefer the command line.
+For automation, scripting, or if you prefer the terminal.
 
 ```bash
-# Install
-go install github.com/eljojo/rememory/cmd/rememory@latest
+# macOS (Homebrew)
+brew install eljojo/rememory/rememory
 
-# Or download from GitHub Releases
+# Linux (x86_64)
+curl -Lo rememory https://github.com/eljojo/rememory/releases/latest/download/rememory-linux-amd64
+chmod +x rememory
+sudo mv rememory /usr/local/bin/
+
+# Nix
+nix run github:eljojo/rememory
 ```
 
 See the **[CLI User Guide](docs/guide.md)** for complete documentation.
@@ -70,14 +74,14 @@ See the **[CLI User Guide](docs/guide.md)** for complete documentation.
 
 ## Try It First
 
-Before protecting real secrets, **try the recovery process** to understand how it works:
+Before protecting real secrets, try the recovery process:
 
 1. **[Download demo bundles](https://github.com/eljojo/rememory/releases/download/v0.0.3/demo-bundles.zip)** (contains 3 sample bundles)
 2. Open `bundle-alice/recover.html` in your browser
-3. Alice's share is pre-loaded — add Bob's share (or Carol's)
-4. Watch the automatic decryption when the threshold is met
+3. Alice's share is pre-loaded — add Bob's or Carol's
+4. When enough shares are added, the files unlock
 
-This hands-on experience will help you understand what your friends will see during a real recovery.
+This is the closest thing to what a real recovery feels like.
 
 ---
 
@@ -87,12 +91,22 @@ Each friend gets a ZIP bundle containing:
 
 | File | Purpose |
 |------|---------|
-| `README.txt` | Instructions + their unique share + contact list |
+| `README.txt` | Instructions, their unique share, contact list |
 | `README.pdf` | Same content, formatted for printing |
-| `MANIFEST.age` | Your encrypted secrets |
-| `recover.html` | Browser-based recovery tool (~1.8 MB, self-contained) |
+| `MANIFEST.age` | Your encrypted files |
+| `recover.html` | Recovery tool (~1.8 MB), runs in any browser |
 
-**A single share reveals absolutely nothing.** But tell your friends to keep their bundle safe—it's their responsibility to you.
+**A single share reveals nothing.** But tell your friends to keep their bundle somewhere safe — it's their responsibility to you.
+
+![Example README PDF — page 1](docs/screenshots/demo-pdf/page-1.png)
+
+<details>
+<summary>More pages</summary>
+
+![Example README PDF — page 2](docs/screenshots/demo-pdf/page-2.png)
+![Example README PDF — page 3](docs/screenshots/demo-pdf/page-3.png)
+
+</details>
 
 ---
 
@@ -101,7 +115,7 @@ Each friend gets a ZIP bundle containing:
 <details>
 <summary>Why ReMemory?</summary>
 
-We all have digital secrets that matter: password manager recovery codes, cryptocurrency seeds, important documents, or instructions for loved ones. What happens to these if you're suddenly unavailable?
+We all have digital secrets that matter: password manager recovery codes, cryptocurrency seeds, important documents, instructions for loved ones. What happens to these if you're suddenly unavailable?
 
 Traditional approaches fail:
 - **Give one person everything** → Single point of failure and trust
@@ -109,11 +123,11 @@ Traditional approaches fail:
 - **Use a password manager's emergency access** → Relies on company existing
 - **Write it in a will** → Becomes public record, slow legal process
 
-ReMemory solves this with cryptographic guarantees:
-- **No single point of failure** — Requires multiple friends to cooperate
-- **No trust in any one person** — Even your most trusted friend can't access secrets alone
-- **Offline and self-contained** — Recovery works without internet or servers
-- **Designed for non-technical friends** — Clear instructions, not cryptographic puzzles
+ReMemory takes a different approach:
+- **No single point of failure** — requires multiple people to cooperate
+- **No trust in any one person** — even your most trusted friend can't access secrets alone
+- **Offline and self-contained** — recovery works without internet or servers
+- **Designed for non-technical people** — clear instructions, not cryptographic puzzles
 
 </details>
 
@@ -160,7 +174,7 @@ See the **[Security Audit](docs/security-audit.md)** for details.
 | Integrity | SHA-256 checksums |
 | Passphrase | 256 bits from crypto/rand |
 
-**A single share reveals absolutely nothing about your secret.** This is a mathematical guarantee of Shamir's Secret Sharing—any fewer than *threshold* shares contains zero information about the original secret.
+**A single share reveals nothing about your secret.** This is a mathematical guarantee of Shamir's Secret Sharing — any fewer than *threshold* shares contains zero information about the original secret.
 
 </details>
 
@@ -171,7 +185,7 @@ See the **[Security Audit](docs/security-audit.md)** for details.
 |------------|--------|
 | A friend loses their bundle? | Fine, as long as threshold friends remain |
 | A friend leaks their share publicly? | Harmless without threshold-1 other shares |
-| ReMemory disappears in 10 years? | `recover.html` still works—it's self-contained |
+| ReMemory disappears in 10 years? | `recover.html` still works — it's self-contained |
 | Browsers change dramatically? | Plain HTML + WASM with no external dependencies |
 | You forget how this works? | Each bundle's README.txt explains everything |
 | Some friends can't be reached? | That's why you set threshold below total friends |
@@ -201,7 +215,7 @@ make serve        # Serves at http://localhost:8000
 <details>
 <summary>Other Similar Tools</summary>
 
-There's a flavour of secret sharing for everyone. ReMemory isn't the first tool to use Shamir's Secret Sharing, but it focuses on making recovery possible for **non-technical people** without installing anything. Here's how it compares:
+ReMemory isn't the first tool to use Shamir's Secret Sharing. Its focus is making recovery possible for non-technical people, without installing anything.
 
 #### Shamir's Secret Sharing tools
 
@@ -247,7 +261,7 @@ Apache-2.0 — Copyright 2026 José Albornoz
 
 Built on:
 - [age](https://github.com/FiloSottile/age) — Modern file encryption by Filippo Valsorda
-- [HashiCorp Vault's Shamir implementation](https://github.com/hashicorp/vault) — Battle-tested secret sharing
+- [HashiCorp Vault's Shamir implementation](https://github.com/hashicorp/vault) — Shamir's Secret Sharing
 - [Cobra](https://github.com/spf13/cobra) — CLI framework
 
 The protocol was [originally designed in a Google Doc](https://docs.google.com/document/d/1B4_wIN3fXqb67Tln0v5v2pMRFf8v5umkKikaqCRAdyM/edit?usp=sharing) in 2023.

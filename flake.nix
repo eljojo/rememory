@@ -26,10 +26,15 @@
           version = "0.1.0";
           src = ./.;
 
-          vendorHash = "sha256-4voapYXaf792sNI/P2Uj7ujs4x2r0vkb1bzLXr5Y14I=";
+          vendorHash = "sha256-W6LWBjVG7TFJJfnlTxE7Zc/vS/Nxg7zQWbvo/QEXVGY=";
           proxyVendor = true; # Download deps during build instead of vendoring
 
           nativeBuildInputs = [ pkgs.esbuild pkgs.gnumake ];
+
+          # Patch go.mod to match nixpkgs Go version (nixpkgs may lag behind)
+          prePatch = ''
+            sed -i "s/^go .*/go ${pkgs.go.version}/" go.mod
+          '';
 
           # Build TypeScript and WASM using Makefile
           preBuild = ''
@@ -111,6 +116,7 @@
             pkgs.nodejs
             pkgs.esbuild
             pkgs.playwright-test
+            pkgs.poppler-utils
           ];
           shellHook = ''
             export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1

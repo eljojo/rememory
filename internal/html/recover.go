@@ -17,14 +17,20 @@ type FriendInfo struct {
 	ShareIndex int    `json:"shareIndex"` // 1-based share index for this friend
 }
 
+// MaxEmbeddedManifestSize is the maximum size of MANIFEST.age that will be
+// embedded (base64-encoded) in recover.html. Manifests at or below this size
+// are included so recovery can work without the separate MANIFEST.age file.
+const MaxEmbeddedManifestSize = 5 << 20 // 5 MiB
+
 // PersonalizationData holds the data to personalize recover.html for a specific friend.
 type PersonalizationData struct {
-	Holder       string       `json:"holder"`             // This friend's name
-	HolderShare  string       `json:"holderShare"`        // This friend's encoded share
-	OtherFriends []FriendInfo `json:"otherFriends"`       // List of other friends
-	Threshold    int          `json:"threshold"`          // Required shares (K)
-	Total        int          `json:"total"`              // Total shares (N)
-	Language     string       `json:"language,omitempty"` // Default UI language for this friend
+	Holder       string       `json:"holder"`                // This friend's name
+	HolderShare  string       `json:"holderShare"`           // This friend's encoded share
+	OtherFriends []FriendInfo `json:"otherFriends"`          // List of other friends
+	Threshold    int          `json:"threshold"`             // Required shares (K)
+	Total        int          `json:"total"`                 // Total shares (N)
+	Language     string       `json:"language,omitempty"`    // Default UI language for this friend
+	ManifestB64  string       `json:"manifestB64,omitempty"` // Base64-encoded MANIFEST.age (when <= MaxEmbeddedManifestSize)
 }
 
 // GenerateRecoverHTML creates the complete recover.html with all assets embedded.
@@ -65,6 +71,9 @@ func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personaliz
 	}
 	html = strings.Replace(html, "{{PERSONALIZATION_DATA}}", personalizationJSON, 1)
 
+	// Apply CSP nonce to all script tags
+	html = applyCSPNonce(html)
+
 	return html
 }
 
@@ -72,8 +81,15 @@ func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personaliz
 // This reduces WASM size by ~70% in the embedded HTML.
 func compressAndEncode(data []byte) string {
 	var buf bytes.Buffer
-	gz, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	gz.Write(data)
-	gz.Close()
+	gz, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		panic("gzip.NewWriterLevel: " + err.Error())
+	}
+	if _, err := gz.Write(data); err != nil {
+		panic("gzip.Write: " + err.Error())
+	}
+	if err := gz.Close(); err != nil {
+		panic("gzip.Close: " + err.Error())
+	}
 	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

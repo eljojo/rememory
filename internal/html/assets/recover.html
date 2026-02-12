@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{CSP_NONCE}}' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src blob: data:; connect-src blob:; form-action 'none';">
   <title>ReMemory Recovery Tool</title>
   <style>{{STYLES}}</style>
 </head>
@@ -28,11 +29,21 @@
   <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <p style="margin-top: 1rem; color: #7f8c8d;" data-i18n="loading">Loading recovery module...</p>
+    <p style="margin-top: 1rem; color: var(--text-secondary);" data-i18n="loading">Loading...</p>
   </div>
 
   <div class="container">
-    <header>
+    <nav class="site-nav">
+      <a href="index.html" class="logo">🧠 ReMemory</a>
+      <div class="nav-links" id="nav-links-standalone">
+        <a href="index.html">About</a>
+        <a href="maker.html">Create Bundles</a>
+        <a href="docs.html#recovering">Guide</a>
+        <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
+      </div>
+      <div class="nav-links hidden" id="nav-links-bundle">
+        <a href="https://eljojo.github.io/rememory/docs#recovering" target="_blank">Guide</a>
+      </div>
       <div class="lang-toggle">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="es">ES</button>
@@ -40,16 +51,20 @@
         <button data-lang="fr">FR</button>
         <button data-lang="sl">SL</button>
       </div>
-      <h1 data-i18n="title">🧠 ReMemory Recovery</h1>
-      <p data-i18n="subtitle">Recover your encrypted files using Shamir's Secret Sharing</p>
-    </header>
+    </nav>
+
+    <div class="page-intro">
+      <h1 data-i18n="title">Recover Files</h1>
+      <p class="subtitle" data-i18n="subtitle">Bring together the pieces your friends kept safe.</p>
+      <p class="summary" data-i18n="page_description">Each friend received a bundle with one piece of the key. Gather enough pieces below, add the encrypted archive, and your files will be decrypted here in the browser. Nothing leaves your device.</p>
+    </div>
 
     <!-- Step 1: Collect Shares -->
     <div class="card">
-      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Collect Shares</span></h2>
+      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Gather the pieces</span></h2>
       <div id="share-drop-zone" class="drop-zone">
-        <p data-i18n="step1_drop">Drag & drop README.txt files here, or click to browse</p>
-        <small data-i18n="step1_hint">Each README.txt contains the share for that person</small>
+        <p data-i18n="step1_drop">Drop README.txt files here, or click to choose them</p>
+        <small data-i18n="step1_hint">Each file holds one person's piece</small>
       </div>
       <input type="file" id="share-file-input" accept=".txt,.zip" multiple>
 
@@ -70,8 +85,8 @@
 
       <!-- Contact list for other friends (populated via JS if personalization data exists) -->
       <div id="contact-list-section" class="contact-list-section hidden">
-        <h3 data-i18n="contact_list">Contact other share holders</h3>
-        <p class="hint" data-i18n="contact_list_hint">Reach out to these friends to collect their shares</p>
+        <h3 data-i18n="contact_list">Contact the others</h3>
+        <p class="hint" data-i18n="contact_list_hint">Reach out to these friends to gather their pieces</p>
         <div id="contact-list" class="contact-list"></div>
       </div>
 
@@ -80,25 +95,25 @@
 
     <!-- Step 2: Load Manifest -->
     <div class="card">
-      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Load Encrypted Manifest</span></h2>
+      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Add the encrypted archive</span></h2>
       <div id="manifest-drop-zone" class="drop-zone">
-        <p data-i18n="step2_drop">Drag & drop MANIFEST.age here, or click to browse</p>
-        <small data-i18n="step2_hint">This is the encrypted file containing your secrets</small>
+        <p data-i18n="step2_drop">Drop a recover.html or MANIFEST.age here, or click to choose it</p>
+        <small data-i18n="step2_hint">Use a recover.html from any friend's bundle, or the MANIFEST.age file</small>
       </div>
-      <input type="file" id="manifest-file-input" accept=".age">
+      <input type="file" id="manifest-file-input" accept=".age,.html,.htm,.zip">
 
       <div id="manifest-status" class="manifest-status hidden">
         <span class="icon">&#128196;</span>
-        <div data-i18n="no_manifest">No manifest loaded</div>
+        <div data-i18n="no_manifest">No archive added yet</div>
       </div>
     </div>
 
     <!-- Step 3: Recover -->
     <div class="card">
-      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Recover Files</span></h2>
+      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Recover the files</span></h2>
       <div id="recover-section" class="recover-section">
         <button id="recover-btn" class="btn btn-primary" disabled>
-          <span>&#128275;</span> <span data-i18n="decrypt_btn">Decrypt & Recover</span>
+          <span>&#128275;</span> <span data-i18n="decrypt_btn">Unlock & Recover</span>
         </button>
 
         <div id="progress-bar" class="progress-bar hidden">
@@ -111,7 +126,7 @@
 
         <div id="download-actions" class="download-actions hidden">
           <button id="download-all-btn" class="btn btn-success">
-            <span>&#128229;</span> <span data-i18n="download_btn">Download Archive (.tar.gz)</span>
+            <span>&#128229;</span> <span data-i18n="download_btn">Download archive (.tar.gz)</span>
           </button>
         </div>
       </div>
@@ -119,16 +134,16 @@
   </div>
 
   <footer>
-    <p>ReMemory {{VERSION}} &mdash; <span data-i18n="works_offline">Works completely offline</span></p>
+    <p>ReMemory {{VERSION}} &mdash; <span data-i18n="works_offline">Works fully offline</span></p>
     <p>
       <span data-i18n="need_help">Need help?</span>
-      <a href="https://eljojo.github.io/rememory/docs.html" target="_blank">Docs</a> ·
+      <a href="https://eljojo.github.io/rememory/docs#recovering" target="_blank">Docs</a> ·
       <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI tool from GitHub</a>
     </p>
   </footer>
 
   <!-- Translations -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     const translations = {{TRANSLATIONS}};
 
     let currentLang = 'en';
@@ -179,6 +194,13 @@
       if (window.PERSONALIZATION && window.PERSONALIZATION.language && !localStorage.getItem('rememory-lang')) {
         currentLang = window.PERSONALIZATION.language;
       }
+
+      // Toggle nav links: bundle mode shows only Guide (absolute), standalone shows all (relative)
+      if (window.PERSONALIZATION) {
+        document.getElementById('nav-links-standalone')?.classList.add('hidden');
+        document.getElementById('nav-links-bundle')?.classList.remove('hidden');
+      }
+
       setLanguage(currentLang);
 
       // Add click handlers
@@ -195,20 +217,20 @@
   </script>
 
   <!-- Go WASM runtime -->
-  <script>{{WASM_EXEC}}</script>
+  <script nonce="{{CSP_NONCE}}">{{WASM_EXEC}}</script>
 
   <!-- Embedded WASM binary (base64) -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     window.WASM_BINARY = "{{WASM_BASE64}}";
   </script>
 
   <!-- Personalization data (embedded for this specific friend) -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     window.PERSONALIZATION = {{PERSONALIZATION_DATA}};
   </script>
 
   <!-- Application logic (must come after WASM_BINARY and PERSONALIZATION) -->
   <!-- App.js handles WASM loading with gzip decompression -->
-  <script>{{APP_JS}}</script>
+  <script nonce="{{CSP_NONCE}}">{{APP_JS}}</script>
 </body>
 </html>

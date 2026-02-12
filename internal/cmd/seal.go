@@ -37,6 +37,7 @@ Run this command inside a project directory (created with 'rememory init').`,
 
 func init() {
 	sealCmd.Flags().String("recovery-url", core.DefaultRecoveryURL, "Base URL for QR code in PDF")
+	sealCmd.Flags().Bool("no-embed-manifest", false, "Do not embed MANIFEST.age in recover.html (it is embedded by default when 5 MB or less)")
 	rootCmd.AddCommand(sealCmd)
 }
 
@@ -62,8 +63,9 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	}
 
 	recoveryURL, _ := cmd.Flags().GetString("recovery-url")
+	noEmbedManifest, _ := cmd.Flags().GetBool("no-embed-manifest")
 
-	if err := sealProject(p, recoveryURL); err != nil {
+	if err := sealProject(p, recoveryURL, noEmbedManifest); err != nil {
 		return err
 	}
 
@@ -76,7 +78,8 @@ func runSeal(cmd *cobra.Command, args []string) error {
 // sealProject archives, encrypts, splits, verifies, saves, and generates bundles
 // for an already-loaded project. Both runSeal and runDemo share this logic.
 // recoveryURL is the base URL for QR codes in the PDF. If empty, the PDF defaults to the production URL.
-func sealProject(p *project.Project, recoveryURL string) error {
+// noEmbedManifest controls whether MANIFEST.age is embedded in recover.html.
+func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool) error {
 	// Check manifest directory exists and has content
 	manifestDir := p.ManifestPath()
 	fileCount, err := manifest.CountFiles(manifestDir)
@@ -223,6 +226,7 @@ func sealProject(p *project.Project, recoveryURL string) error {
 		GitHubReleaseURL: fmt.Sprintf("https://github.com/eljojo/rememory/releases/tag/%s", version),
 		WASMBytes:        wasmBytes,
 		RecoveryURL:      recoveryURL,
+		NoEmbedManifest:  noEmbedManifest,
 	}
 
 	if err := bundle.GenerateAll(p, cfg); err != nil {

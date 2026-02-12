@@ -32,11 +32,12 @@ type ReadmeData struct {
 	Anonymous        bool
 	RecoveryURL      string // Base URL for QR code (e.g. "https://example.com/recover.html")
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+	ManifestEmbedded bool   // true when manifest is embedded in recover.html
 }
 
 // Font sizes
 const (
-	titleSize   = 16.0
+	titleSize   = 22.0
 	headingSize = 12.0
 	bodySize    = 10.0
 	monoSize    = 8.0
@@ -74,55 +75,135 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	// Register embedded UTF-8 TrueType fonts (DejaVu Sans)
 	registerUTF8Fonts(p)
 
+	// Page numbers — small, centered, low-key
+	p.SetFooterFunc(func() {
+		p.SetY(-15)
+		p.SetFont(fontSans, "", 7)
+		p.SetTextColor(180, 180, 180)
+		p.CellFormat(0, 10, fmt.Sprintf("%d", p.PageNo()), "", 0, "C", false, 0, "")
+		p.SetTextColor(0, 0, 0)
+	})
+
 	p.AddPage()
 
-	// Title
+	// Page dimensions (used throughout for centered elements)
+	pageWidth, _ := p.GetPageSize()
+	leftMargin, _, rightMargin, _ := p.GetMargins()
+	contentWidth := pageWidth - leftMargin - rightMargin
+
+	// ── Title area — certificate feel with breathing room ──
+	p.Ln(12)
 	p.SetFont(fontSans, "B", titleSize)
-	p.CellFormat(0, 10, t("title"), "", 1, "C", false, 0, "")
-	p.SetFont(fontSans, "", headingSize)
+	p.CellFormat(0, 12, t("title"), "", 1, "C", false, 0, "")
+	p.Ln(3)
+	// Decorative horizontal rule
+	p.SetDrawColor(180, 180, 180)
+	p.SetLineWidth(0.4)
+	ruleInset := 35.0
+	p.Line(leftMargin+ruleInset, p.GetY(), pageWidth-rightMargin-ruleInset, p.GetY())
+	p.Ln(4)
+	p.SetFont(fontSans, "", 14)
 	p.CellFormat(0, 8, t("for", data.Holder), "", 1, "C", false, 0, "")
-	p.Ln(5)
+	p.Ln(12)
 
-	// Warning box
-	p.SetFillColor(255, 240, 240)
-	p.SetFont(fontSans, "B", bodySize)
-	p.CellFormat(0, 7, "  !! "+t("warning_cannot_alone"), "", 1, "L", true, 0, "")
-	p.SetFont(fontSans, "", bodySize)
+	// ── Warning stamps — high contrast, centered, stamp-like ──
+	// Stamp 1: Cannot use alone
+	p.SetFillColor(85, 115, 90)
+	p.SetTextColor(255, 255, 255)
+	p.SetFont(fontSans, "B", headingSize)
+	p.CellFormat(0, 11, t("warning_cannot_alone"), "", 1, "C", true, 0, "")
+	p.SetTextColor(0, 0, 0)
+	p.SetFillColor(232, 242, 234)
+	p.SetFont(fontSans, "", 9)
 	if data.Anonymous {
-		p.CellFormat(0, 5, "  "+t("warning_need_shares"), "", 1, "L", true, 0, "")
+		p.CellFormat(0, 7, t("warning_need_shares"), "", 1, "C", true, 0, "")
 	} else {
-		p.CellFormat(0, 5, "  "+t("warning_need_friends"), "", 1, "L", true, 0, "")
+		p.CellFormat(0, 7, t("warning_need_friends"), "", 1, "C", true, 0, "")
 	}
-	p.Ln(2)
-	p.SetFont(fontSans, "B", bodySize)
-	p.CellFormat(0, 7, "  !! "+t("warning_confidential"), "", 1, "L", true, 0, "")
-	p.SetFont(fontSans, "", bodySize)
-	p.CellFormat(0, 5, "  "+t("warning_keep_safe"), "", 1, "L", true, 0, "")
-	p.Ln(5)
+	p.Ln(4)
+	// Stamp 2: Confidential
+	p.SetFillColor(85, 115, 90)
+	p.SetTextColor(255, 255, 255)
+	p.SetFont(fontSans, "B", headingSize)
+	p.CellFormat(0, 11, t("warning_confidential"), "", 1, "C", true, 0, "")
+	p.SetTextColor(0, 0, 0)
+	p.SetFillColor(232, 242, 234)
+	p.SetFont(fontSans, "", 9)
+	p.CellFormat(0, 7, t("warning_keep_safe"), "", 1, "C", true, 0, "")
+	p.Ln(8)
 
-	// Section: What is this?
-	addSection(p, t("what_is_this"))
+	// ── Recovery rule — prominent standalone box ──
+	p.SetFillColor(242, 242, 248)
+	p.SetDrawColor(140, 140, 160)
+	p.SetLineWidth(0.5)
+	ruleBoxY := p.GetY()
+	ruleBoxH := 20.0
+	p.Rect(leftMargin, ruleBoxY, contentWidth, ruleBoxH, "FD")
+	p.SetFont(fontSans, "", 9)
+	p.SetXY(leftMargin, ruleBoxY+2)
+	p.CellFormat(contentWidth, 5, t("recovery_rule"), "", 1, "C", false, 0, "")
+	p.SetFont(fontSans, "B", 18)
+	p.SetXY(leftMargin, ruleBoxY+8)
+	p.CellFormat(contentWidth, 10, t("recovery_rule_count", data.Threshold, data.Total), "", 1, "C", false, 0, "")
+	p.SetY(ruleBoxY + ruleBoxH + 8)
+	p.SetDrawColor(0, 0, 0)
+	p.SetLineWidth(0.2)
+
+	// ── What is this? — secondary, informational ──
+	p.SetFont(fontSans, "B", bodySize)
+	p.CellFormat(0, 6, t("what_is_this"), "", 1, "L", false, 0, "")
+	p.Ln(1)
 	addBody(p, t("what_bundle_for", data.ProjectName))
 	addBody(p, t("what_one_of", data.Total))
-	addBody(p, t("what_threshold", data.Threshold))
 	p.Ln(5)
 
-	// Section: Other share holders - skip for anonymous mode
+	// ── Other share holders — contact card layout ──
 	if !data.Anonymous {
 		addSection(p, t("other_holders"))
-		for _, friend := range data.OtherFriends {
+		for i, friend := range data.OtherFriends {
 			p.SetFont(fontSans, "B", bodySize)
-			p.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
-			p.SetFont(fontSans, "", bodySize)
 			if friend.Contact != "" {
-				p.CellFormat(0, 5, "    "+t("contact_label", friend.Contact), "", 1, "L", false, 0, "")
+				nameStr := "   " + friend.Name + "  "
+				nameW := p.GetStringWidth(nameStr)
+				p.CellFormat(nameW, 7, nameStr, "", 0, "L", false, 0, "")
+				p.SetFont(fontSans, "", bodySize)
+				p.CellFormat(0, 7, "\u2014  "+friend.Contact, "", 1, "L", false, 0, "")
+			} else {
+				p.CellFormat(0, 7, "   "+friend.Name, "", 1, "L", false, 0, "")
 			}
-			p.Ln(2)
+			if i < len(data.OtherFriends)-1 {
+				p.Ln(2)
+			}
 		}
-		p.Ln(5)
+		p.Ln(8)
 	}
 
+	// ── Sharing your share — procedure card with grey background ──
+	p.SetFillColor(245, 245, 245)
+	p.SetFont(fontSans, "B", headingSize)
+	p.CellFormat(0, 10, " "+t("sharing_title"), "", 1, "L", true, 0, "")
+	p.CellFormat(0, 2, "", "", 1, "", true, 0, "")
+	p.SetFont(fontSans, "", bodySize)
+	p.MultiCell(0, 5, " "+t("sharing_verify"), "", "L", true)
+	p.CellFormat(0, 3, "", "", 1, "", true, 0, "")
+	p.MultiCell(0, 5, "   \u2022 "+t("sharing_easiest"), "", "L", true)
+	p.MultiCell(0, 5, "   \u2022 "+t("sharing_readme_only"), "", "L", true)
+	p.MultiCell(0, 5, "   \u2022 "+t("sharing_words_phone"), "", "L", true)
+	p.MultiCell(0, 5, "   \u2022 "+t("sharing_qr_mail"), "", "L", true)
+	p.CellFormat(0, 3, "", "", 1, "", true, 0, "")
+	p.Ln(5)
+
 	// Section: Your Share (QR code + PEM block)
+	// Ensure the section header + QR code + caption + compact string stay together
+	qrBlockHeight := 10.0 + 2.0 + qrSizeMM + 3.0 + 5.0 + 2.0 + 4.0 // header + gap + QR + gap + caption + gap + compact
+	{
+		_, pageHeight := p.GetPageSize()
+		_, _, _, bottomMargin := p.GetMargins()
+		usableBottom := pageHeight - bottomMargin
+		if p.GetY()+qrBlockHeight > usableBottom {
+			p.AddPage()
+		}
+	}
 	addSection(p, t("your_share"))
 	p.Ln(2)
 
@@ -137,9 +218,6 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	qrReader := bytes.NewReader(qrPNG)
 	opts := fpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}
 	p.RegisterImageOptionsReader("qrcode", opts, qrReader)
-	pageWidth, _ := p.GetPageSize()
-	leftMargin, _, rightMargin, _ := p.GetMargins()
-	contentWidth := pageWidth - leftMargin - rightMargin
 	qrX := leftMargin + (contentWidth-qrSizeMM)/2
 	p.ImageOptions("qrcode", qrX, p.GetY(), qrSizeMM, qrSizeMM, false, opts, 0, "")
 	p.SetY(p.GetY() + qrSizeMM + 3)
@@ -221,10 +299,17 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.Ln(2)
 	p.SetFont(fontSans, "B", bodySize)
 	p.MultiCell(0, 5, "   "+t("recover_share_loaded"), "", "L", false)
+	p.SetFont(fontSans, "", bodySize)
+	p.MultiCell(0, 5, "   "+t("recover_no_html"), "", "L", false)
 	p.Ln(2)
-	addBody(p, t("recover_step2"))
-	addBody(p, "   "+t("recover_step2_drag"))
-	addBody(p, "   "+t("recover_step2_click"))
+	if data.ManifestEmbedded {
+		addBody(p, t("recover_step2_embedded"))
+		addBody(p, "   "+t("recover_step2_embedded_hint"))
+	} else {
+		addBody(p, t("recover_step2"))
+		addBody(p, "   "+t("recover_step2_drag"))
+		addBody(p, "   "+t("recover_step2_click"))
+	}
 	p.Ln(2)
 	if data.Anonymous {
 		addBody(p, t("recover_anon_step3"))

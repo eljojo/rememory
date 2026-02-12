@@ -94,7 +94,7 @@ export const toast: ToastManager = {
     if (actions && actions.length > 0) {
       actionsHtml = `<div class="toast-actions">
         ${actions.map(a =>
-          `<button class="toast-action ${a.primary ? 'toast-action-primary' : ''}" data-action="${a.id || ''}">${a.label}</button>`
+          `<button class="toast-action ${a.primary ? 'toast-action-primary' : ''}" data-action="${escapeHtml(a.id)}">${escapeHtml(a.label)}</button>`
         ).join('')}
       </div>`;
     }

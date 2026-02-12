@@ -1,0 +1,55 @@
+name: Fix Nix vendor hash
+
+on:
+  pull_request:
+    paths:
+      - 'go.mod'
+      - 'go.sum'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-vendor-hash:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Update vendorHash
+        run: |
+          # Try building — it will fail with a hash mismatch
+          BUILD_OUTPUT=$(nix build .#rememory 2>&1 || true)
+
+          # Extract the "got:" hash from the error output
+          NEW_HASH=$(echo "$BUILD_OUTPUT" | grep -oP 'got:\s+\K\S+' || true)
+
+          if [ -z "$NEW_HASH" ]; then
+            echo "No hash mismatch found — build may have succeeded or failed for another reason."
+            echo "$BUILD_OUTPUT"
+            exit 0
+          fi
+
+          echo "New vendorHash: $NEW_HASH"
+
+          # Replace the vendorHash in flake.nix
+          sed -i "s|vendorHash = \".*\"|vendorHash = \"$NEW_HASH\"|" flake.nix
+
+          # Verify the fix works
+          nix build .#rememory
+
+      - name: Commit updated flake.nix
+        run: |
+          git diff --quiet flake.nix && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flake.nix
+          git commit -m "fix: update Nix vendorHash for dependency changes"
+          git push

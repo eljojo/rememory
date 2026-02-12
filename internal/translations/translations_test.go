@@ -108,11 +108,11 @@ func TestTWithParameterSubstitution(t *testing.T) {
 		args      []any
 		want      string
 	}{
-		{"recover", "en", "need_more", []any{3}, "Waiting for 3 more pieces"},
+		{"recover", "en", "need_more", []any{3}, "3 more pieces needed"},
 		{"recover", "en", "shares_of", []any{2, 5}, "2 of 5 pieces"},
 		{"recover", "es", "need_more", []any{3}, "Faltan 3 partes"},
-		{"recover", "en", "loading", nil, "Preparing the recovery tool..."},
-		{"maker", "en", "loading", nil, "Preparing the bundle creator..."},
+		{"recover", "en", "loading", nil, "Loading..."},
+		{"maker", "en", "loading", nil, "Loading..."},
 	}
 
 	for _, tt := range tests {
@@ -127,7 +127,7 @@ func TestTWithParameterSubstitution(t *testing.T) {
 
 func TestTFallsBackToEnglish(t *testing.T) {
 	got := T("recover", "xx", "loading")
-	want := "Preparing the recovery tool..."
+	want := "Loading..."
 	if got != want {
 		t.Errorf("T with unknown language should fall back to English: got %q, want %q", got, want)
 	}
@@ -142,22 +142,23 @@ func TestTFallsBackToKey(t *testing.T) {
 
 func TestGetStringBasic(t *testing.T) {
 	got := GetString("recover", "en", "loading")
-	if got != "Preparing the recovery tool..." {
-		t.Errorf("GetString(recover, en, loading) = %q, want %q", got, "Preparing the recovery tool...")
+	if got != "Loading..." {
+		t.Errorf("GetString(recover, en, loading) = %q, want %q", got, "Loading...")
 	}
 }
 
 func TestGetStringSameKeyDifferentComponents(t *testing.T) {
-	recover := GetString("recover", "en", "loading")
-	maker := GetString("maker", "en", "loading")
+	// "works_offline" has different values per component
+	recover := GetString("recover", "en", "works_offline")
+	maker := GetString("maker", "en", "works_offline")
 	if recover == maker {
-		t.Errorf("same key 'loading' should have different values per component, both got %q", recover)
+		t.Errorf("same key 'works_offline' should have different values per component, both got %q", recover)
 	}
-	if recover != "Preparing the recovery tool..." {
-		t.Errorf("recover loading = %q, want %q", recover, "Preparing the recovery tool...")
+	if recover != "Works fully offline" {
+		t.Errorf("recover works_offline = %q, want %q", recover, "Works fully offline")
 	}
-	if maker != "Preparing the bundle creator..." {
-		t.Errorf("maker loading = %q, want %q", maker, "Preparing the bundle creator...")
+	if maker != "Works completely offline" {
+		t.Errorf("maker works_offline = %q, want %q", maker, "Works completely offline")
 	}
 }
 

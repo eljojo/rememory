@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full update-pdf-png release
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -51,6 +51,9 @@ test-e2e-headed: build
 	@if [ ! -d node_modules ]; then echo "Run 'npm install' first"; exit 1; fi
 	REMEMORY_BIN=./$(BINARY) npx playwright test --headed
 
+# Clean rebuild + all tests (unit + e2e)
+full: clean build test test-e2e
+
 lint:
 	go vet ./...
 	test -z "$$(gofmt -w .)"
@@ -70,12 +73,11 @@ man: build
 
 # Generate standalone HTML files for static hosting
 html: build
-	@mkdir -p dist/screenshots
 	./$(BINARY) html index > dist/index.html
 	./$(BINARY) html create > dist/maker.html
 	./$(BINARY) html docs > dist/docs.html
 	./$(BINARY) html recover > dist/recover.html
-	@cp docs/screenshots/*.png dist/screenshots/ 2>/dev/null || true
+	@rsync -a --include='*.png' --include='*/' --exclude='*' docs/screenshots/ dist/screenshots/
 	@echo "Generated dist/ site"
 
 # Preview the website locally
@@ -102,9 +104,28 @@ build-all: wasm
 	GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o dist/rememory-darwin-arm64 ./cmd/rememory
 	GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o dist/rememory-windows-amd64.exe ./cmd/rememory
 
+# Stamp the Unreleased section in CHANGELOG.md with the next patch version.
+# Run this before bump-patch to finalize the changelog for the release.
+release:
+	@git fetch --tags; \
+	current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
+	minor=$$(echo $$current | cut -d. -f2); \
+	patch=$$(echo $$current | cut -d. -f3); \
+	new="v$$major.$$minor.$$((patch + 1))"; \
+	today=$$(date +%Y-%m-%d); \
+	if ! grep -q '^## Unreleased' CHANGELOG.md; then \
+		echo "No Unreleased section found in CHANGELOG.md"; exit 1; \
+	fi; \
+	perl -i -pe "s/^## Unreleased$$/## Unreleased\n\n## $$new — $$today/" CHANGELOG.md; \
+	git add CHANGELOG.md; \
+	git commit -m "Release $$new"; \
+	echo "Stamped changelog and committed. Now run: make bump-patch"
+
 # Bump version tags (usage: make bump-patch, bump-minor, bump-major)
 bump-patch:
-	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	@git fetch --tags; \
+	current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
 	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
 	minor=$$(echo $$current | cut -d. -f2); \
 	patch=$$(echo $$current | cut -d. -f3); \
@@ -120,7 +141,8 @@ bump-patch:
 	fi
 
 bump-minor:
-	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	@git fetch --tags; \
+	current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
 	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
 	minor=$$(echo $$current | cut -d. -f2); \
 	new="v$$major.$$((minor + 1)).0"; \
@@ -135,7 +157,8 @@ bump-minor:
 	fi
 
 bump-major:
-	@current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
+	@git fetch --tags; \
+	current=$$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0"); \
 	major=$$(echo $$current | cut -d. -f1 | tr -d v); \
 	new="v$$((major + 1)).0.0"; \
 	echo "Bumping $$current -> $$new"; \
@@ -147,3 +170,15 @@ bump-major:
 	else \
 		echo "Tag created locally. Push with: git push origin $$new"; \
 	fi
+
+# Generate PNG screenshots from demo PDF pages (requires pdftoppm from poppler)
+update-pdf-png: build
+	@rm -rf demo-recovery
+	./$(BINARY) demo
+	@mkdir -p docs/screenshots/demo-pdf docs/screenshots/demo-pdf-es
+	@rm -f docs/screenshots/demo-pdf/*.png docs/screenshots/demo-pdf-es/*.png
+	@unzip -o demo-recovery/output/bundles/bundle-alice.zip README.pdf -d demo-recovery/output/bundles/bundle-alice/
+	@unzip -o demo-recovery/output/bundles/bundle-camila.zip LEEME.pdf -d demo-recovery/output/bundles/bundle-camila/
+	pdftoppm -png -r 200 demo-recovery/output/bundles/bundle-alice/README.pdf docs/screenshots/demo-pdf/page
+	pdftoppm -png -r 200 demo-recovery/output/bundles/bundle-camila/LEEME.pdf docs/screenshots/demo-pdf-es/page
+	@echo "Generated PDF page screenshots in docs/screenshots/demo-pdf/ (English) and docs/screenshots/demo-pdf-es/ (Spanish)"

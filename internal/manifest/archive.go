@@ -186,7 +186,7 @@ func Extract(r io.Reader, destDir string) (*ExtractResult, error) {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+			if err := os.MkdirAll(target, os.FileMode(header.Mode)&0777); err != nil {
 				return nil, fmt.Errorf("creating directory %s: %w", target, err)
 			}
 
@@ -204,7 +204,7 @@ func Extract(r io.Reader, destDir string) (*ExtractResult, error) {
 				return nil, fmt.Errorf("creating parent directory: %w", err)
 			}
 
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(header.Mode))
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(header.Mode)&0666)
 			if err != nil {
 				return nil, fmt.Errorf("creating file %s: %w", target, err)
 			}
@@ -212,9 +212,12 @@ func Extract(r io.Reader, destDir string) (*ExtractResult, error) {
 			// Use LimitReader to enforce size limit during actual copy
 			limitedReader := io.LimitReader(tr, core.MaxFileSize+1)
 			written, err := io.Copy(f, limitedReader)
-			f.Close()
+			closeErr := f.Close()
 			if err != nil {
 				return nil, fmt.Errorf("writing file %s: %w", target, err)
+			}
+			if closeErr != nil {
+				return nil, fmt.Errorf("closing file %s: %w", target, closeErr)
 			}
 			if written > core.MaxFileSize {
 				return nil, fmt.Errorf("file exceeds maximum size during extraction")

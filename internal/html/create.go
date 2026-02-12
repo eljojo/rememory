@@ -35,5 +35,8 @@ func GenerateMakerHTML(createWASMBytes []byte, version, githubURL string) string
 	html = strings.Replace(html, "{{VERSION}}", version, -1)
 	html = strings.Replace(html, "{{GITHUB_URL}}", githubURL, -1)
 
+	// Apply CSP nonce to all script tags
+	html = applyCSPNonce(html)
+
 	return html
 }

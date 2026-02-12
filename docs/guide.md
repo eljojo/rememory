@@ -19,6 +19,7 @@ This guide walks you through using ReMemory to create encrypted recovery bundles
 - [Best Practices](#best-practices)
 - [Project Structure](#project-structure)
 - [Commands Reference](#commands-reference)
+- [Revoking Access](#revoking-access)
 - [Advanced: Anonymous Mode](#advanced-anonymous-mode)
 - [Advanced: Multilingual Bundles](#advanced-multilingual-bundles)
 
@@ -34,24 +35,35 @@ The key innovation is that recovery works **entirely offline in a browser**—no
 
 ## Installation
 
-### From GitHub Releases
-
-Download the latest binary for your platform from [Releases](https://github.com/eljojo/rememory/releases).
-
-### With Go
+### macOS (Homebrew)
 
 ```bash
-go install github.com/eljojo/rememory/cmd/rememory@latest
+brew install eljojo/rememory/rememory
 ```
 
-Optionally, generate man pages:
+### Linux
+
+Download the binary, make it executable, and move it to your path.
+
+**x86_64:**
 
 ```bash
-mkdir -p ~/.local/share/man/man1
-rememory doc ~/.local/share/man/man1
+curl -Lo rememory https://github.com/eljojo/rememory/releases/latest/download/rememory-linux-amd64
+chmod +x rememory
+sudo mv rememory /usr/local/bin/
 ```
 
-### With Nix
+**ARM64:**
+
+```bash
+curl -Lo rememory https://github.com/eljojo/rememory/releases/latest/download/rememory-linux-arm64
+chmod +x rememory
+sudo mv rememory /usr/local/bin/
+```
+
+Binaries for all platforms are available on the [Releases](https://github.com/eljojo/rememory/releases) page.
+
+### Nix
 
 Run directly without installing:
 
@@ -60,7 +72,7 @@ nix run github:eljojo/rememory
 ```
 
 <details>
-<summary>Install</summary>
+<summary>Install permanently</summary>
 
 Add to your flake inputs:
 
@@ -92,6 +104,13 @@ Or in home-manager:
 ```
 
 </details>
+
+### Man pages (optional)
+
+```bash
+mkdir -p ~/.local/share/man/man1
+rememory doc ~/.local/share/man/man1
+```
 
 
 ## Creating Your First Project
@@ -257,7 +276,8 @@ Each bundle contains:
 - The `recover.html` is personalized for each friend:
   - Their share is pre-loaded automatically
   - Shows a contact list with other friends' info
-  - They only need to load the manifest and collect shares from others to complete recovery
+  - If the encrypted manifest is 5 MB or less, it's also embedded in `recover.html`—so friends only need to collect shares from others to complete recovery
+  - For larger manifests, they'll also need to load the separate `MANIFEST.age` file
 
 The README.txt includes:
 
@@ -327,8 +347,8 @@ When your friends need to recover your secrets:
    - They'll see a **contact list** showing other friends who hold shares
 
 2. **Load the encrypted manifest**
-   - Drag and drop `MANIFEST.age` from the bundle onto the manifest area
-   - Or click to browse and select it
+   - For small manifests (≤ 5 MB), this step is automatic—the manifest is embedded in `recover.html`
+   - Otherwise, drag and drop `MANIFEST.age` from the bundle onto the manifest area, or click to browse
 
 3. **Coordinate with other friends**
    - The contact list shows names, emails, and phone numbers
@@ -410,6 +430,20 @@ You can copy friend configuration:
 ```bash
 rememory init new-project --from old-project
 ```
+
+### Revoking Access
+
+There is no way to remotely revoke a share once it has been distributed. This is by design — the system is offline and serverless, so there is no central authority that can invalidate a share.
+
+If you need to remove someone from your recovery group (e.g., a falling out, or you simply want to change who holds shares), the only option is:
+
+1. **Create a new project** with a new set of friends and a fresh passphrase
+2. **Send new bundles** to the friends you still trust
+3. **Ask every remaining friend to delete their old bundle** and replace it with the new one
+
+This last step is critical. Old shares can still decrypt old manifests, so friends must not keep old bundles "just in case." When you send someone a new bundle, be clear: **delete the old one, keep only the new one.** No version history, no archives — just the latest bundle.
+
+The same applies when you update your secrets (e.g., a password changed). Sealing a new project generates a completely new passphrase and new shares. The old shares become useless for the new manifest, but they still work with the old `MANIFEST.age`. Make sure friends aren't holding on to old copies.
 
 ## Project Structure
 

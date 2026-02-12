@@ -27,6 +27,7 @@ type ReadmeData struct {
 	Created          time.Time
 	Anonymous        bool
 	Language         string // Bundle language (e.g. "en", "es"); defaults to "en"
+	ManifestEmbedded bool   // true when manifest is embedded in recover.html
 }
 
 // writeWordGrid writes a two-column word grid to the string builder.
@@ -95,15 +96,31 @@ func GenerateReadme(data ReadmeData) string {
 		}
 	}
 
+	// Sharing your share (what to do when someone asks)
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("sharing_title")))
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("sharing_verify")))
+	sb.WriteString(fmt.Sprintf("  - %s\n", t("sharing_easiest")))
+	sb.WriteString(fmt.Sprintf("  - %s\n", t("sharing_readme_only")))
+	sb.WriteString(fmt.Sprintf("  - %s\n", t("sharing_words_phone")))
+	sb.WriteString(fmt.Sprintf("  - %s\n\n", t("sharing_qr_mail")))
+
 	// Primary method - Browser
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString(fmt.Sprintf("%s\n", t("recover_browser")))
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step1")))
-	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_share_loaded")))
-	sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
-	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
-	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_share_loaded")))
+	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_no_html")))
+	if data.ManifestEmbedded {
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2_embedded")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_embedded_hint")))
+	} else {
+		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
+		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
+		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
+	}
 	if data.Anonymous {
 		sb.WriteString(fmt.Sprintf("%s\n", t("recover_anon_step3")))
 		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_anon_step3_drag")))

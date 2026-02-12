@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-{{CSP_NONCE}}' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; img-src blob: data:; connect-src blob:; form-action 'none';">
   <title>🧠 ReMemory - Create Recovery Bundles</title>
   <style>{{STYLES}}</style>
   <style>
@@ -15,7 +16,7 @@
       gap: 0.5rem;
       align-items: end;
       padding: 0.75rem;
-      background: #f8f9fa;
+      background: var(--paper-light);
       border-radius: 4px;
       margin-bottom: 0.5rem;
     }
@@ -28,12 +29,12 @@
     }
     .friend-entry label {
       font-size: 0.75rem;
-      color: #6c757d;
+      color: var(--text-secondary);
       margin-bottom: 0.25rem;
     }
     .friend-entry input, .friend-entry select {
       padding: 0.375rem 0.5rem;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
       border-radius: 4px;
       font-size: 0.875rem;
     }
@@ -46,8 +47,8 @@
     .friend-entry .remove-btn {
       padding: 0.375rem 0.5rem;
       background: transparent;
-      color: #adb5bd;
-      border: 1px solid #ddd;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
       border-radius: 4px;
       cursor: pointer;
       font-size: 1.1rem;
@@ -55,13 +56,13 @@
       transition: all 0.15s;
     }
     .friend-entry .remove-btn:hover {
-      background: #f8d7da;
-      color: #dc3545;
-      border-color: #dc3545;
+      background: var(--rose);
+      color: var(--error);
+      border-color: var(--error);
     }
     .friend-entry .friend-number {
       font-weight: bold;
-      color: #495057;
+      color: var(--text);
       display: flex;
       align-items: center;
       padding-bottom: 0.375rem;
@@ -90,37 +91,37 @@
       gap: 0.5rem;
       margin-top: 1rem;
       padding: 1rem;
-      background: #e8f4fc;
+      background: var(--sage-tint);
       border-radius: 4px;
     }
     .threshold-selector select {
       padding: 0.375rem 0.5rem;
-      border: 1px solid #3498db;
+      border: 1px solid var(--sage);
       border-radius: 4px;
       font-size: 1rem;
-      background: white;
+      background: var(--paper-light);
     }
 
     /* Files preview */
     .files-preview {
       max-height: 200px;
       overflow-y: auto;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      background: #f8f9fa;
+      background: var(--paper-light);
     }
     .files-preview .file-item {
       display: flex;
       align-items: center;
       padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--border-light);
     }
     .files-preview .file-item:last-child {
       border-bottom: none;
     }
     .files-preview .file-item .icon {
       margin-right: 0.5rem;
-      color: #6c757d;
+      color: var(--text-secondary);
     }
     .files-preview .file-item .name {
       flex: 1;
@@ -128,14 +129,14 @@
       font-size: 0.875rem;
     }
     .files-preview .file-item .size {
-      color: #6c757d;
+      color: var(--text-secondary);
       font-size: 0.75rem;
     }
     .files-preview .file-item .file-remove-btn {
       padding: 0.25rem 0.5rem;
       background: transparent;
-      color: #adb5bd;
-      border: 1px solid #ddd;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
       border-radius: 4px;
       cursor: pointer;
       font-size: 1rem;
@@ -144,16 +145,16 @@
       transition: all 0.15s;
     }
     .files-preview .file-item .file-remove-btn:hover {
-      background: #f8d7da;
-      color: #dc3545;
-      border-color: #dc3545;
+      background: var(--rose);
+      color: var(--error);
+      border-color: var(--error);
     }
     .files-summary {
       padding: 0.5rem 0.75rem;
-      background: #e8f4fc;
+      background: var(--sage-tint);
       border-radius: 0 0 4px 4px;
       font-size: 0.875rem;
-      color: #495057;
+      color: var(--text);
     }
 
     /* Bundle list */
@@ -161,12 +162,12 @@
       display: flex;
       align-items: center;
       padding: 0.75rem;
-      background: #f8f9fa;
+      background: var(--paper-light);
       border-radius: 4px;
       margin-bottom: 0.5rem;
     }
     .bundle-item.ready {
-      background: #d4edda;
+      background: var(--sage-light);
     }
     .bundle-item .icon {
       margin-right: 0.75rem;
@@ -180,56 +181,19 @@
     }
     .bundle-item .meta {
       font-size: 0.875rem;
-      color: #6c757d;
+      color: var(--text-secondary);
     }
     .bundle-item .download-btn {
       padding: 0.375rem 0.75rem;
-      background: #28a745;
-      color: white;
+      background: var(--sage);
+      color: var(--paper-light);
       border: none;
       border-radius: 4px;
       cursor: pointer;
       font-size: 0.875rem;
     }
     .bundle-item .download-btn:hover {
-      background: #218838;
-    }
-
-    /* Maker nav */
-    .maker-nav {
-      background: white;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .maker-nav .logo {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: #2c3e50;
-      text-decoration: none;
-    }
-    .maker-nav .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-    .maker-nav .nav-links a {
-      color: #3498db;
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-    .maker-nav .nav-links a:hover {
-      text-decoration: underline;
-    }
-    .maker-nav .lang-toggle {
-      position: static;
-      margin-left: auto;
+      background: var(--sage-dark);
     }
 
     /* Card header with title and anonymous toggle */
@@ -244,7 +208,7 @@
     }
     .anonymous-toggle {
       font-size: 0.8rem;
-      color: #6c757d;
+      color: var(--text-secondary);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -256,7 +220,7 @@
       cursor: pointer;
     }
     .anonymous-toggle:hover {
-      color: #495057;
+      color: var(--text);
     }
 
     /* Anonymous mode shares input */
@@ -265,96 +229,29 @@
       align-items: center;
       gap: 0.5rem;
       padding: 1rem;
-      background: #f8f9fa;
+      background: var(--paper-light);
       border-radius: 4px;
       margin-bottom: 0.5rem;
     }
     .shares-input label {
       font-size: 0.875rem;
-      color: #495057;
+      color: var(--text);
     }
     .shares-input input {
       width: 60px;
       padding: 0.375rem 0.5rem;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
       border-radius: 4px;
       font-size: 1rem;
       text-align: center;
     }
 
-    /* Maker intro */
-    .maker-intro {
-      background: white;
-      border-radius: 8px;
-      padding: 1.5rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
-    }
-    .maker-intro h1 {
-      font-size: 1.5rem;
-      color: #2c3e50;
-      margin-bottom: 0.25rem;
-    }
-    .maker-intro .subtitle {
-      color: #7f8c8d;
-      margin-bottom: 1rem;
-    }
-    .maker-intro .summary {
-      color: #495057;
-      line-height: 1.7;
-      margin-bottom: 1rem;
-    }
-    .maker-intro details {
-      border-top: 1px solid #eee;
-      padding-top: 1rem;
-    }
-    .maker-intro summary {
-      cursor: pointer;
-      color: #3498db;
-      font-size: 0.95rem;
-    }
-    .maker-intro summary:hover {
-      text-decoration: underline;
-    }
-    .maker-intro .details-content {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: #f8f9fa;
-      border-radius: 4px;
-    }
-    .maker-intro .details-content h3 {
-      font-size: 1rem;
-      color: #2c3e50;
-      margin: 1rem 0 0.5rem;
-    }
-    .maker-intro .details-content h3:first-child {
-      margin-top: 0;
-    }
-    .maker-intro .details-content ul {
-      margin: 0;
-      padding-left: 1.25rem;
-      color: #6c757d;
-      font-size: 0.95rem;
-    }
-    .maker-intro .details-content li {
-      margin: 0.25rem 0;
-    }
-
     footer .version {
       font-size: 0.75rem;
-      color: #bdc3c7;
+      color: var(--text-muted);
       margin-top: 0.25rem;
     }
 
-    @media (max-width: 600px) {
-      .maker-nav {
-        flex-direction: column;
-        text-align: center;
-      }
-      .maker-nav .lang-toggle {
-        margin-left: 0;
-      }
-    }
   </style>
 </head>
 <body>
@@ -364,11 +261,11 @@
   <!-- Loading overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="spinner"></div>
-    <p style="margin-top: 1rem; color: #7f8c8d;" data-i18n="loading">Loading bundle creator...</p>
+    <p style="margin-top: 1rem; color: var(--text-secondary);" data-i18n="loading">Loading...</p>
   </div>
 
   <div class="container">
-    <nav class="maker-nav">
+    <nav class="site-nav">
       <a href="index.html" class="logo">🧠 ReMemory</a>
       <div class="nav-links">
         <a href="index.html">About</a>
@@ -386,12 +283,12 @@
       </div>
     </nav>
 
-    <div class="maker-intro">
+    <div class="page-intro">
       <h1 data-i18n="page_title">Create Bundles</h1>
-      <p class="subtitle" data-i18n="subtitle">Make sure your important files are never lost.</p>
+      <p class="subtitle" data-i18n="subtitle">Keep your important files within reach — even if you can't reach them yourself.</p>
       <p data-i18n="page_description" class="summary">
-        Add files, choose friends, set a threshold. Each friend gets a bundle they can use to help recover your files later.
-        Everything runs locally—your files never leave your browser.
+        Add your files, choose who to trust, and set how many must agree for recovery. Each person gets a self-contained bundle.
+        Everything runs locally — nothing leaves your browser.
       </p>
 
       <details>
@@ -399,8 +296,8 @@
         <div class="details-content">
           <h3>Creating bundles (this page)</h3>
           <ul>
-            <li>Add your sensitive files and choose trusted friends</li>
-            <li>Set a threshold (e.g., "3 of 5 friends needed")</li>
+            <li>Add the files you want to protect and choose who to trust</li>
+            <li>Set how many friends must agree (e.g., 3 of 5)</li>
             <li>Generate a unique bundle for each friend</li>
             <li>Send each friend their bundle (email, USB, etc.)</li>
           </ul>
@@ -408,14 +305,14 @@
           <h3>Recovering files (when needed)</h3>
           <ul>
             <li>Friends open their bundle's <code>recover.html</code> in any browser</li>
-            <li>They combine their shares (threshold number required)</li>
-            <li>Files are decrypted and recovered—no server needed</li>
+            <li>They combine their pieces (enough must agree)</li>
+            <li>Files are decrypted and recovered — no server needed</li>
           </ul>
 
           <h3>Security notes</h3>
           <ul>
-            <li>Everything runs locally in your browser—no data leaves your device</li>
-            <li>You can save this page to your computer and use it offline</li>
+            <li>Everything runs in your browser — nothing leaves your device</li>
+            <li>This page can be saved and used offline</li>
             <li>Files are encrypted with <a href="https://github.com/FiloSottile/age" target="_blank">age</a></li>
             <li>Open source (Apache-2.0)</li>
           </ul>
@@ -438,7 +335,7 @@
           </label>
         </div>
       </div>
-      <p class="hint" id="friends-hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
+      <p class="hint" id="friends-hint" data-i18n="friends_hint">Each person here will hold one piece of your recovery key</p>
 
       <!-- Anonymous mode: shares input -->
       <div id="shares-input" class="shares-input hidden">
@@ -458,7 +355,7 @@
       <div class="threshold-selector">
         <label for="threshold-select" data-i18n="threshold_label">Threshold:</label>
         <select id="threshold-select"></select>
-        <span data-i18n="threshold_desc">friends needed to recover</span>
+        <span data-i18n="threshold_desc">must agree to recover</span>
       </div>
 
       <details id="import-section" class="import-section">
@@ -518,7 +415,7 @@
   </footer>
 
   <!-- Translations -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     const translations = {{TRANSLATIONS}};
 
     let currentLang = 'en';
@@ -582,20 +479,20 @@
   </script>
 
   <!-- Go WASM runtime -->
-  <script>{{WASM_EXEC}}</script>
+  <script nonce="{{CSP_NONCE}}">{{WASM_EXEC}}</script>
 
   <!-- Embedded WASM binary (base64) -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     window.WASM_BINARY = "{{WASM_BASE64}}";
     window.VERSION = "{{VERSION}}";
     window.GITHUB_URL = "{{GITHUB_URL}}";
   </script>
 
   <!-- Application logic -->
-  <script>{{CREATE_APP_JS}}</script>
+  <script nonce="{{CSP_NONCE}}">{{CREATE_APP_JS}}</script>
 
   <!-- Load WASM from embedded gzip-compressed binary -->
-  <script>
+  <script nonce="{{CSP_NONCE}}">
     (async function() {
       const go = new Go();
       try {
@@ -639,17 +536,17 @@
         document.getElementById('loading-overlay').innerHTML = `
           <div class="loading-error">
             <div class="loading-error-icon">⚠️</div>
-            <div class="loading-error-title">Failed to load bundle creator</div>
+            <div class="loading-error-title">Could not load the bundle creator</div>
             <div class="loading-error-message">
-              The bundle creation module couldn't be loaded in your browser.
-              This can happen with older browsers or certain privacy settings.
+              The bundle creator did not load. This can happen with older browsers or certain privacy settings.
             </div>
             <div class="loading-error-actions">
-              <button class="btn btn-primary" onclick="window.location.reload()">Reload page</button>
+              <button class="btn btn-primary" id="reload-page-btn">Reload page</button>
               <a href="https://github.com/eljojo/rememory" class="btn btn-secondary" target="_blank">Use CLI tool instead</a>
             </div>
           </div>
         `;
+        document.getElementById('reload-page-btn')?.addEventListener('click', () => window.location.reload());
       }
     })();
   </script>

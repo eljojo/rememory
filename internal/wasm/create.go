@@ -7,7 +7,9 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"fmt"
+	"strings"
 	"syscall/js"
 	"time"
 
@@ -264,6 +266,13 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Total:        n,
 			Language:     lang,
 		}
+
+		// Embed manifest in recover.html when small enough
+		manifestEmbedded := len(manifestData) <= html.MaxEmbeddedManifestSize
+		if manifestEmbedded {
+			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
+		}
+
 		recoverHTML := html.GenerateRecoverHTML(wasmBytes, config.Version, config.GitHubURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 
@@ -282,6 +291,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Created:          now,
 			Anonymous:        config.Anonymous,
 			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
 		}
 		readmeContent := bundle.GenerateReadme(readmeData)
 
@@ -301,20 +311,25 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Created:          now,
 			Anonymous:        config.Anonymous,
 			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {
 			return nil, fmt.Errorf("generating PDF for %s: %w", friend.Name, err)
 		}
 
-		// Create ZIP bundle
+		// Create ZIP bundle.
+		// When the manifest is embedded in recover.html, skip the separate MANIFEST.age
+		// file to avoid duplicating data and inflating the ZIP size.
 		readmeFileTxt := translations.ReadmeFilename(lang, ".txt")
 		readmeFilePdf := translations.ReadmeFilename(lang, ".pdf")
 		zipFiles := []bundle.ZipFile{
 			{Name: readmeFileTxt, Content: []byte(readmeContent), ModTime: now},
 			{Name: readmeFilePdf, Content: pdfContent, ModTime: now},
-			{Name: "MANIFEST.age", Content: manifestData, ModTime: now},
 			{Name: "recover.html", Content: []byte(recoverHTML), ModTime: now},
+		}
+		if !manifestEmbedded {
+			zipFiles = append(zipFiles, bundle.ZipFile{Name: "MANIFEST.age", Content: manifestData, ModTime: now})
 		}
 
 		zipData, err := createZipInMemory(zipFiles)
@@ -356,6 +371,10 @@ func createTarGz(files []FileEntry) ([]byte, error) {
 		name := f.Name
 		// Remove leading slashes or "manifest/" prefix if present
 		name = trimLeadingSlashes(name)
+		// Security: reject path traversal attempts
+		if strings.Contains(name, "..") {
+			return nil, fmt.Errorf("invalid path in file entry: %s", f.Name)
+		}
 		if len(name) > 9 && name[:9] == "manifest/" {
 			name = name[9:]
 		}

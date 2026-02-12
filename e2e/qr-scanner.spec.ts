@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
   getRememoryBin,
   createTestProject,
+  cleanupProject,
   extractBundle,
   extractBundles,
   findReadmeFile,
@@ -26,9 +27,7 @@ test.describe('QR Scanner', () => {
   });
 
   test.afterAll(async () => {
-    if (projectDir && fs.existsSync(projectDir)) {
-      fs.rmSync(projectDir, { recursive: true, force: true });
-    }
+    cleanupProject(projectDir);
   });
 
   test('scan button is visible when BarcodeDetector is available', async ({ page }) => {
@@ -101,7 +100,9 @@ test.describe('QR Scanner', () => {
     await expect(page.locator('#qr-scanner-modal')).not.toBeVisible();
   });
 
-  test('scanning a compact share adds it to the shares list', async ({ page }) => {
+  test('scanning a compact share adds it to the shares list', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox', 'Firefox canvas.captureStream() does not produce a usable video stream for the mock scanner');
+
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
 
     const recovery = new RecoveryPage(page, aliceDir);
@@ -181,7 +182,9 @@ test.describe('QR Scanner', () => {
     await expect(page.locator('#qr-scanner-modal')).not.toBeVisible();
   });
 
-  test('scanning a URL with fragment adds the share', async ({ page }) => {
+  test('scanning a URL with fragment adds the share', async ({ page, browserName }) => {
+    test.skip(browserName === 'firefox', 'Firefox canvas.captureStream() does not produce a usable video stream for the mock scanner');
+
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
 
     const bobReadme = fs.readFileSync(findReadmeFile(bobDir), 'utf8');
