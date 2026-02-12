@@ -81,7 +81,7 @@ func TestGetTranslationsJSProducesValidJS(t *testing.T) {
 			}
 
 			for _, lang := range Languages {
-				if !strings.Contains(js, lang+": {") {
+				if !strings.Contains(js, "\""+lang+"\": {") {
 					t.Errorf("GetTranslationsJS(%s) missing language %s", component, lang)
 				}
 			}
