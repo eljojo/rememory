@@ -18,7 +18,7 @@ var makerFS embed.FS
 var readmeFS embed.FS
 
 // Languages lists all supported language codes.
-var Languages = []string{"en", "es", "de", "fr", "sl", "pt", "zh_TW"}
+var Languages = []string{"en", "es", "de", "fr", "sl", "pt", "zh-TW"}
 
 // GetTranslationsJS builds the JavaScript translations object for injection into HTML templates.
 // component must be "recover", "maker", or "readme".
@@ -53,7 +53,8 @@ func GetTranslationsJS(component string) string {
 			valJSON, _ := json.Marshal(check[k])
 			entries = append(entries, fmt.Sprintf("        %s: %s", string(keyJSON), string(valJSON)))
 		}
-		parts = append(parts, fmt.Sprintf("      %s: {\n%s\n      }", lang, strings.Join(entries, ",\n")))
+		langJSON, _ := json.Marshal(lang)
+		parts = append(parts, fmt.Sprintf("      %s: {\n%s\n      }", langJSON, strings.Join(entries, ",\n")))
 	}
 
 	return "{\n" + strings.Join(parts, ",\n\n") + "\n    }"

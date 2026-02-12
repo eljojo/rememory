@@ -55,7 +55,7 @@
   "lang_fr": "法文",
   "lang_de": "德文",
   "lang_sl": "斯洛文尼亞文",
-  "lang_zh_TW": "正體中文",
+  "lang_zh-TW": "正體中文",
   "machine_readable": "機器可讀格式（貼到網頁上）：",
   "metadata_footer": "中繼資料註腳（機器可解析）",
   "qr_caption": "掃描以匯入金鑰片段",
