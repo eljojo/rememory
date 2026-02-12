@@ -76,7 +76,7 @@ See the **[CLI User Guide](docs/guide.md)** for complete documentation.
 
 Before protecting real secrets, try the recovery process:
 
-1. **[Download demo bundles](https://github.com/eljojo/rememory/releases/download/v0.0.3/demo-bundles.zip)** (contains 3 sample bundles)
+1. **[Download demo bundles](https://github.com/eljojo/rememory/releases/latest/download/demo-bundles.zip)** (contains 3 sample bundles)
 2. Open `bundle-alice/recover.html` in your browser
 3. Alice's share is pre-loaded — add Bob's or Carol's
 4. When enough shares are added, the files unlock
