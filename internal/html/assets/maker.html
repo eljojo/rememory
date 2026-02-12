@@ -462,8 +462,8 @@
     // Set initial language immediately
     (function() {
       const saved = localStorage.getItem('rememory-lang');
-      const browserLang = navigator.language.split('-')[0];
-      currentLang = saved || (['es', 'de', 'fr', 'pt'].includes(browserLang) ? browserLang : 'en');
+      const detected = navigator.languages.find((language) => ['es', 'de', 'fr', 'sl', 'pt', 'zh-TW'].includes(language));
+      currentLang = saved || detected || 'en';
     })();
 
     // Initialize language toggle buttons after DOM is ready
