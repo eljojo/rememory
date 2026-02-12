@@ -11,6 +11,7 @@
   "num_shares_label": "Número de partes:",
   "add_friend": "Adicionar Amigo",
   "threshold_label": "Número mínimo de partes:",
+  "threshold_option": "{0} of {1}",
   "threshold_desc": "amigos necessários para recuperar",
   "name_label": "Nome",
   "contact_label": "Informações de contato (opcional)",
