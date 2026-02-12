@@ -157,6 +157,7 @@ func extractBundle(zipData []byte) (*BundleContents, error) {
 
 	var readmeContent string
 	var manifestData []byte
+	var totalSize int64
 
 	for _, f := range r.File {
 		rc, err := f.Open()
@@ -164,12 +165,20 @@ func extractBundle(zipData []byte) (*BundleContents, error) {
 			return nil, fmt.Errorf("opening %s: %w", f.Name, err)
 		}
 
-		data, err := io.ReadAll(rc)
+		limitedReader := io.LimitReader(rc, core.MaxFileSize+1)
+		data, err := io.ReadAll(limitedReader)
 		if closeErr := rc.Close(); closeErr != nil && err == nil {
 			err = closeErr
 		}
 		if err != nil {
 			return nil, fmt.Errorf("reading %s: %w", f.Name, err)
+		}
+		if int64(len(data)) > core.MaxFileSize {
+			return nil, fmt.Errorf("file %s exceeds maximum allowed size (%d bytes)", f.Name, core.MaxFileSize)
+		}
+		totalSize += int64(len(data))
+		if totalSize > core.MaxTotalSize {
+			return nil, fmt.Errorf("bundle exceeds maximum total size (%d bytes)", core.MaxTotalSize)
 		}
 
 		switch {

@@ -279,6 +279,7 @@
         <button data-lang="de">DE</button>
         <button data-lang="fr">FR</button>
         <button data-lang="sl">SL</button>
+        <button data-lang="pt">PT</button>
         <button data-lang="zh_TW">ZH-TW</button>
       </div>
     </nav>
@@ -462,7 +463,7 @@
     (function() {
       const saved = localStorage.getItem('rememory-lang');
       const browserLang = navigator.language.split('-')[0];
-      currentLang = saved || (['es', 'de', 'fr'].includes(browserLang) ? browserLang : 'en');
+      currentLang = saved || (['es', 'de', 'fr', 'pt'].includes(browserLang) ? browserLang : 'en');
     })();
 
     // Initialize language toggle buttons after DOM is ready

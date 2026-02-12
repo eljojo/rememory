@@ -24,7 +24,6 @@ test.describe('Browser Recovery Tool', () => {
     // Skip if rememory binary not available
     const bin = getRememoryBin();
     if (!fs.existsSync(bin)) {
-      console.log(`Skipping tests: rememory binary not found at ${bin}`);
       test.skip();
       return;
     }
@@ -270,7 +269,6 @@ test.describe('Anonymous Bundle Recovery', () => {
     // Skip if rememory binary not available
     const bin = getRememoryBin();
     if (!fs.existsSync(bin)) {
-      console.log(`Skipping tests: rememory binary not found at ${bin}`);
       test.skip();
       return;
     }
@@ -348,7 +346,6 @@ test.describe('Generic recover.html (no personalization)', () => {
   test.beforeAll(async () => {
     const bin = getRememoryBin();
     if (!fs.existsSync(bin)) {
-      console.log(`Skipping tests: rememory binary not found at ${bin}`);
       test.skip();
       return;
     }

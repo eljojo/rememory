@@ -323,6 +323,7 @@ declare let currentLang: string;
       { code: 'de', label: 'Deutsch' },
       { code: 'fr', label: 'Français' },
       { code: 'sl', label: 'Slovenščina' },
+      { code: 'pt', label: 'Português' },
       { code: 'zh_TW', label: '正體中文' }
     ];
     const langOptionsHtml = langOptions.map(o =>
