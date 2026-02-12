@@ -11,7 +11,7 @@
   "what_one_of": "你是 {0} 位受委託的朋友之一，每位朋友都持有復原金鑰的一部分。",
   "what_threshold": "你們需要至少 {0} 位合作以解密檔案。",
   "other_holders": "其他金鑰片段持有人（請聯絡以配合復原）",
-  "contact_label": "聯絡資料：{0}",
+  "contact_label": "聯絡方式：{0}",
   "recover_browser": "如何復原（主要方式：瀏覽器）",
   "recover_step1": "1. 使用任何現代瀏覽器（Chrome、Firefox、Safari、Edge）打開 recover.html",
   "recover_share_loaded": "本復原包的解密工具專為你設計，你保管的金鑰片段已被預先載入！",
