@@ -322,7 +322,8 @@ declare let currentLang: string;
       { code: 'es', label: 'Español' },
       { code: 'de', label: 'Deutsch' },
       { code: 'fr', label: 'Français' },
-      { code: 'sl', label: 'Slovenščina' }
+      { code: 'sl', label: 'Slovenščina' },
+      { code: 'zh_TW', label: '正體中文' }
     ];
     const langOptionsHtml = langOptions.map(o =>
       `<option value="${o.code}"${o.code === effectiveLang ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
