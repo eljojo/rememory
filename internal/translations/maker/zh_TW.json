@@ -12,7 +12,7 @@
   "add_friend": "新增朋友",
   "threshold_label": "門檻值：需要",
   "threshold_option": "{0}／{1}",
-  "threshold_desc": "位朋友一起協助復原",
+  "threshold_desc": "位朋友同意以開始復原",
   "name_label": "姓名",
   "contact_label": "聯絡方式（選填）",
   "import_summary": "從現有的 project.yml 匯入聯絡人",
