@@ -546,6 +546,8 @@ declare let currentLang: string;
   }
 
   function renderFilesPreview(): void {
+    elements.filesDropZone?.classList.toggle('loaded', state.files.length > 0);
+
     if (state.files.length === 0) {
       elements.filesPreview?.classList.add('hidden');
       elements.filesSummary?.classList.add('hidden');

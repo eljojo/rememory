@@ -44,6 +44,19 @@ const (
 	smallMono   = 7.0
 )
 
+// bundleColors are soft, distinguishable colors used to give each friend's
+// printed PDF a unique visual identity. Indexed by (share.Index - 1) % len.
+var bundleColors = [][3]int{
+	{122, 143, 166}, // dusty blue
+	{85, 115, 90},   // sage
+	{166, 130, 100}, // warm tan
+	{140, 110, 140}, // muted plum
+	{110, 145, 140}, // teal
+	{180, 140, 100}, // amber
+	{120, 130, 160}, // slate
+	{155, 120, 120}, // dusty rose
+}
+
 // QR code size in mm on the PDF page.
 const qrSizeMM = 70.0
 
@@ -75,19 +88,38 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	// Register embedded UTF-8 TrueType fonts (DejaVu Sans)
 	registerUTF8Fonts(p)
 
-	// Page numbers — small, centered, low-key
+	// Bundle identity color — each friend gets a distinct strip
+	colorIdx := 0
+	if data.Share != nil && data.Share.Index > 0 {
+		colorIdx = (data.Share.Index - 1) % len(bundleColors)
+	}
+	bc := bundleColors[colorIdx]
+
+	// Page numbers — small, centered, low-key, with identity mark
 	p.SetFooterFunc(func() {
+		pw, _ := p.GetPageSize()
 		p.SetY(-15)
+		// Small identity mark before the page number
+		markW := 15.0
+		markH := 2.0
+		markX := (pw - markW) / 2
+		p.SetFillColor(bc[0], bc[1], bc[2])
+		p.Rect(markX, p.GetY()-1, markW, markH, "F")
 		p.SetFont(fontSans, "", 7)
 		p.SetTextColor(180, 180, 180)
 		p.CellFormat(0, 10, fmt.Sprintf("%d", p.PageNo()), "", 0, "C", false, 0, "")
-		p.SetTextColor(0, 0, 0)
+		p.SetTextColor(46, 42, 38)
 	})
 
 	p.AddPage()
 
 	// Page dimensions (used throughout for centered elements)
 	pageWidth, _ := p.GetPageSize()
+
+	// Identity strip at the top of the first page
+	p.SetFillColor(bc[0], bc[1], bc[2])
+	p.Rect(0, 0, pageWidth, 4, "F")
+
 	leftMargin, _, rightMargin, _ := p.GetMargins()
 	contentWidth := pageWidth - leftMargin - rightMargin
 
@@ -106,13 +138,12 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.CellFormat(0, 8, t("for", data.Holder), "", 1, "C", false, 0, "")
 	p.Ln(12)
 
-	// ── Warning stamps — high contrast, centered, stamp-like ──
+	// ── Warning stamps — soft, centered, calm ──
 	// Stamp 1: Cannot use alone
-	p.SetFillColor(85, 115, 90)
-	p.SetTextColor(255, 255, 255)
+	p.SetFillColor(232, 239, 234)
+	p.SetTextColor(46, 42, 38)
 	p.SetFont(fontSans, "B", headingSize)
 	p.CellFormat(0, 11, t("warning_cannot_alone"), "", 1, "C", true, 0, "")
-	p.SetTextColor(0, 0, 0)
 	p.SetFillColor(232, 242, 234)
 	p.SetFont(fontSans, "", 9)
 	if data.Anonymous {
@@ -122,11 +153,9 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 	p.Ln(4)
 	// Stamp 2: Confidential
-	p.SetFillColor(85, 115, 90)
-	p.SetTextColor(255, 255, 255)
+	p.SetFillColor(232, 239, 234)
 	p.SetFont(fontSans, "B", headingSize)
 	p.CellFormat(0, 11, t("warning_confidential"), "", 1, "C", true, 0, "")
-	p.SetTextColor(0, 0, 0)
 	p.SetFillColor(232, 242, 234)
 	p.SetFont(fontSans, "", 9)
 	p.CellFormat(0, 7, t("warning_keep_safe"), "", 1, "C", true, 0, "")

@@ -112,6 +112,12 @@ header p {
   background: var(--sage-tint);
 }
 
+.drop-zone.loaded {
+  border-color: var(--sage);
+  border-style: solid;
+  background: var(--sage-tint);
+}
+
 .drop-zone p {
   color: var(--text-secondary);
   margin-bottom: 0.5rem;

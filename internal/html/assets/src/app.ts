@@ -883,6 +883,8 @@ declare const t: TranslationFunction;
   function updateSharesUI(): void {
     if (!elements.sharesList) return;
 
+    elements.shareDropZone?.classList.toggle('loaded', state.shares.length > 0);
+
     elements.sharesList.innerHTML = '';
 
     state.shares.forEach((share, idx) => {
