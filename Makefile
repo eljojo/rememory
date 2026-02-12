@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full update-pdf-png release
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm ts build-all bump-patch bump-minor bump-major man html serve demo generate-fixtures full update-pdf-png release check-translations
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
@@ -90,6 +90,10 @@ demo: build
 	rm -rf demo-recovery
 	./$(BINARY) demo
 	open demo-recovery/output/bundles/bundle-alice.zip
+
+# Check that all languages have the same translation keys as English
+check-translations:
+	REMEMORY_CHECK_TRANSLATIONS=1 go test -v -run TestAllLanguagesHaveSameKeys ./internal/translations/
 
 # Regenerate golden test fixtures (one-time, output is committed)
 generate-fixtures:
