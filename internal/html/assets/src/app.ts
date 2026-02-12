@@ -31,7 +31,7 @@ declare const t: TranslationFunction;
 
   // DOM elements interface
   interface Elements {
-    loadingOverlay: HTMLElement | null;
+    wasmLoadingIndicator: HTMLElement | null;
     shareDropZone: HTMLElement | null;
     shareFileInput: HTMLInputElement | null;
     sharesList: HTMLElement | null;
@@ -62,7 +62,7 @@ declare const t: TranslationFunction;
 
   // DOM elements
   const elements: Elements = {
-    loadingOverlay: document.getElementById('loading-overlay'),
+    wasmLoadingIndicator: document.getElementById('wasm-loading-indicator'),
     shareDropZone: document.getElementById('share-drop-zone'),
     shareFileInput: document.getElementById('share-file-input') as HTMLInputElement | null,
     sharesList: document.getElementById('shares-list'),
@@ -124,6 +124,7 @@ declare const t: TranslationFunction;
 
   const errorHandlers = {
     wasmLoadFailed(_err: unknown): void {
+      elements.wasmLoadingIndicator?.classList.add('hidden');
       toast.error(
         t('error_wasm_title'),
         t('error_wasm_message'),
@@ -378,7 +379,7 @@ declare const t: TranslationFunction;
       await waitForWasm();
       state.wasmReady = true;
       window.rememoryAppReady = true;
-      elements.loadingOverlay?.classList.add('hidden');
+      elements.wasmLoadingIndicator?.classList.add('hidden');
     } catch (err) {
       // Try loading from embedded gzip-compressed base64 as fallback
       if (typeof window.WASM_BINARY !== 'undefined') {
@@ -390,7 +391,7 @@ declare const t: TranslationFunction;
           await waitForWasm();
           state.wasmReady = true;
           window.rememoryAppReady = true;
-          elements.loadingOverlay?.classList.add('hidden');
+          elements.wasmLoadingIndicator?.classList.add('hidden');
           return;
         } catch (e) {
           errorHandlers.wasmLoadFailed(e);
@@ -401,18 +402,7 @@ declare const t: TranslationFunction;
     }
   }
 
-  function waitForWasm(): Promise<void> {
-    return new Promise((resolve) => {
-      const check = (): void => {
-        if (window.rememoryReady) {
-          resolve();
-        } else {
-          setTimeout(check, 50);
-        }
-      };
-      check();
-    });
-  }
+  const { waitForWasm } = window.rememoryUtils;
 
   async function decodeAndDecompressWasm(base64: string): Promise<ArrayBuffer> {
     const compressed = Uint8Array.from(atob(base64), c => c.charCodeAt(0));

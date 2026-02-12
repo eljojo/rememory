@@ -6,7 +6,8 @@
   "subtitle": "Quien tiene un amigo, tiene un tesoro.",
   "step1_title": "Amigos",
   "friends_hint": "Cada persona aquí guardará una parte de tu clave de recuperación",
-  "anonymous_label": "Anónimo",
+  "mode_named": "Con nombre",
+  "mode_anonymous": "Anónimo",
   "anonymous_hint": "Los participantes no sabrán quiénes son los demás",
   "num_shares_label": "Número de partes:",
   "add_friend": "Agregar amigo",
@@ -27,8 +28,6 @@
   "download_all_btn": "Descargar todos los kits",
   "download_yaml_btn": "Guardar project.yml",
   "works_offline": "Funciona completamente sin conexión",
-  "need_help": "¿Necesitas ayuda?",
-  "download_cli": "Descarga la herramienta CLI desde GitHub",
   "generating": "Generando kits...",
   "archiving": "Preparando archivos...",
   "encrypting": "Cifrando archivos...",
@@ -60,5 +59,6 @@
   "language_label": "Idioma del kit",
 
   "custom_language_label": "Idioma personalizado",
-  "remove": "Eliminar"
+  "remove": "Eliminar",
+  "threshold_guidance": "Piensa en quién podría estar disponible al mismo tiempo. Un número menor es más flexible si alguien no está disponible."
 }

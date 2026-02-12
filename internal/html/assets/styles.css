@@ -346,35 +346,49 @@ footer a:hover {
   text-decoration: underline;
 }
 
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(247,244,238,0.92);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid var(--sand);
-  border-top-color: var(--sage);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
 .hidden {
   display: none !important;
+}
+
+/* Inline WASM loading hint (shown near recover button while loading) */
+.wasm-loading-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--sand);
+  border-top-color: var(--sage);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* WASM load failure fallback */
+.wasm-fallback {
+  background: var(--rose);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+.wasm-fallback p {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+.wasm-fallback .loading-error-actions {
+  margin-top: 0.75rem;
 }
 
 /* Paste section */
@@ -922,32 +936,6 @@ footer a:hover {
 .drop-zone.has-error {
   border-color: var(--error-border);
   background: var(--rose);
-}
-
-/* WASM loading error state */
-.loading-error {
-  text-align: center;
-  padding: 2rem;
-}
-
-.loading-error-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.loading-error-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--error-dark);
-  margin-bottom: 0.5rem;
-}
-
-.loading-error-message {
-  color: var(--text-secondary);
-  margin-bottom: 1rem;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .loading-error-actions {

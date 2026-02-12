@@ -6,7 +6,8 @@
   "subtitle": "Keep your important files within reach — even if you can't reach them yourself.",
   "step1_title": "Friends",
   "friends_hint": "Each person here will hold one piece of your recovery key",
-  "anonymous_label": "Anonymous",
+  "mode_named": "Named",
+  "mode_anonymous": "Anonymous",
   "anonymous_hint": "Holders won't know each other",
   "num_shares_label": "Number of shares:",
   "add_friend": "Add Friend",
@@ -27,8 +28,6 @@
   "download_all_btn": "Download All Bundles",
   "download_yaml_btn": "Save project.yml",
   "works_offline": "Works completely offline",
-  "need_help": "Need help?",
-  "download_cli": "Download the CLI tool from GitHub",
   "generating": "Generating...",
   "archiving": "Archiving...",
   "encrypting": "Encrypting...",
@@ -60,5 +59,6 @@
   "language_label": "Bundle language",
 
   "custom_language_label": "Custom language",
-  "remove": "Remove"
+  "remove": "Remove",
+  "threshold_guidance": "Think about who might be reachable at the same time. A lower number is more forgiving if someone is unavailable."
 }

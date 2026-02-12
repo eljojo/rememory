@@ -6,7 +6,8 @@
   "subtitle": "Qui a un ami a un trésor.",
   "step1_title": "Amis",
   "friends_hint": "Chaque personne ici gardera une part de votre clé de récupération",
-  "anonymous_label": "Anonyme",
+  "mode_named": "Nommé",
+  "mode_anonymous": "Anonyme",
   "anonymous_hint": "Les participants ne connaîtront pas les autres",
   "num_shares_label": "Nombre de parts :",
   "add_friend": "Ajouter un ami",
@@ -27,8 +28,6 @@
   "download_all_btn": "Télécharger toutes les enveloppes",
   "download_yaml_btn": "Enregistrer project.yml",
   "works_offline": "Fonctionne entièrement hors ligne",
-  "need_help": "Besoin d'aide ?",
-  "download_cli": "Télécharger l'outil CLI depuis GitHub",
   "generating": "Génération...",
   "archiving": "Archivage...",
   "encrypting": "Chiffrement...",
@@ -60,5 +59,6 @@
   "language_label": "Langue du paquet",
 
   "custom_language_label": "Langue personnalisée",
-  "remove": "Supprimer"
+  "remove": "Supprimer",
+  "threshold_guidance": "Pensez à qui pourrait être joignable en même temps. Un nombre plus bas pardonne mieux l'absence de quelqu'un."
 }

@@ -6,7 +6,8 @@
   "subtitle": "Vaše pomembne datoteke naj bodo vedno na dosegu — tudi če vi niste.",
   "step1_title": "Prijatelji",
   "friends_hint": "Vsaka oseba tukaj bo hranila en del vašega obnovitvenega ključa",
-  "anonymous_label": "Anonimno",
+  "mode_named": "Poimensko",
+  "mode_anonymous": "Anonimno",
   "anonymous_hint": "Imetniki se ne bodo poznali med seboj",
   "num_shares_label": "Število delov:",
   "add_friend": "Dodaj prijatelja",
@@ -27,8 +28,6 @@
   "download_all_btn": "Prenesi vse svežnje",
   "download_yaml_btn": "Shrani project.yml",
   "works_offline": "Deluje popolnoma brez povezave",
-  "need_help": "Potrebujete pomoč?",
-  "download_cli": "Prenesite CLI orodje iz GitHub",
   "generating": "Ustvarjanje...",
   "archiving": "Arhiviranje...",
   "encrypting": "Šifriranje...",
@@ -60,5 +59,6 @@
   "language_label": "Jezik svežnja",
 
   "custom_language_label": "Lasten jezik",
-  "remove": "Odstrani"
+  "remove": "Odstrani",
+  "threshold_guidance": "Premislite, kdo bi bil dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo."
 }

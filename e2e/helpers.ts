@@ -415,8 +415,12 @@ export class CreationPage {
 
   // YAML import
   async importYAML(content: string): Promise<void> {
-    // Open the details element
-    await this.page.locator('.import-section summary').click();
+    // Open the import details
+    const details = this.page.locator('.import-section');
+    const isOpen = await details.getAttribute('open');
+    if (isOpen === null) {
+      await details.locator('> summary').click();
+    }
     await this.page.locator('#yaml-import').fill(content);
     await this.page.locator('#import-btn').click();
   }
@@ -508,16 +512,38 @@ export class CreationPage {
   }
 
   // Anonymous mode methods
+  async selectAnonymousMode(): Promise<void> {
+    await this.page.locator('.mode-tab[data-mode="anonymous"]').click();
+  }
+
+  async selectNamedMode(): Promise<void> {
+    await this.page.locator('.mode-tab[data-mode="named"]').click();
+  }
+
   async toggleAnonymousMode(): Promise<void> {
-    await this.page.locator('#anonymous-mode').click();
+    const anonTab = this.page.locator('.mode-tab[data-mode="anonymous"]');
+    const isActive = await anonTab.evaluate(el => el.classList.contains('active'));
+    if (isActive) {
+      await this.page.locator('.mode-tab[data-mode="named"]').click();
+    } else {
+      await anonTab.click();
+    }
+  }
+
+  async expectAnonymousModeActive(): Promise<void> {
+    await expect(this.page.locator('.mode-tab[data-mode="anonymous"]')).toHaveClass(/active/);
+  }
+
+  async expectNamedModeActive(): Promise<void> {
+    await expect(this.page.locator('.mode-tab[data-mode="named"]')).toHaveClass(/active/);
   }
 
   async expectAnonymousModeChecked(): Promise<void> {
-    await expect(this.page.locator('#anonymous-mode')).toBeChecked();
+    await this.expectAnonymousModeActive();
   }
 
   async expectAnonymousModeUnchecked(): Promise<void> {
-    await expect(this.page.locator('#anonymous-mode')).not.toBeChecked();
+    await this.expectNamedModeActive();
   }
 
   async expectFriendsListHidden(): Promise<void> {

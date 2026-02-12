@@ -221,6 +221,27 @@ export function clearInlineError(targetElement: HTMLElement): void {
 }
 
 // ============================================
+// WASM Loading
+// ============================================
+
+export function waitForWasm(timeoutMs: number = 15000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('WASM load timed out'));
+    }, timeoutMs);
+    const check = (): void => {
+      if (window.rememoryReady) {
+        clearTimeout(timeout);
+        resolve();
+      } else {
+        setTimeout(check, 50);
+      }
+    };
+    check();
+  });
+}
+
+// ============================================
 // Export to global scope for use by app.ts and create-app.ts
 // ============================================
 
@@ -229,5 +250,6 @@ window.rememoryUtils = {
   formatSize,
   toast,
   showInlineError,
-  clearInlineError
+  clearInlineError,
+  waitForWasm
 };

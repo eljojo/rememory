@@ -6,7 +6,8 @@
   "subtitle": "Garanta que seus arquivos importantes nunca sejam perdidos.",
   "step1_title": "Amigos",
   "friends_hint": "Adicione pelo menos 2 amigos. Cada um guardará uma parte da sua chave de recuperação",
-  "anonymous_label": "Anônimo",
+  "mode_named": "Nomeado",
+  "mode_anonymous": "Anônimo",
   "anonymous_hint": "Os detentores de partes não se conhecerão",
   "num_shares_label": "Número de partes:",
   "add_friend": "Adicionar Amigo",
@@ -27,8 +28,6 @@
   "download_all_btn": "Baixar Todos os Pacotes",
   "download_yaml_btn": "Salvar project.yml",
   "works_offline": "Isso funciona completamente offline",
-  "need_help": "Precisa de ajuda?",
-  "download_cli": "Baixar a ferramenta CLI do GitHub",
   "generating": "Gerando pacotes...",
   "archiving": "Arquivando arquivos...",
   "encrypting": "Criptografando arquivo...",
@@ -60,5 +59,6 @@
   "language_label": "Idioma do pacote",
 
   "custom_language_label": "Idioma personalizado",
-  "remove": "Remover"
+  "remove": "Remover",
+  "threshold_guidance": "Pense em quem pode estar acessível ao mesmo tempo. Um número menor é mais flexível se alguém não estiver disponível."
 }

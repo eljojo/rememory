@@ -26,12 +26,6 @@
     </div>
   </div>
 
-  <!-- Loading overlay -->
-  <div id="loading-overlay" class="loading-overlay">
-    <div class="spinner"></div>
-    <p style="margin-top: 1rem; color: var(--text-secondary);" data-i18n="loading">Loading...</p>
-  </div>
-
   <div class="container">
     <nav class="site-nav">
       <a href="index.html" class="logo">🧠 ReMemory</a>
@@ -117,6 +111,11 @@
         <button id="recover-btn" class="btn btn-primary" disabled>
           <span>&#128275;</span> <span data-i18n="decrypt_btn">Unlock & Recover</span>
         </button>
+
+        <p id="wasm-loading-indicator" class="wasm-loading-hint">
+          <span class="spinner-small"></span>
+          <span data-i18n="loading">Loading...</span>
+        </p>
 
         <div id="progress-bar" class="progress-bar hidden">
           <div class="fill" style="width: 0%"></div>

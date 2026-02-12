@@ -231,7 +231,7 @@ func TestReadmeHasExpectedKeys(t *testing.T) {
 		"recover_step2", "recover_step2_drag", "recover_step2_click",
 		"recover_offline", "recover_cli", "recover_cli_hint", "recover_cli_usage",
 		"your_share", "recovery_words_title", "recovery_words_hint",
-		"machine_readable", "metadata_footer",
+		"machine_readable",
 		"readme_filename",
 	}
 
