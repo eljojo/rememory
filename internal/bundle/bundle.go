@@ -269,7 +269,9 @@ func VerifyBundle(bundlePath string) error {
 		}
 
 		data, err := io.ReadAll(rc)
-		rc.Close()
+		if closeErr := rc.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
 		if err != nil {
 			return fmt.Errorf("reading %s: %w", f.Name, err)
 		}

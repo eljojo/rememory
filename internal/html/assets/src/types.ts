@@ -19,6 +19,7 @@ export interface ParsedShare {
 export interface ShareInput {
   version: number;
   index: number;
+  threshold: number;
   dataB64: string;
 }
 

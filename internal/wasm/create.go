@@ -9,6 +9,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"syscall/js"
 	"time"
 
@@ -370,6 +371,10 @@ func createTarGz(files []FileEntry) ([]byte, error) {
 		name := f.Name
 		// Remove leading slashes or "manifest/" prefix if present
 		name = trimLeadingSlashes(name)
+		// Security: reject path traversal attempts
+		if strings.Contains(name, "..") {
+			return nil, fmt.Errorf("invalid path in file entry: %s", f.Name)
+		}
 		if len(name) > 9 && name[:9] == "manifest/" {
 			name = name[9:]
 		}

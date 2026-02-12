@@ -1158,6 +1158,7 @@ declare const t: TranslationFunction;
       const sharesForCombine: ShareInput[] = state.shares.map(s => ({
         version: s.version,
         index: s.index,
+        threshold: s.threshold,
         dataB64: s.dataB64
       }));
 

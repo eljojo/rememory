@@ -81,8 +81,15 @@ func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personaliz
 // This reduces WASM size by ~70% in the embedded HTML.
 func compressAndEncode(data []byte) string {
 	var buf bytes.Buffer
-	gz, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	gz.Write(data)
-	gz.Close()
+	gz, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		panic("gzip.NewWriterLevel: " + err.Error())
+	}
+	if _, err := gz.Write(data); err != nil {
+		panic("gzip.Write: " + err.Error())
+	}
+	if err := gz.Close(); err != nil {
+		panic("gzip.Close: " + err.Error())
+	}
 	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }
