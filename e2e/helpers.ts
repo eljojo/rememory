@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -16,7 +16,7 @@ export function generateStandaloneHTML(tmpDir: string, type: 'recover' | 'create
   const bin = getRememoryBin();
   const htmlPath = path.join(tmpDir, type === 'create' ? 'maker.html' : 'recover.html');
 
-  execSync(`${bin} html ${type} -o ${htmlPath}`, { stdio: 'inherit' });
+  execFileSync(bin, ['html', type, '-o', htmlPath], { stdio: 'inherit' });
 
   return htmlPath;
 }
@@ -49,9 +49,10 @@ export function createTestProject(options: TestProjectOptions = {}): string {
   const bin = getRememoryBin();
 
   // Create project with 3 friends, threshold 2
-  execSync(`${bin} init ${projectDir} --name "E2E Test" --threshold 2 --friend "Alice,alice@test.com" --friend "Bob,bob@test.com" --friend "Carol,carol@test.com"`, {
-    stdio: 'inherit'
-  });
+  execFileSync(bin, [
+    'init', projectDir, '--name', 'E2E Test', '--threshold', '2',
+    '--friend', 'Alice,alice@test.com', '--friend', 'Bob,bob@test.com', '--friend', 'Carol,carol@test.com',
+  ], { stdio: 'inherit' });
 
   // Add secret content
   const manifestDir = path.join(projectDir, 'manifest');
@@ -59,9 +60,9 @@ export function createTestProject(options: TestProjectOptions = {}): string {
   fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Remember to feed the cat!');
 
   // Seal and generate bundles
-  const sealFlags = options.noEmbedManifest ? ' --no-embed-manifest' : '';
-  execSync(`${bin} seal${sealFlags}`, { cwd: projectDir, stdio: 'inherit' });
-  execSync(`${bin} bundle${sealFlags}`, { cwd: projectDir, stdio: 'inherit' });
+  const extraFlags = options.noEmbedManifest ? ['--no-embed-manifest'] : [];
+  execFileSync(bin, ['seal', ...extraFlags], { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['bundle', ...extraFlags], { cwd: projectDir, stdio: 'inherit' });
 
   projectCache.set(key, projectDir);
   cachedPaths.add(projectDir);
@@ -81,9 +82,9 @@ export function createAnonymousTestProject(): string {
   const bin = getRememoryBin();
 
   // Create anonymous project with 3 shares, threshold 2
-  execSync(`${bin} init ${projectDir} --name "Anonymous E2E Test" --anonymous --shares 3 --threshold 2`, {
-    stdio: 'inherit'
-  });
+  execFileSync(bin, [
+    'init', projectDir, '--name', 'Anonymous E2E Test', '--anonymous', '--shares', '3', '--threshold', '2',
+  ], { stdio: 'inherit' });
 
   // Add secret content
   const manifestDir = path.join(projectDir, 'manifest');
@@ -91,8 +92,8 @@ export function createAnonymousTestProject(): string {
   fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Anonymous notes!');
 
   // Seal and generate bundles
-  execSync(`${bin} seal`, { cwd: projectDir, stdio: 'inherit' });
-  execSync(`${bin} bundle`, { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['seal'], { cwd: projectDir, stdio: 'inherit' });
+  execFileSync(bin, ['bundle'], { cwd: projectDir, stdio: 'inherit' });
 
   projectCache.set(key, projectDir);
   cachedPaths.add(projectDir);
