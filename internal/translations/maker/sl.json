@@ -58,7 +58,7 @@
   "validation_guidance": "Vsak prijatelj potrebuje ime, in dodana mora biti vsaj ena datoteka.",
   "language_label": "Jezik svežnja",
 
-  "custom_language_label": "Lasten jezik",
+  "custom_language_label": "Spremeni jezik",
   "remove": "Odstrani",
   "threshold_guidance": "Premislite, kdo bi bil dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo."
 }

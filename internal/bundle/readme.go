@@ -64,16 +64,6 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("                              %s\n", t("for", data.Holder)))
 	sb.WriteString("================================================================================\n\n")
 
-	// Warnings
-	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_cannot_alone")))
-	if data.Anonymous {
-		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_need_shares")))
-	} else {
-		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_need_friends")))
-	}
-	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_confidential")))
-	sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_keep_safe")))
-
 	// What is this
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString(fmt.Sprintf("%s\n", t("what_is_this")))
@@ -81,6 +71,14 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("%s\n", t("what_bundle_for", data.ProjectName)))
 	sb.WriteString(fmt.Sprintf("%s\n", t("what_one_of", data.Total)))
 	sb.WriteString(fmt.Sprintf("%s\n\n", t("what_threshold", data.Threshold)))
+
+	// Warning
+	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_title")))
+	if data.Anonymous {
+		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_message_shares")))
+	} else {
+		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_message_friends")))
+	}
 
 	// Other share holders (skip for anonymous mode)
 	if !data.Anonymous {

@@ -58,7 +58,7 @@
   "validation_guidance": "Cada amigo necesita un nombre, y debes agregar al menos un archivo.",
   "language_label": "Idioma del kit",
 
-  "custom_language_label": "Idioma personalizado",
+  "custom_language_label": "Cambiar idioma",
   "remove": "Eliminar",
   "threshold_guidance": "Piensa en quién podría estar disponible al mismo tiempo. Un número menor es más flexible si alguien no está disponible."
 }

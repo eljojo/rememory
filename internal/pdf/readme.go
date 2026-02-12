@@ -138,27 +138,26 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.CellFormat(0, 8, t("for", data.Holder), "", 1, "C", false, 0, "")
 	p.Ln(12)
 
-	// ── Warning stamps — soft, centered, calm ──
-	// Stamp 1: Cannot use alone
+	// ── What is this? — context first ──
+	p.SetFont(fontSans, "B", bodySize)
+	p.CellFormat(0, 6, t("what_is_this"), "", 1, "L", false, 0, "")
+	p.Ln(1)
+	addBody(p, t("what_bundle_for", data.ProjectName))
+	addBody(p, t("what_one_of", data.Total))
+	p.Ln(5)
+
+	// ── Warning stamp — soft, centered, calm ──
 	p.SetFillColor(232, 239, 234)
 	p.SetTextColor(46, 42, 38)
 	p.SetFont(fontSans, "B", headingSize)
-	p.CellFormat(0, 11, t("warning_cannot_alone"), "", 1, "C", true, 0, "")
+	p.CellFormat(0, 11, t("warning_title"), "", 1, "C", true, 0, "")
 	p.SetFillColor(232, 242, 234)
 	p.SetFont(fontSans, "", 9)
 	if data.Anonymous {
-		p.CellFormat(0, 7, t("warning_need_shares"), "", 1, "C", true, 0, "")
+		p.MultiCell(0, 5, t("warning_message_shares"), "", "C", true)
 	} else {
-		p.CellFormat(0, 7, t("warning_need_friends"), "", 1, "C", true, 0, "")
+		p.MultiCell(0, 5, t("warning_message_friends"), "", "C", true)
 	}
-	p.Ln(4)
-	// Stamp 2: Confidential
-	p.SetFillColor(232, 239, 234)
-	p.SetFont(fontSans, "B", headingSize)
-	p.CellFormat(0, 11, t("warning_confidential"), "", 1, "C", true, 0, "")
-	p.SetFillColor(232, 242, 234)
-	p.SetFont(fontSans, "", 9)
-	p.CellFormat(0, 7, t("warning_keep_safe"), "", 1, "C", true, 0, "")
 	p.Ln(8)
 
 	// ── Recovery rule — prominent standalone box ──
@@ -177,14 +176,6 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.SetY(ruleBoxY + ruleBoxH + 8)
 	p.SetDrawColor(0, 0, 0)
 	p.SetLineWidth(0.2)
-
-	// ── What is this? — secondary, informational ──
-	p.SetFont(fontSans, "B", bodySize)
-	p.CellFormat(0, 6, t("what_is_this"), "", 1, "L", false, 0, "")
-	p.Ln(1)
-	addBody(p, t("what_bundle_for", data.ProjectName))
-	addBody(p, t("what_one_of", data.Total))
-	p.Ln(5)
 
 	// ── Other share holders — contact card layout ──
 	if !data.Anonymous {

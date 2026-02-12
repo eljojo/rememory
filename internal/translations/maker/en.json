@@ -58,7 +58,7 @@
   "validation_guidance": "Each friend needs a name, and at least one file must be added.",
   "language_label": "Bundle language",
 
-  "custom_language_label": "Custom language",
+  "custom_language_label": "Change language",
   "remove": "Remove",
   "threshold_guidance": "Think about who might be reachable at the same time. A lower number is more forgiving if someone is unavailable."
 }

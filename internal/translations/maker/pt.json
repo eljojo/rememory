@@ -58,7 +58,7 @@
   "validation_guidance": "Campos obrigatórios estão marcados com um asterisco (*). Certifique-se de que cada amigo tem um nome e você adicionou pelo menos um arquivo.",
   "language_label": "Idioma do pacote",
 
-  "custom_language_label": "Idioma personalizado",
+  "custom_language_label": "Mudar idioma",
   "remove": "Remover",
   "threshold_guidance": "Pense em quem pode estar acessível ao mesmo tempo. Um número menor é mais flexível se alguém não estiver disponível."
 }

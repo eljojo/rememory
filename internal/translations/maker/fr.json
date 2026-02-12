@@ -58,7 +58,7 @@
   "validation_guidance": "Chaque ami a besoin d'un nom, et au moins un fichier doit être ajouté.",
   "language_label": "Langue du paquet",
 
-  "custom_language_label": "Langue personnalisée",
+  "custom_language_label": "Changer la langue",
   "remove": "Supprimer",
   "threshold_guidance": "Pensez à qui pourrait être joignable en même temps. Un nombre plus bas pardonne mieux l'absence de quelqu'un."
 }

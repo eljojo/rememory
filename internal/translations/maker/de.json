@@ -58,7 +58,7 @@
   "validation_guidance": "Jeder Freund braucht einen Namen, und mindestens eine Datei muss hinzugefügt werden.",
   "language_label": "Paket-Sprache",
 
-  "custom_language_label": "Eigene Sprache",
+  "custom_language_label": "Sprache ändern",
   "remove": "Entfernen",
   "threshold_guidance": "Überlege, wer zur gleichen Zeit erreichbar sein könnte. Eine niedrigere Zahl ist nachsichtiger, wenn jemand nicht verfügbar ist."
 }
