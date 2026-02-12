@@ -20,7 +20,7 @@ const (
 type Friend struct {
 	Name     string `yaml:"name"`
 	Contact  string `yaml:"contact,omitempty"`
-	Language string `yaml:"language,omitempty"` // Bundle language override (e.g. "en", "es", "de", "fr", "sl", "pt")
+	Language string `yaml:"language,omitempty"` // Bundle language override (e.g. "en", "es", "de", "fr", "sl", "pt", "zh-TW")
 }
 
 // ShareInfo stores information about a generated share.
@@ -44,7 +44,7 @@ type Project struct {
 	Created   string   `yaml:"created"`
 	Threshold int      `yaml:"threshold"`
 	Anonymous bool     `yaml:"anonymous,omitempty"`
-	Language  string   `yaml:"language,omitempty"` // Default bundle language (e.g. "en", "es", "de", "fr", "sl", "pt")
+	Language  string   `yaml:"language,omitempty"` // Default bundle language (e.g. "en", "es", "de", "fr", "sl", "pt", "zh-TW")
 	Friends   []Friend `yaml:"friends"`
 	Sealed    *Sealed  `yaml:"sealed,omitempty"`
 
