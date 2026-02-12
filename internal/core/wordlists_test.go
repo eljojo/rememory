@@ -95,8 +95,8 @@ func TestLookupWordStripped(t *testing.T) {
 		lang Lang
 		word string
 	}{
-		{LangES, "abaco"},   // matches "ábaco"
-		{LangFR, "aerer"},   // matches "aérer" (if present)
+		{LangES, "abaco"}, // matches "ábaco"
+		{LangFR, "aerer"}, // matches "aérer" (if present)
 	}
 
 	for _, tt := range tests {

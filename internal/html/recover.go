@@ -24,13 +24,13 @@ const MaxEmbeddedManifestSize = 5 << 20 // 5 MiB
 
 // PersonalizationData holds the data to personalize recover.html for a specific friend.
 type PersonalizationData struct {
-	Holder       string       `json:"holder"`                       // This friend's name
-	HolderShare  string       `json:"holderShare"`                  // This friend's encoded share
-	OtherFriends []FriendInfo `json:"otherFriends"`                 // List of other friends
-	Threshold    int          `json:"threshold"`                    // Required shares (K)
-	Total        int          `json:"total"`                        // Total shares (N)
-	Language     string       `json:"language,omitempty"`           // Default UI language for this friend
-	ManifestB64  string       `json:"manifestB64,omitempty"`        // Base64-encoded MANIFEST.age (when <= MaxEmbeddedManifestSize)
+	Holder       string       `json:"holder"`                // This friend's name
+	HolderShare  string       `json:"holderShare"`           // This friend's encoded share
+	OtherFriends []FriendInfo `json:"otherFriends"`          // List of other friends
+	Threshold    int          `json:"threshold"`             // Required shares (K)
+	Total        int          `json:"total"`                 // Total shares (N)
+	Language     string       `json:"language,omitempty"`    // Default UI language for this friend
+	ManifestB64  string       `json:"manifestB64,omitempty"` // Base64-encoded MANIFEST.age (when <= MaxEmbeddedManifestSize)
 }
 
 // GenerateRecoverHTML creates the complete recover.html with all assets embedded.
