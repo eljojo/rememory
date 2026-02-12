@@ -16,7 +16,6 @@ test.describe('Browser Bundle Creation Tool', () => {
     // Skip if rememory binary not available
     const bin = getRememoryBin();
     if (!fs.existsSync(bin)) {
-      console.log(`Skipping tests: rememory binary not found at ${bin}`);
       test.skip();
       return;
     }

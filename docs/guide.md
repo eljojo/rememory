@@ -130,18 +130,15 @@ How many shares needed to recover? [3]: 3
 
 Friend 1:
   Name: Alice
-  Email: alice@example.com
-  Phone (optional): 555-1234
+  Contact info (optional): alice@example.com
 
 Friend 2:
   Name: Bob
-  Email: bob@example.com
-  Phone (optional):
+  Contact info (optional):
 
 Friend 3:
   Name: Carol
-  Email: carol@example.com
-  Phone (optional): 555-3456
+  Contact info (optional): carol@example.com
 
 ...
 ```
