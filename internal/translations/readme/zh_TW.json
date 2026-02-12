@@ -1,7 +1,7 @@
 {
   "title": "REMEMORY 復原包",
   "for": "持有人：{0}",
-  "warning_cannot_alone": "本文件不能單獨使用",
+  "warning_cannot_alone": "這個檔案不能單獨使用",
   "warning_need_friends": "你將需要下列持有人的協助。",
   "warning_need_shares": "你需要把這個檔案和其他人手上的金鑰片段放在一起使用。",
   "warning_confidential": "機密：請勿分享本文件",
@@ -22,7 +22,7 @@
   "recover_step1": "1. 使用任何現代瀏覽器（Chrome、Firefox、Safari、Edge）開啟 recover.html",
   "recover_share_loaded": "本復原包的解鎖工具專為你設計，你保管的金鑰片段已被預先載入。",
   "recover_no_html": "如果你沒有 recover.html，請瀏覽 https://eljojo.github.io/rememory/recover",
-  "recover_step2": "2. 由本復原包載入已加密的封存檔（MANIFEST.age）：",
+  "recover_step2": "2. 由本復原包載入加密封存檔（MANIFEST.age）：",
   "recover_step2_drag": "- 拖放到封存檔區域；或",
   "recover_step2_click": "- 點擊以瀏覽並選擇封存檔",
   "recover_step2_embedded": "2. 加密封存檔已經預先載入，無須再手動載入。",
