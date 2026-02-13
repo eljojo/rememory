@@ -85,5 +85,8 @@
   "action_reload": "Osveži stran",
   "action_use_cli": "Uporabi CLI orodje",
   "action_try_again": "Poskusi znova",
-  "action_try_different_shares": "Poskusi druge dele"
+  "action_try_different_shares": "Poskusi druge dele",
+  "nav_about": "O projektu",
+  "nav_create": "Ustvari",
+  "nav_guide": "Vodič"
 }

@@ -6,7 +6,8 @@
   "subtitle": "確保你的重要文件觸手可及，即使當你無法自己取得時。",
   "step1_title": "朋友",
   "friends_hint": "每位朋友都會保管你的一部分復原金鑰",
-  "anonymous_label": "匿名",
+  "mode_named": "指名",
+  "mode_anonymous": "匿名",
   "anonymous_hint": "拿到復原包的人不會知道彼此是誰",
   "num_shares_label": "份數：",
   "add_friend": "新增朋友",
@@ -27,8 +28,6 @@
   "download_all_btn": "下載所有復原包",
   "download_yaml_btn": "儲存 project.yml",
   "works_offline": "可完全離線使用",
-  "need_help": "需要幫助？",
-  "download_cli": "從 GitHub 下載命令列工具",
   "generating": "產生中……",
   "archiving": "封存中……",
   "encrypting": "加密中……",
@@ -59,6 +58,10 @@
   "validation_guidance": "每位朋友都需要填寫姓名，並且需要加入至少 1 個檔案。",
   "language_label": "復原包語言",
 
-  "custom_language_label": "自訂語言",
-  "remove": "移除"
+  "custom_language_label": "變更語言",
+  "remove": "移除",
+  "threshold_guidance": "想想誰可能同時有空。門檻越低，在有人無法參與時越有彈性。",
+  "nav_about": "關於",
+  "nav_guide": "指南",
+  "nav_recover": "復原"
 }

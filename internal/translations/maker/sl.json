@@ -12,7 +12,7 @@
   "num_shares_label": "Število delov:",
   "add_friend": "Dodaj prijatelja",
   "threshold_label": "Prag:",
-  "threshold_option": "{0} of {1}",
+  "threshold_option": "{0} od {1}",
   "threshold_desc": "morajo soglašati za obnovitev",
   "name_label": "Ime",
   "contact_label": "Kontakt (neobvezno)",
@@ -60,5 +60,8 @@
 
   "custom_language_label": "Spremeni jezik",
   "remove": "Odstrani",
-  "threshold_guidance": "Premislite, kdo bi bil dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo."
+  "threshold_guidance": "Premislite, kdo bi bil dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo.",
+  "nav_about": "O projektu",
+  "nav_guide": "Vodič",
+  "nav_recover": "Obnovitev"
 }

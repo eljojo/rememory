@@ -73,6 +73,7 @@ man: build
 
 # Generate standalone HTML files for static hosting
 html: build
+	@mkdir -p dist
 	./$(BINARY) html index > dist/index.html
 	./$(BINARY) html create > dist/maker.html
 	./$(BINARY) html docs > dist/docs.html

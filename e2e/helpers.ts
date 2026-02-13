@@ -503,7 +503,7 @@ export class CreationPage {
 
   // Language
   async setLanguage(lang: string): Promise<void> {
-    await this.page.locator(`.lang-toggle button[data-lang="${lang}"]`).click();
+    await this.page.locator('#lang-select').selectOption(lang);
   }
 
   // Dismiss dialogs (for validation error tests)

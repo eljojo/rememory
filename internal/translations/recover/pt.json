@@ -85,5 +85,8 @@
   "action_reload": "Recarregar página",
   "action_use_cli": "Usar ferramenta CLI",
   "action_try_again": "Tentar novamente",
-  "action_try_different_shares": "Tentar partes diferentes"
+  "action_try_different_shares": "Tentar partes diferentes",
+  "nav_about": "Sobre",
+  "nav_create": "Criar pacotes",
+  "nav_guide": "Guia"
 }

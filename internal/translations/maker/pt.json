@@ -12,7 +12,7 @@
   "num_shares_label": "Número de partes:",
   "add_friend": "Adicionar Amigo",
   "threshold_label": "Número mínimo de partes:",
-  "threshold_option": "{0} of {1}",
+  "threshold_option": "{0} de {1}",
   "threshold_desc": "amigos necessários para recuperar",
   "name_label": "Nome",
   "contact_label": "Informações de contato (opcional)",
@@ -60,5 +60,8 @@
 
   "custom_language_label": "Mudar idioma",
   "remove": "Remover",
-  "threshold_guidance": "Pense em quem pode estar acessível ao mesmo tempo. Um número menor é mais flexível se alguém não estiver disponível."
+  "threshold_guidance": "Pense em quem pode estar acessível ao mesmo tempo. Um número menor é mais flexível se alguém não estiver disponível.",
+  "nav_about": "Sobre",
+  "nav_guide": "Guia",
+  "nav_recover": "Recuperar"
 }

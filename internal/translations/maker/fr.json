@@ -12,7 +12,7 @@
   "num_shares_label": "Nombre de parts :",
   "add_friend": "Ajouter un ami",
   "threshold_label": "Seuil :",
-  "threshold_option": "{0} of {1}",
+  "threshold_option": "{0} sur {1}",
   "threshold_desc": "doivent se mettre d'accord",
   "name_label": "Nom",
   "contact_label": "Contact (optionnel)",
@@ -60,5 +60,8 @@
 
   "custom_language_label": "Changer la langue",
   "remove": "Supprimer",
-  "threshold_guidance": "Pensez à qui pourrait être joignable en même temps. Un nombre plus bas pardonne mieux l'absence de quelqu'un."
+  "threshold_guidance": "Pensez à qui pourrait être joignable en même temps. Un nombre plus bas pardonne mieux l'absence de quelqu'un.",
+  "nav_about": "À propos",
+  "nav_guide": "Guide",
+  "nav_recover": "Récupérer"
 }

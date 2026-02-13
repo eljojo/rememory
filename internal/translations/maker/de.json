@@ -12,7 +12,7 @@
   "num_shares_label": "Anzahl der Teile:",
   "add_friend": "Freund hinzufügen",
   "threshold_label": "Schwelle:",
-  "threshold_option": "{0} of {1}",
+  "threshold_option": "{0} von {1}",
   "threshold_desc": "müssen zustimmen, um wiederherzustellen",
   "name_label": "Name",
   "contact_label": "Kontakt (optional)",
@@ -60,5 +60,8 @@
 
   "custom_language_label": "Sprache ändern",
   "remove": "Entfernen",
-  "threshold_guidance": "Überlege, wer zur gleichen Zeit erreichbar sein könnte. Eine niedrigere Zahl ist nachsichtiger, wenn jemand nicht verfügbar ist."
+  "threshold_guidance": "Überlege, wer zur gleichen Zeit erreichbar sein könnte. Eine niedrigere Zahl ist nachsichtiger, wenn jemand nicht verfügbar ist.",
+  "nav_about": "Über",
+  "nav_guide": "Anleitung",
+  "nav_recover": "Wiederherstellen"
 }
