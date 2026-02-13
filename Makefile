@@ -137,13 +137,7 @@ bump-patch:
 	new="v$$major.$$minor.$$((patch + 1))"; \
 	echo "Bumping $$current -> $$new"; \
 	git tag -a $$new -m "Release $$new"; \
-	echo ""; \
-	read -p "Push tag $$new to origin? [y/N] " answer; \
-	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
-		git push origin $$new; \
-	else \
-		echo "Tag created locally. Push with: git push origin $$new"; \
-	fi
+	git push origin $$new
 
 bump-minor:
 	@git fetch --tags; \
@@ -153,13 +147,7 @@ bump-minor:
 	new="v$$major.$$((minor + 1)).0"; \
 	echo "Bumping $$current -> $$new"; \
 	git tag -a $$new -m "Release $$new"; \
-	echo ""; \
-	read -p "Push tag $$new to origin? [y/N] " answer; \
-	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
-		git push origin $$new; \
-	else \
-		echo "Tag created locally. Push with: git push origin $$new"; \
-	fi
+	git push origin $$new
 
 bump-major:
 	@git fetch --tags; \
@@ -168,13 +156,7 @@ bump-major:
 	new="v$$((major + 1)).0.0"; \
 	echo "Bumping $$current -> $$new"; \
 	git tag -a $$new -m "Release $$new"; \
-	echo ""; \
-	read -p "Push tag $$new to origin? [y/N] " answer; \
-	if [ "$$answer" = "y" ] || [ "$$answer" = "Y" ]; then \
-		git push origin $$new; \
-	else \
-		echo "Tag created locally. Push with: git push origin $$new"; \
-	fi
+	git push origin $$new
 
 # Generate PNG screenshots from demo PDF pages (requires pdftoppm from poppler)
 update-pdf-png: build
