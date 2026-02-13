@@ -178,7 +178,9 @@
     // Set initial language immediately (before app.js runs)
     (function() {
       const saved = localStorage.getItem('rememory-lang');
-      const detected = navigator.languages.find((language) => {{LANG_DETECT}}.includes(language));
+      const langs = {{LANG_DETECT}};
+      const detected = navigator.languages.find((l) => langs.includes(l))
+        || navigator.languages.map((l) => l.split('-')[0]).find((l) => langs.includes(l));
       currentLang = saved || detected || 'en';
     })();
 
