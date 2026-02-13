@@ -2,7 +2,7 @@
   "loading": "Nalaganje...",
   "title": "🧠 ReMemory - Ustvarjanje svežnjev",
   "page_title": "Ustvari svežnje",
-  "page_description": "Dodajte datoteke, izberite komu zaupate in določite, koliko jih mora sodelovati za obnovitev. Vsak prejme svoj sveženj. Vse deluje lokalno — nič ne zapusti vašega brskalnika.",
+  "page_description": "Dodajte datoteke, izberite komu zaupate in določite koliko se jih mora soglašati za obnovitev. Vsak prejme svoj sveženj. Vse deluje lokalno — nič ne zapusti vašega brskalnika.",
   "subtitle": "Vaše pomembne datoteke naj bodo vedno na dosegu — tudi če vi niste.",
   "step1_title": "Prijatelji",
   "friends_hint": "Vsaka oseba tukaj bo hranila en del vašega obnovitvenega ključa",
@@ -60,7 +60,7 @@
 
   "custom_language_label": "Spremeni jezik",
   "remove": "Odstrani",
-  "threshold_guidance": "Premislite, kdo bi bil dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo.",
+  "threshold_guidance": "Premislite, kdo bo v primeru obnovitve podatkov dosegljiv hkrati. Nižje število je bolj prizanesljivo, če kdo ni na voljo.",
   "nav_about": "O projektu",
   "nav_guide": "Vodič",
   "nav_recover": "Obnovitev"
