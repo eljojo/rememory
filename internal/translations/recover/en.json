@@ -85,5 +85,8 @@
   "action_reload": "Reload page",
   "action_use_cli": "Use CLI tool",
   "action_try_again": "Try again",
-  "action_try_different_shares": "Try different pieces"
+  "action_try_different_shares": "Try different pieces",
+  "nav_about": "About",
+  "nav_create": "Create Bundles",
+  "nav_guide": "Guide"
 }

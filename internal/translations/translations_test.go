@@ -73,6 +73,61 @@ func TestAllLanguagesHaveSameKeys(t *testing.T) {
 	}
 }
 
+func TestLangNamesMatchesLanguages(t *testing.T) {
+	if len(LangNames) != len(Languages) {
+		t.Fatalf("LangNames has %d entries but Languages has %d", len(LangNames), len(Languages))
+	}
+	for i, entry := range LangNames {
+		if entry[0] != Languages[i] {
+			t.Errorf("LangNames[%d] code %q != Languages[%d] %q", i, entry[0], i, Languages[i])
+		}
+		if entry[1] == "" {
+			t.Errorf("LangNames[%d] (%s) has empty display name", i, entry[0])
+		}
+	}
+}
+
+func TestLangSelectOptions(t *testing.T) {
+	opts := LangSelectOptions()
+
+	// Should contain an option for every language
+	for _, entry := range LangNames {
+		expected := `<option value="` + entry[0] + `">` + entry[1] + `</option>`
+		if !strings.Contains(opts, expected) {
+			t.Errorf("LangSelectOptions() missing %s", expected)
+		}
+	}
+
+	// Should start with English (no leading newline/whitespace)
+	if !strings.HasPrefix(opts, `<option value="en">`) {
+		t.Errorf("LangSelectOptions() should start with English option, got: %s", opts[:50])
+	}
+}
+
+func TestLangDetectJS(t *testing.T) {
+	js := LangDetectJS()
+
+	// Should be a JS array
+	if !strings.HasPrefix(js, "[") || !strings.HasSuffix(js, "]") {
+		t.Errorf("LangDetectJS() should be a JS array, got: %s", js)
+	}
+
+	// Should not contain English (it's the fallback)
+	if strings.Contains(js, "'en'") {
+		t.Error("LangDetectJS() should not contain 'en' (English is the fallback)")
+	}
+
+	// Should contain all non-English languages
+	for _, entry := range LangNames {
+		if entry[0] == "en" {
+			continue
+		}
+		if !strings.Contains(js, "'"+entry[0]+"'") {
+			t.Errorf("LangDetectJS() missing language %s", entry[0])
+		}
+	}
+}
+
 func TestGetTranslationsJSProducesValidJS(t *testing.T) {
 	for _, component := range []string{"recover", "maker"} {
 		t.Run(component, func(t *testing.T) {

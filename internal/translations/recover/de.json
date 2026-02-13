@@ -85,5 +85,8 @@
   "action_reload": "Seite neu laden",
   "action_use_cli": "CLI-Tool verwenden",
   "action_try_again": "Erneut versuchen",
-  "action_try_different_shares": "Andere Teile probieren"
+  "action_try_different_shares": "Andere Teile probieren",
+  "nav_about": "Über",
+  "nav_create": "Erstellen",
+  "nav_guide": "Anleitung"
 }

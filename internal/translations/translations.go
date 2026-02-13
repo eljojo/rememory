@@ -20,6 +20,49 @@ var readmeFS embed.FS
 // Languages lists all supported language codes.
 var Languages = []string{"en", "es", "de", "fr", "sl", "pt", "zh-TW"}
 
+// LangNames maps language codes to their native display names, in the same
+// order as Languages. This is the single source of truth for the language
+// picker UI — HTML templates use the generator functions below instead of
+// hardcoding option lists.
+var LangNames = [][2]string{
+	{"en", "English"},
+	{"es", "Español"},
+	{"de", "Deutsch"},
+	{"fr", "Français"},
+	{"sl", "Slovenščina"},
+	{"pt", "Português"},
+	{"zh-TW", "中文（台灣）"},
+}
+
+// LangSelectOptions returns HTML <option> elements for all languages,
+// suitable for injection into a <select> element.
+func LangSelectOptions() string {
+	var b strings.Builder
+	for i, entry := range LangNames {
+		if i > 0 {
+			b.WriteString("\n        ")
+		}
+		b.WriteString(`<option value="`)
+		b.WriteString(entry[0])
+		b.WriteString(`">`)
+		b.WriteString(entry[1])
+		b.WriteString(`</option>`)
+	}
+	return b.String()
+}
+
+// LangDetectJS returns a JavaScript array literal of non-English language codes
+// for use in navigator.languages detection, e.g. ['es','de','fr','sl','pt','zh-TW'].
+func LangDetectJS() string {
+	var codes []string
+	for _, entry := range LangNames {
+		if entry[0] != "en" {
+			codes = append(codes, "'"+entry[0]+"'")
+		}
+	}
+	return "[" + strings.Join(codes, ",") + "]"
+}
+
 // GetTranslationsJS builds the JavaScript translations object for injection into HTML templates.
 // component must be "recover", "maker", or "readme".
 // Returns a string like: { en: {...}, es: {...}, de: {...}, fr: {...}, sl: {...} }

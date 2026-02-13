@@ -85,5 +85,8 @@
   "action_reload": "重新載入網頁",
   "action_use_cli": "使用命令列工具",
   "action_try_again": "再試一次",
-  "action_try_different_shares": "嘗試不同的金鑰片段"
+  "action_try_different_shares": "嘗試不同的金鑰片段",
+  "nav_about": "關於",
+  "nav_create": "建立復原包",
+  "nav_guide": "指南"
 }

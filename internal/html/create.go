@@ -17,6 +17,10 @@ func GenerateMakerHTML(createWASMBytes []byte, version, githubURL string) string
 	// Embed translations
 	html = strings.Replace(html, "{{TRANSLATIONS}}", translations.GetTranslationsJS("maker"), 1)
 
+	// Embed language picker (generated from translations.LangNames)
+	html = strings.Replace(html, "{{LANG_OPTIONS}}", translations.LangSelectOptions(), 1)
+	html = strings.Replace(html, "{{LANG_DETECT}}", translations.LangDetectJS(), 1)
+
 	// Embed styles
 	html = strings.Replace(html, "{{STYLES}}", stylesCSS, 1)
 

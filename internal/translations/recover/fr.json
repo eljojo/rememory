@@ -85,5 +85,8 @@
   "action_reload": "Rafraîchir la page",
   "action_use_cli": "Utiliser l'outil CLI",
   "action_try_again": "Réessayer",
-  "action_try_different_shares": "Essayer d'autres parts"
+  "action_try_different_shares": "Essayer d'autres parts",
+  "nav_about": "À propos",
+  "nav_create": "Créer",
+  "nav_guide": "Guide"
 }

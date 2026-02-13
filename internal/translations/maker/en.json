@@ -60,5 +60,8 @@
 
   "custom_language_label": "Change language",
   "remove": "Remove",
-  "threshold_guidance": "Think about who might be reachable at the same time. A lower number is more forgiving if someone is unavailable."
+  "threshold_guidance": "Think about who might be reachable at the same time. A lower number is more forgiving if someone is unavailable.",
+  "nav_about": "About",
+  "nav_guide": "Guide",
+  "nav_recover": "Recover"
 }

@@ -30,23 +30,17 @@
     <nav class="site-nav">
       <a href="index.html" class="logo">🧠 ReMemory</a>
       <div class="nav-links" id="nav-links-standalone">
-        <a href="index.html">About</a>
-        <a href="maker.html">Create Bundles</a>
-        <a href="docs.html#recovering">Guide</a>
+        <a href="index.html" data-i18n="nav_about">About</a>
+        <a href="maker.html" data-i18n="nav_create">Create Bundles</a>
+        <a href="docs.html" data-i18n="nav_guide">Guide</a>
         <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
       </div>
       <div class="nav-links hidden" id="nav-links-bundle">
-        <a href="https://eljojo.github.io/rememory/docs#recovering" target="_blank">Guide</a>
+        <a href="https://eljojo.github.io/rememory/docs" target="_blank" data-i18n="nav_guide">Guide</a>
       </div>
-      <div class="lang-toggle">
-        <button data-lang="en" class="active">EN</button>
-        <button data-lang="es">ES</button>
-        <button data-lang="de">DE</button>
-        <button data-lang="fr">FR</button>
-        <button data-lang="sl">SL</button>
-        <button data-lang="pt">PT</button>
-        <button data-lang="zh-TW">ZH-TW</button>
-      </div>
+      <select class="lang-select" id="lang-select">
+        {{LANG_OPTIONS}}
+      </select>
     </nav>
 
     <div class="page-intro">
@@ -161,10 +155,9 @@
       currentLang = lang;
       localStorage.setItem('rememory-lang', lang);
 
-      // Update toggle buttons
-      document.querySelectorAll('.lang-toggle button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
-      });
+      // Update select
+      const sel = document.getElementById('lang-select');
+      if (sel) sel.value = lang;
 
       // Update all translatable elements
       document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -185,11 +178,11 @@
     // Set initial language immediately (before app.js runs)
     (function() {
       const saved = localStorage.getItem('rememory-lang');
-      const detected = navigator.languages.find((language) => ['es', 'de', 'fr', 'sl', 'pt', 'zh-TW'].includes(language));
+      const detected = navigator.languages.find((language) => {{LANG_DETECT}}.includes(language));
       currentLang = saved || detected || 'en';
     })();
 
-    // Initialize language toggle buttons after DOM is ready
+    // Initialize language select after DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
       // If personalized with a language preference and no saved preference, use it
       if (window.PERSONALIZATION && window.PERSONALIZATION.language && !localStorage.getItem('rememory-lang')) {
@@ -204,15 +197,11 @@
 
       setLanguage(currentLang);
 
-      // Add click handlers
-      document.querySelectorAll('.lang-toggle button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          setLanguage(btn.dataset.lang);
-          // Re-render dynamic content when language changes
-          if (typeof window.rememoryUpdateUI === 'function') {
-            window.rememoryUpdateUI();
-          }
-        });
+      document.getElementById('lang-select')?.addEventListener('change', (e) => {
+        setLanguage(e.target.value);
+        if (typeof window.rememoryUpdateUI === 'function') {
+          window.rememoryUpdateUI();
+        }
       });
     });
   </script>

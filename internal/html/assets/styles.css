@@ -527,28 +527,20 @@ footer a:hover {
   text-decoration: underline;
 }
 
-/* Language toggle - shared across pages */
-.lang-toggle {
+/* Language select - shared across pages */
+.lang-select {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  display: flex;
-  gap: 0.5rem;
-}
-.lang-toggle button {
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.4rem;
   border: 1px solid var(--border);
   background: var(--paper-light);
   border-radius: 4px;
-  cursor: pointer;
   font-size: 0.875rem;
+  color: var(--text);
+  cursor: pointer;
 }
-.lang-toggle button.active {
-  background: var(--sage);
-  color: var(--paper-light);
-  border-color: var(--sage);
-}
-.lang-toggle button:hover:not(.active) {
+.lang-select:hover {
   background: var(--sand);
 }
 
@@ -1023,7 +1015,6 @@ footer a:hover {
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -1046,7 +1037,7 @@ footer a:hover {
 .site-nav .nav-links a:hover {
   text-decoration: underline;
 }
-.site-nav .lang-toggle {
+.site-nav .lang-select {
   position: static;
   margin-left: auto;
 }
@@ -1132,7 +1123,7 @@ footer a:hover {
     flex-direction: column;
     text-align: center;
   }
-  .site-nav .lang-toggle {
+  .site-nav .lang-select {
     margin-left: 0;
   }
 }
