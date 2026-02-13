@@ -158,7 +158,7 @@ export function extractAnonymousBundles(bundlesDir: string, shareNums: number[])
 }
 
 // Known README filenames across all supported languages
-const README_FILENAMES = ['README', 'LEEME', 'LIESMICH', 'LISEZMOI', 'PREBERI', 'LEIA-ME'];
+const README_FILENAMES = ['README', 'LEEME', 'LIESMICH', 'LISEZMOI', 'PREBERIME', 'LEIA-ME'];
 
 // Find the README .txt file in an extracted bundle directory (any language)
 export function findReadmeFile(bundleDir: string, ext: string = '.txt'): string {
