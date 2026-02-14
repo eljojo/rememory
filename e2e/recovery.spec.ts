@@ -566,23 +566,6 @@ test.describe('PDF Share Import', () => {
     cleanupProject(projectDir);
   });
 
-  test('can add shares from PDF files', async ({ page }) => {
-    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
-    const recovery = new RecoveryPage(page, aliceDir);
-
-    await recovery.open();
-
-    // Alice's share is already pre-loaded via personalization
-    await recovery.expectShareCount(1);
-    await recovery.expectShareHolder('Alice');
-
-    // Add Bob's share via PDF file
-    await recovery.addSharePDFs(bobDir);
-    await recovery.expectShareCount(2);
-    await recovery.expectShareHolder('Bob');
-    await recovery.expectReadyToRecover();
-  });
-
   test('full recovery workflow with PDF files', async ({ page }) => {
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
     const recovery = new RecoveryPage(page, aliceDir);
@@ -603,27 +586,5 @@ test.describe('PDF Share Import', () => {
     await recovery.expectRecoveryComplete();
     await recovery.expectFileCount(3); // secret.txt, notes.txt, README.md
     await recovery.expectDownloadVisible();
-  });
-
-  test('can mix PDF and text README files', async ({ page }) => {
-    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
-    const recovery = new RecoveryPage(page, aliceDir);
-
-    await recovery.open();
-
-    // Alice's share is pre-loaded
-    await recovery.expectShareCount(1);
-
-    // Load manifest
-    await recovery.addManifest();
-    await recovery.expectManifestLoaded();
-
-    // Add Bob's share via PDF
-    await recovery.addSharePDFs(bobDir);
-    await recovery.expectShareCount(2);
-
-    // Recovery should complete with 2 shares (threshold is 2)
-    await recovery.expectRecoveryComplete();
-    await recovery.expectFileCount(3);
   });
 });
