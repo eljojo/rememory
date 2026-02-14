@@ -221,6 +221,20 @@ func resealProject(p *project.Project, shareFiles []string, recoveryURL string) 
 		return fmt.Errorf("writing standard manifest: %w", err)
 	}
 
+	// Update sealed metadata with new manifest checksum and timestamp, keeping shares/passphrase data
+	newChecksum, err := crypto.HashFile(standardManifestPath)
+	if err != nil {
+		return fmt.Errorf("hashing new manifest: %w", err)
+	}
+
+	if p.Sealed != nil {
+		p.Sealed.ManifestChecksum = newChecksum
+		p.Sealed.At = time.Now().UTC()
+	}
+
+	if err := p.Save(); err != nil {
+		return fmt.Errorf("saving project metadata: %w", err)
+	}
 	fmt.Printf("Generating bundles for %d friends...\n", len(p.Friends))
 
 	wasmBytes := html.GetRecoverWASMBytes()
