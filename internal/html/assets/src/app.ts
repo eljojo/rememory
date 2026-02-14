@@ -759,8 +759,12 @@ declare const t: TranslationFunction;
         } else if (file.name.endsWith('.pdf') || file.type === 'application/pdf') {
           // PDF files have the share appended as text at the end
           const arrayBuffer = await readFileAsArrayBuffer(file);
-          const content = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
-          await parseAndAddShare(content, file.name);
+          try {
+            const content = new TextDecoder('utf-8', { fatal: true }).decode(arrayBuffer);
+            await parseAndAddShare(content, file.name);
+          } catch (decodeError) {
+            errorHandlers.fileReadFailed(file.name);
+          }
         } else {
           const content = await readFileAsText(file);
           await parseAndAddShare(content, file.name);

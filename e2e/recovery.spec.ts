@@ -606,7 +606,7 @@ test.describe('PDF Share Import', () => {
   });
 
   test('can mix PDF and text README files', async ({ page }) => {
-    const [aliceDir, bobDir, carolDir] = extractBundles(bundlesDir, ['Alice', 'Bob', 'Carol']);
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
     const recovery = new RecoveryPage(page, aliceDir);
 
     await recovery.open();
