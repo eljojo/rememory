@@ -193,10 +193,11 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool) e
 	}
 
 	p.Sealed = &project.Sealed{
-		At:               time.Now().UTC(),
-		ManifestChecksum: manifestChecksum,
-		VerificationHash: core.HashString(passphrase),
-		Shares:           shareInfos,
+		At:                 time.Now().UTC(),
+		ManifestChecksum:   manifestChecksum,
+		VerificationHash:   core.HashString(passphrase),
+		PassphraseChecksum: crypto.ComputePassphraseChecksum(passphrase),
+		Shares:             shareInfos,
 	}
 
 	if err := p.Save(); err != nil {

@@ -25,6 +25,7 @@ type Config struct {
 	WASMBytes        []byte // Compiled recover.wasm binary
 	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
 	NoEmbedManifest  bool   // If true, do not embed MANIFEST.age in recover.html even when small enough
+	ResealMode       bool   // If true, this is a reseal operation (existing shares not regenerated)
 }
 
 // GenerateAll creates bundles for all friends in the project.

@@ -390,3 +390,50 @@ func containsAt(s, substr string, start int) bool {
 	}
 	return false
 }
+
+func TestSupportsReseal(t *testing.T) {
+	tests := []struct {
+		name            string
+		sealed          *Sealed
+		wantSupportsReseal bool
+	}{
+		{
+			name:            "not sealed",
+			sealed:          nil,
+			wantSupportsReseal: false,
+		},
+		{
+			name: "sealed without checksum",
+			sealed: &Sealed{
+				ManifestChecksum: "sha256:abc123",
+				VerificationHash: "sha256:def456",
+			},
+			wantSupportsReseal: false,
+		},
+		{
+			name: "sealed with checksum",
+			sealed: &Sealed{
+				ManifestChecksum:   "sha256:abc123",
+				VerificationHash:   "sha256:def456",
+				PassphraseChecksum: "sha256:ghi789",
+			},
+			wantSupportsReseal: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Project{
+				Name:      "test",
+				Threshold: 2,
+				Friends:   []Friend{{Name: "Alice"}, {Name: "Bob"}},
+				Sealed:    tt.sealed,
+			}
+			got := p.SupportsReseal()
+			if got != tt.wantSupportsReseal {
+				t.Errorf("SupportsReseal: got %v, want %v", got, tt.wantSupportsReseal)
+			}
+		})
+	}
+}
+

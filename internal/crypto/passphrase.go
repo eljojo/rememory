@@ -2,7 +2,9 @@ package crypto
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -37,3 +39,17 @@ func GenerateRawPassphrase(numBytes int) (raw []byte, passphrase string, err err
 	passphrase = base64.RawURLEncoding.EncodeToString(raw)
 	return raw, passphrase, nil
 }
+
+// ComputePassphraseChecksum creates a deterministic SHA-256 hash of the passphrase
+// for later verification. This is stored in project.yml to verify recovered passphrases.
+func ComputePassphraseChecksum(passphrase string) string {
+	hash := sha256.Sum256([]byte(passphrase))
+	return "sha256:" + hex.EncodeToString(hash[:])
+}
+
+// VerifyPassphrase confirms a recovered passphrase matches the stored checksum.
+func VerifyPassphrase(passphrase string, storedChecksum string) bool {
+	computed := ComputePassphraseChecksum(passphrase)
+	return computed == storedChecksum
+}
+

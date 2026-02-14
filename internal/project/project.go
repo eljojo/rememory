@@ -32,10 +32,12 @@ type ShareInfo struct {
 
 // SealedInfo stores information about the sealed manifest.
 type Sealed struct {
-	At               time.Time   `yaml:"at"`
-	ManifestChecksum string      `yaml:"manifest_checksum"`
-	VerificationHash string      `yaml:"verification_hash"`
-	Shares           []ShareInfo `yaml:"shares"`
+	At                   time.Time   `yaml:"at"`
+	ManifestChecksum     string      `yaml:"manifest_checksum"`
+	VerificationHash     string      `yaml:"verification_hash"`
+	PassphraseChecksum   string      `yaml:"passphrase_checksum,omitempty"` // Hash for verifying recovered passphrase
+	PassphraseRecoveryHint string    `yaml:"passphrase_recovery_hint,omitempty"` // Optional hint for user
+	Shares               []ShareInfo `yaml:"shares"`
 }
 
 // Project represents a rememory project configuration.
@@ -126,6 +128,11 @@ func (p *Project) SharesPath() string {
 // ManifestAgePath returns the path to the encrypted manifest.
 func (p *Project) ManifestAgePath() string {
 	return filepath.Join(p.Path, OutputDir, "MANIFEST.age")
+}
+
+// SupportsReseal returns true if this project was sealed with PassphraseChecksum (supports key reuse).
+func (p *Project) SupportsReseal() bool {
+	return p.Sealed != nil && p.Sealed.PassphraseChecksum != ""
 }
 
 // FindProjectDir searches up the directory tree for a project.yml file.

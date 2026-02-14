@@ -1194,3 +1194,175 @@ func TestManifestEmbedding(t *testing.T) {
 		}
 	})
 }
+
+// TestSealAndReseal tests the reseal workflow: initial seal followed by data update and reseal
+func TestSealAndReseal(t *testing.T) {
+	baseDir := t.TempDir()
+	projectDir := filepath.Join(baseDir, "test-reseal")
+
+	// Step 1: Create and seal initial project
+	friends := []project.Friend{
+		{Name: "Alice", Contact: "alice@example.com"},
+		{Name: "Bob", Contact: "bob@example.com"},
+		{Name: "Carol", Contact: "carol@example.com"},
+	}
+	threshold := 2
+
+	p, err := project.New(projectDir, "test-reseal", threshold, friends)
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+
+	// Add initial secret
+	initialSecret := "Initial secret v1"
+	secretFile := filepath.Join(p.ManifestPath(), "secrets.txt")
+	if err := os.WriteFile(secretFile, []byte(initialSecret), 0644); err != nil {
+		t.Fatalf("writing initial secret: %v", err)
+	}
+
+	// Seal initial version
+	var archiveBuf bytes.Buffer
+	if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+		t.Fatalf("archiving v1: %v", err)
+	}
+
+	raw, passphrase, err := crypto.GenerateRawPassphrase(crypto.DefaultPassphraseBytes)
+	if err != nil {
+		t.Fatalf("generating passphrase: %v", err)
+	}
+
+	var encryptedBuf bytes.Buffer
+	if err := core.Encrypt(&encryptedBuf, bytes.NewReader(archiveBuf.Bytes()), passphrase); err != nil {
+		t.Fatalf("encrypting v1: %v", err)
+	}
+
+	// Save first MANIFEST.age
+	manifestPath := p.ManifestAgePath()
+	if err := os.MkdirAll(filepath.Dir(manifestPath), 0755); err != nil {
+		t.Fatalf("creating output dir: %v", err)
+	}
+	if err := os.WriteFile(manifestPath, encryptedBuf.Bytes(), 0644); err != nil {
+		t.Fatalf("writing manifest v1: %v", err)
+	}
+
+	// Create and save shares
+	sharesDir := p.SharesPath()
+	if err := os.MkdirAll(sharesDir, 0755); err != nil {
+		t.Fatalf("creating shares dir: %v", err)
+	}
+
+	shares, err := core.Split(raw, len(friends), threshold)
+	if err != nil {
+		t.Fatalf("splitting: %v", err)
+	}
+
+	shareFiles := make([]string, len(shares))
+	shareInfos := make([]project.ShareInfo, len(shares))
+	for i, shareData := range shares {
+		share := core.NewShare(2, i+1, len(friends), threshold, friends[i].Name, shareData)
+		filename := share.Filename()
+		sharePath := filepath.Join(sharesDir, filename)
+		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0600); err != nil {
+			t.Fatalf("writing share: %v", err)
+		}
+		shareFiles[i] = sharePath
+		shareInfos[i] = project.ShareInfo{
+			Friend:   friends[i].Name,
+			File:     filename,
+			Checksum: core.HashBytes([]byte(share.Encode())),
+		}
+	}
+
+	// Create sealed project metadata
+	p.Sealed = &project.Sealed{
+		At:                 time.Now().UTC(),
+		ManifestChecksum:   core.HashBytes(encryptedBuf.Bytes()),
+		VerificationHash:   core.HashString(passphrase),
+		PassphraseChecksum: crypto.ComputePassphraseChecksum(passphrase),
+		Shares:             shareInfos,
+	}
+	if err := p.Save(); err != nil {
+		t.Fatalf("saving project: %v", err)
+	}
+
+	// Verify project supports reseal
+	if !p.SupportsReseal() {
+		t.Fatal("project should support reseal after seal with PassphraseChecksum")
+	}
+
+	// Step 2: Update manifest and reseal
+	updatedSecret := "Updated secret v2 with new data"
+	if err := os.WriteFile(secretFile, []byte(updatedSecret), 0644); err != nil {
+		t.Fatalf("writing updated secret: %v", err)
+	}
+
+	// Archive updated manifest
+	var archiveBuf2 bytes.Buffer
+	if _, err := manifest.Archive(&archiveBuf2, p.ManifestPath()); err != nil {
+		t.Fatalf("archiving v2: %v", err)
+	}
+
+	// Encrypt with recovered passphrase
+	// First, recover passphrase from shares
+	shareData := make([][]byte, threshold)
+	for i := 0; i < threshold; i++ {
+		content, err := os.ReadFile(shareFiles[i])
+		if err != nil {
+			t.Fatalf("reading share %d: %v", i, err)
+		}
+		parsedShare, err := core.ParseShare(content)
+		if err != nil {
+			t.Fatalf("parsing share %d: %v", i, err)
+		}
+		shareData[i] = parsedShare.Data
+	}
+
+	recovered, err := core.Combine(shareData)
+	if err != nil {
+		t.Fatalf("combining shares: %v", err)
+	}
+	recoveredPassphrase := core.RecoverPassphrase(recovered, 2)
+
+	// Verify passphrase matches
+	if !crypto.VerifyPassphrase(recoveredPassphrase, p.Sealed.PassphraseChecksum) {
+		t.Fatal("recovered passphrase doesn't match checksum")
+	}
+
+	// Encrypt with recovered passphrase
+	var encryptedBuf2 bytes.Buffer
+	if err := core.Encrypt(&encryptedBuf2, bytes.NewReader(archiveBuf2.Bytes()), recoveredPassphrase); err != nil {
+		t.Fatalf("encrypting v2: %v", err)
+	}
+
+	// Save updated MANIFEST.age
+	if err := os.WriteFile(manifestPath, encryptedBuf2.Bytes(), 0644); err != nil {
+		t.Fatalf("writing manifest v2: %v", err)
+	}
+
+	// Verify we can recover with the new manifest
+	var recoverBuf bytes.Buffer
+	if err := core.Decrypt(&recoverBuf, bytes.NewReader(encryptedBuf2.Bytes()), recoveredPassphrase); err != nil {
+		t.Fatalf("decrypting v2 manifest: %v", err)
+	}
+
+	// Verify manifests are different (different content was encrypted)
+	if bytes.Equal(encryptedBuf.Bytes(), encryptedBuf2.Bytes()) {
+		t.Fatal("encrypted manifests should be different after reseal")
+	}
+
+	// Verify old manifest still decrypts correctly (backward compatibility)
+	var recoverBuf1 bytes.Buffer
+	if err := core.Decrypt(&recoverBuf1, bytes.NewReader(encryptedBuf.Bytes()), passphrase); err != nil {
+		t.Fatalf("decrypting v1 manifest: %v", err)
+	}
+
+	// Verify new manifest decrypts with same passphrase
+	var recoverBuf2 bytes.Buffer
+	if err := core.Decrypt(&recoverBuf2, bytes.NewReader(encryptedBuf2.Bytes()), passphrase); err != nil {
+		t.Fatalf("decrypting v2 manifest with original passphrase: %v", err)
+	}
+
+	t.Log("✓ Reseal test passed: both old and new manifests decrypt correctly with the same passphrase")
+}
+
+

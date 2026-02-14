@@ -83,3 +83,58 @@ func TestHashFileNotFound(t *testing.T) {
 		t.Error("expected error for nonexistent file")
 	}
 }
+
+func TestComputePassphraseChecksum(t *testing.T) {
+	tests := []struct {
+		name       string
+		passphrase string
+	}{
+		{"simple", "test-passphrase"},
+		{"empty", ""},
+		{"long", "this-is-a-very-long-passphrase-with-many-characters-and-symbols-!@#$%^&*()"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			checksum := ComputePassphraseChecksum(tt.passphrase)
+			// Should start with sha256: prefix
+			if !strings.HasPrefix(checksum, "sha256:") {
+				t.Errorf("checksum should have sha256: prefix, got %s", checksum)
+			}
+			// Should be deterministic
+			checksum2 := ComputePassphraseChecksum(tt.passphrase)
+			if checksum != checksum2 {
+				t.Errorf("checksum should be deterministic, got %s != %s", checksum, checksum2)
+			}
+		})
+	}
+}
+
+func TestComputePassphraseChecksum_Different(t *testing.T) {
+	checksum1 := ComputePassphraseChecksum("passphrase1")
+	checksum2 := ComputePassphraseChecksum("passphrase2")
+	if checksum1 == checksum2 {
+		t.Error("different passphrases should have different checksums")
+	}
+}
+
+func TestVerifyPassphrase(t *testing.T) {
+	passphrase := "my-secret-passphrase"
+	checksum := ComputePassphraseChecksum(passphrase)
+
+	// Should verify correct passphrase
+	if !VerifyPassphrase(passphrase, checksum) {
+		t.Error("should verify correct passphrase")
+	}
+
+	// Should reject incorrect passphrase
+	if VerifyPassphrase("wrong-passphrase", checksum) {
+		t.Error("should reject incorrect passphrase")
+	}
+
+	// Should reject empty passphrase
+	if VerifyPassphrase("", checksum) {
+		t.Error("should reject empty passphrase against non-empty checksum")
+	}
+}
+
