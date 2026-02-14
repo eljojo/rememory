@@ -756,11 +756,6 @@ declare const t: TranslationFunction;
       try {
         if (file.name.endsWith('.zip') || file.type === 'application/zip') {
           await handleBundleZip(file);
-        } else if (file.name.endsWith('.pdf') || file.type === 'application/pdf') {
-          // PDF files have the share appended as text at the end
-          const arrayBuffer = await readFileAsArrayBuffer(file);
-          const content = new TextDecoder('utf-8', { fatal: false }).decode(arrayBuffer);
-          await parseAndAddShare(content, file.name);
         } else {
           const content = await readFileAsText(file);
           await parseAndAddShare(content, file.name);
