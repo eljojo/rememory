@@ -19,6 +19,7 @@ This guide walks you through using ReMemory to create encrypted recovery bundles
 - [Best Practices](#best-practices)
 - [Project Structure](#project-structure)
 - [Commands Reference](#commands-reference)
+- [Updating Secrets](#updating-secrets)
 - [Revoking Access](#revoking-access)
 - [Advanced: Anonymous Mode](#advanced-anonymous-mode)
 - [Advanced: Multilingual Bundles](#advanced-multilingual-bundles)
@@ -472,6 +473,7 @@ my-recovery-2026/
 | `rememory init <name>` | Create a new project |
 | `rememory demo [dir]` | Create a demo project with sample data (great for testing!) |
 | `rememory seal` | Encrypt manifest, create shares, and generate bundles |
+| `rememory reseal` | Update manifest and re-encrypt with existing shares |
 | `rememory bundle` | Regenerate bundles (if lost or need updating) |
 | `rememory status` | Show project status and summary |
 | `rememory verify` | Verify integrity of sealed files |
@@ -484,6 +486,71 @@ For detailed help on any command:
 ```bash
 rememory <command> --help
 ```
+
+## Updating Secrets
+
+If you need to update your secrets later (a password changed, recovery codes updated), you can re-encrypt the new data using your existing shares. Friends keep the same bundle—no redistribution needed.
+
+### When to Use Reseal
+
+Reseal is useful when:
+- You want to update a password or secret and re-encrypt it
+- You're maintaining an encrypted backup that changes over time
+- You need multiple versions of encrypted data that friends can decrypt with the same shares
+
+### How to Reseal
+
+1. **Update your manifest**
+
+```bash
+cd my-recovery-2026
+# Edit files in manifest/
+echo "new-password-456" > manifest/passwords.txt
+```
+
+2. **Recover the original passphrase from friends**
+
+You'll need at least the threshold number of shares (e.g., 2 out of 3). Ask friends for their `README.txt` or `SHARE-*.txt` file.
+
+3. **Reseal with the recovered shares**
+
+```bash
+rememory reseal SHARE-alice.txt SHARE-bob.txt
+```
+
+This:
+- Combines the shares to recover your original passphrase
+- Verifies the passphrase against a stored checksum (prevents mistakes)
+- Encrypts the updated manifest
+- Regenerates bundles with the new encrypted data
+- Keeps all shares identical (no changes needed from friends)
+
+```
+Combining 2 shares...
+Verifying passphrase... OK
+Encrypting with age...
+Saving MANIFEST-20260214.age...
+Generating bundles for 3 friends...
+
+Resealed:
+  ✓ output/MANIFEST-20260214.age
+  ✓ output/MANIFEST.age
+
+Bundles updated:
+  ✓ bundle-alice.zip (5.4 MB)
+  ✓ bundle-bob.zip (5.4 MB)
+  ✓ bundle-carol.zip (5.4 MB)
+```
+
+4. **Share updated bundles**
+
+Send the new bundles to friends who want the latest version. Old bundles still work—friends don't have to update. Only the manifest changed; their shares remain the same.
+
+### Limitations
+
+- You cannot change friends or the threshold—that requires a new project
+- Each reseal requires at least threshold shares
+- Old bundles still work but will recover the old version
 
 ## Advanced: Anonymous Mode
 
