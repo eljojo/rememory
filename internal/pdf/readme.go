@@ -386,6 +386,10 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 		return nil, fmt.Errorf("writing PDF: %w", err)
 	}
 
+	// Append the machine-readable share to the end of the PDF
+	// This allows the PDF to be dragged into the recovery UI as a share
+	buf.WriteString(shareText)
+
 	return buf.Bytes(), nil
 }
 

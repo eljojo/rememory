@@ -181,3 +181,48 @@ func TestQRCodeContentMatchesCompact(t *testing.T) {
 		t.Error("parsed share data mismatch")
 	}
 }
+
+func TestPDFContainsAppendedShare(t *testing.T) {
+	data := testReadmeData()
+	pdfBytes, err := GenerateReadme(data)
+	if err != nil {
+		t.Fatalf("GenerateReadme: %v", err)
+	}
+
+	// Verify it's a valid PDF
+	if !bytes.HasPrefix(pdfBytes, []byte("%PDF-")) {
+		t.Error("output does not start with PDF header")
+	}
+
+	// Verify the share is appended after the PDF content
+	// PDF files end with %%EOF, so the share should come after that
+	if !bytes.Contains(pdfBytes, []byte("%%EOF")) {
+		t.Error("PDF doesn't contain EOF marker")
+	}
+
+	// The share should be appended after the PDF
+	shareMarker := "-----BEGIN REMEMORY SHARE-----"
+	if !bytes.Contains(pdfBytes, []byte(shareMarker)) {
+		t.Error("PDF doesn't contain appended share")
+	}
+
+	// Try parsing the share from the PDF content
+	parsed, err := core.ParseShare(pdfBytes)
+	if err != nil {
+		t.Fatalf("ParseShare from PDF: %v", err)
+	}
+
+	// Verify the parsed share matches the original
+	if parsed.Index != data.Share.Index {
+		t.Errorf("parsed share index mismatch: got %d, want %d", parsed.Index, data.Share.Index)
+	}
+	if parsed.Total != data.Share.Total {
+		t.Errorf("parsed share total mismatch: got %d, want %d", parsed.Total, data.Share.Total)
+	}
+	if parsed.Threshold != data.Share.Threshold {
+		t.Errorf("parsed share threshold mismatch: got %d, want %d", parsed.Threshold, data.Share.Threshold)
+	}
+	if !bytes.Equal(parsed.Data, data.Share.Data) {
+		t.Error("parsed share data mismatch")
+	}
+}
