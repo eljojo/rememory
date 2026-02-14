@@ -39,10 +39,6 @@ Run this command inside a project directory (created with 'rememory init').`,
 	RunE: runReseal,
 }
 
-var (
-	resealRecoveryURL string
-)
-
 func init() {
 	resealCmd.Flags().String("recovery-url", core.DefaultRecoveryURL, "Base URL for QR code in PDF")
 	rootCmd.AddCommand(resealCmd)
