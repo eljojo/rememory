@@ -228,6 +228,12 @@ export class RecoveryPage {
     await this.page.locator('#share-file-input').setInputFiles(readmePaths);
   }
 
+  // Add shares from PDF files
+  async addSharePDFs(...bundleDirs: string[]): Promise<void> {
+    const pdfPaths = bundleDirs.map(dir => findReadmeFile(dir, '.pdf'));
+    await this.page.locator('#share-file-input').setInputFiles(pdfPaths);
+  }
+
   // Add manifest file — tries MANIFEST.age first, falls back to recover.html
   async addManifest(bundleDir?: string): Promise<void> {
     const dir = bundleDir || this.bundleDir;
