@@ -574,15 +574,21 @@ test.describe('PDF Share Import', () => {
 
     // Alice's share is pre-loaded via personalization
     await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
 
     // Load manifest
     await recovery.addManifest();
     await recovery.expectManifestLoaded();
 
-    // Add Bob's share via PDF file (triggers auto-recovery)
+    // Add Bob's share via PDF file
     await recovery.addSharePDFs(bobDir);
+    
+    // Verify Bob's share was added
+    await recovery.expectShareCount(2);
+    await recovery.expectShareHolder('Bob');
+    await recovery.expectReadyToRecover();
 
-    // Recovery should complete automatically
+    // Recovery should complete automatically (triggered by reaching threshold)
     await recovery.expectRecoveryComplete();
     await recovery.expectFileCount(3); // secret.txt, notes.txt, README.md
     await recovery.expectDownloadVisible();
