@@ -231,6 +231,7 @@ ReMemory isn't the first tool to use Shamir's Secret Sharing. Its focus is makin
 | **[ssss](http://point-at-infinity.org/ssss/)** | CLI | Text (128 char max) | Shamir's SSS | Text shares | No — requires CLI | Yes | No |
 | **[cedws/amnesia](https://github.com/cedws/amnesia)** | CLI | Text/data streams | Shamir's SSS + argon2id | JSON file (Q&A-based, single user) | No — requires CLI | Yes | No |
 | **[henrysdev/Haystack](https://github.com/henrysdev/Haystack)** | CLI | Files | Shamir's SSS | Encrypted file fragments | No — requires CLI | Yes | No |
+| **[antonio-ivanovski/shared-secret-encrypt](https://github.com/antonio-ivanovski/shared-secret-encrypt)** ([site](https://shared-secret-encrypt.tote.mk/)) | Web app | Text only | Shamir's SSS + AES-GCM | Base58-encoded shares + encrypted message | Partial — web UI for decrypt | Yes (client-side, can save HTML) | No |
 
 #### Other approaches
 
