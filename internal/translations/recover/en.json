@@ -11,7 +11,7 @@
   "step2_hint": "Use a recover.html from any friend's bundle, or the MANIFEST.age file",
   "step3_title": "Recover the files",
   "decrypt_btn": "Unlock & Recover",
-  "download_btn": "Download archive (.tar.gz)",
+  "download_btn": "Download archive (.zip)",
   "no_manifest": "No archive added yet",
   "works_offline": "Works fully offline",
   "need_help": "Need help?",

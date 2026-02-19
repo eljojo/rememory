@@ -11,7 +11,7 @@
   "step2_hint": "Puedes usar un recover.html del kit de cualquier amigo, o el archivo MANIFEST.age",
   "step3_title": "Recuperar los archivos",
   "decrypt_btn": "Desbloquear y recuperar",
-  "download_btn": "Descargar el archivo (.tar.gz)",
+  "download_btn": "Descargar el archivo (.zip)",
   "no_manifest": "Aún no se ha subido ningún archivo",
   "works_offline": "Funciona completamente sin internet",
   "need_help": "¿Necesitas ayuda?",

@@ -11,7 +11,7 @@
   "step2_hint": "Você pode usar um recover.html de qualquer pacote de amigo, ou o arquivo MANIFEST.age",
   "step3_title": "Recupere os arquivos",
   "decrypt_btn": "Desbloquear & Recuperar",
-  "download_btn": "Baixar o arquivo (.tar.gz)",
+  "download_btn": "Baixar o arquivo (.zip)",
   "no_manifest": "Nenhum arquivo adicionado ainda",
   "works_offline": "Isso funciona completamente offline",
   "need_help": "Precisa de ajuda?",

@@ -11,7 +11,7 @@
   "step2_hint": "Utilisez un recover.html de l'enveloppe d'un ami, ou le fichier MANIFEST.age",
   "step3_title": "Récupérer les fichiers",
   "decrypt_btn": "Déverrouiller et récupérer",
-  "download_btn": "Télécharger l'archive (.tar.gz)",
+  "download_btn": "Télécharger l'archive (.zip)",
   "no_manifest": "Aucune archive ajoutée pour le moment",
   "works_offline": "Fonctionne entièrement hors ligne",
   "need_help": "Besoin d'aide ?",

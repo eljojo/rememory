@@ -23,6 +23,7 @@ import {
   bytesToBase64,
   decrypt,
   extractTarGz,
+  createZip,
   extractBundle,
   extractPersonalizationFromHTML,
   decodeShareWords,
@@ -1117,10 +1118,9 @@ type UIShare = ParsedShare & { isHolder?: boolean };
 
       setProgress(60);
 
-      state.decryptedArchive = decrypted;
-
       setStatus(t('reading'));
       const files = await extractTarGz(decrypted);
+      state.extractedFiles = files;
 
       setProgress(90);
 
@@ -1189,13 +1189,14 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   // ============================================
 
   function downloadAll(): void {
-    if (!state.decryptedArchive) return;
+    if (!state.extractedFiles || state.extractedFiles.length === 0) return;
 
-    const blob = new Blob([state.decryptedArchive as BlobPart], { type: 'application/gzip' });
+    const zipData = createZip(state.extractedFiles);
+    const blob = new Blob([zipData], { type: 'application/zip' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'manifest.tar.gz';
+    a.download = 'manifest.zip';
     a.click();
     URL.revokeObjectURL(url);
 
@@ -1203,7 +1204,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   }
 
   function clearSensitiveState(): void {
-    state.decryptedArchive = undefined;
+    state.extractedFiles = undefined;
     state.manifest = null;
   }
 

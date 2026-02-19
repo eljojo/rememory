@@ -11,7 +11,7 @@
   "step2_hint": "使用任何一位朋友的復原包裡的 recover.html 或 MANIFEST.age",
   "step3_title": "復原檔案",
   "decrypt_btn": "解鎖及復原",
-  "download_btn": "下載封存檔（.tar.gz）",
+  "download_btn": "下載封存檔（.zip）",
   "no_manifest": "未加入封存檔",
   "works_offline": "可完全離線使用",
   "need_help": "需要幫助？",

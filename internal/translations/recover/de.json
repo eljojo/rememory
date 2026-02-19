@@ -11,7 +11,7 @@
   "step2_hint": "Verwende eine recover.html aus dem Paket eines Freundes oder die MANIFEST.age-Datei",
   "step3_title": "Dateien wiederherstellen",
   "decrypt_btn": "Entsperren & Wiederherstellen",
-  "download_btn": "Archiv herunterladen (.tar.gz)",
+  "download_btn": "Archiv herunterladen (.zip)",
   "no_manifest": "Noch kein Archiv geladen",
   "works_offline": "Funktioniert komplett offline",
   "need_help": "Brauchst du Hilfe?",

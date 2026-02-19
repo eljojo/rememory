@@ -85,7 +85,7 @@ export interface RecoveryState {
   total: number;
   recovering: boolean;
   recoveryComplete: boolean;
-  decryptedArchive?: Uint8Array;
+  extractedFiles?: Array<{ name: string; data: Uint8Array }>;
 }
 
 export interface CreationState {
