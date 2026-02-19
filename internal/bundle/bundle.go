@@ -82,6 +82,28 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			}
 		}
 
+		// Embed manifest in recover.html when small enough and not disabled
+		manifestEmbedded := !cfg.NoEmbedManifest && len(manifestData) <= html.MaxEmbeddedManifestSize
+
+		// Pre-generate README text to embed in recover.html as an in-page guide.
+		// RecoverChecksum is omitted here (not yet computed); users can't verify it from inside the file.
+		guideReadmeData := ReadmeData{
+			ProjectName:      p.Name,
+			Holder:           friend.Name,
+			Share:            share,
+			OtherFriends:     otherFriends,
+			Threshold:        p.Threshold,
+			Total:            len(p.Friends),
+			Version:          cfg.Version,
+			GitHubReleaseURL: cfg.GitHubReleaseURL,
+			ManifestChecksum: manifestChecksum,
+			Created:          p.Sealed.At,
+			Anonymous:        p.Anonymous,
+			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
+		}
+		guideText := GenerateReadme(guideReadmeData)
+
 		// Generate personalized recover.html for this friend
 		personalization := &html.PersonalizationData{
 			Holder:       friend.Name,
@@ -90,10 +112,10 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Threshold:    p.Threshold,
 			Total:        len(p.Friends),
 			Language:     lang,
+			ProjectName:  p.Name,
+			ReadmeText:   guideText,
 		}
 
-		// Embed manifest in recover.html when small enough and not disabled
-		manifestEmbedded := !cfg.NoEmbedManifest && len(manifestData) <= html.MaxEmbeddedManifestSize
 		if manifestEmbedded {
 			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
 		}

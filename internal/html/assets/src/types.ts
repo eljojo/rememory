@@ -69,6 +69,8 @@ export interface PersonalizationData {
   total: number;
   language?: string;
   manifestB64?: string; // Base64-encoded MANIFEST.age (when small enough to embed)
+  projectName?: string; // Project name for display in guide
+  readmeText?: string;  // Pre-generated README for the in-page guide
 }
 
 // ============================================

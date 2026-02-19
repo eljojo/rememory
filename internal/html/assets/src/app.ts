@@ -88,6 +88,11 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     qrScannerModal: HTMLElement | null;
     qrVideo: HTMLVideoElement | null;
     qrScannerClose: HTMLButtonElement | null;
+    guideBtn: HTMLButtonElement | null;
+    guideModal: HTMLElement | null;
+    guideContent: HTMLElement | null;
+    guideCloseBtn: HTMLButtonElement | null;
+    guideDownloadBtn: HTMLButtonElement | null;
   }
 
   // DOM elements
@@ -118,6 +123,11 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     qrScannerModal: document.getElementById('qr-scanner-modal'),
     qrVideo: document.getElementById('qr-video') as HTMLVideoElement | null,
     qrScannerClose: document.getElementById('qr-scanner-close') as HTMLButtonElement | null,
+    guideBtn: document.getElementById('guide-btn') as HTMLButtonElement | null,
+    guideModal: document.getElementById('guide-modal'),
+    guideContent: document.getElementById('guide-content'),
+    guideCloseBtn: document.getElementById('guide-close-btn') as HTMLButtonElement | null,
+    guideDownloadBtn: document.getElementById('guide-download-btn') as HTMLButtonElement | null,
   };
 
   // Personalization data (embedded in HTML)
@@ -256,6 +266,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     // Load personalization data
     if (personalization) {
       await loadPersonalizationData();
+      initGuide();
     }
 
     // Check URL fragment for compact share (e.g. #share=RM1:2:5:3:BASE64:CHECK)
@@ -1062,6 +1073,17 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   function setupButtons(): void {
     elements.recoverBtn?.addEventListener('click', startRecovery);
     elements.downloadAllBtn?.addEventListener('click', downloadAll);
+    elements.guideBtn?.addEventListener('click', showGuide);
+    elements.guideCloseBtn?.addEventListener('click', hideGuide);
+    elements.guideDownloadBtn?.addEventListener('click', downloadGuide);
+    elements.guideModal?.addEventListener('click', (e: MouseEvent) => {
+      if (e.target === elements.guideModal) hideGuide();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && elements.guideModal && !elements.guideModal.classList.contains('hidden')) {
+        hideGuide();
+      }
+    });
   }
 
   function checkRecoverReady(): void {
@@ -1182,6 +1204,41 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       elements.statusMessage.textContent = msg;
       elements.statusMessage.className = 'status-message' + (type ? ' ' + type : '');
     }
+  }
+
+  // ============================================
+  // Guide
+  // ============================================
+
+  function initGuide(): void {
+    if (!personalization?.readmeText) return;
+    elements.guideBtn?.classList.remove('hidden');
+    if (elements.guideContent) {
+      elements.guideContent.textContent = personalization.readmeText;
+    }
+  }
+
+  function showGuide(): void {
+    elements.guideModal?.classList.remove('hidden');
+    elements.guideCloseBtn?.focus();
+  }
+
+  function hideGuide(): void {
+    elements.guideModal?.classList.add('hidden');
+    elements.guideBtn?.focus();
+  }
+
+  function downloadGuide(): void {
+    if (!personalization?.readmeText) return;
+    const holder = personalization.holder || 'guide';
+    const filename = `README-${holder.replace(/[^a-z0-9]/gi, '_')}.txt`;
+    const blob = new Blob([personalization.readmeText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // ============================================

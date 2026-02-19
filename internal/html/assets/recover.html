@@ -12,6 +12,20 @@
   <!-- Toast notifications container -->
   <div id="toast-container" class="toast-container" role="alert" aria-live="polite"></div>
 
+  <!-- Guide modal (shown when personalized recover.html has embedded guide) -->
+  <div id="guide-modal" class="guide-modal hidden" role="dialog" aria-modal="true" aria-labelledby="guide-modal-title">
+    <div class="guide-modal-content">
+      <div class="guide-modal-header">
+        <h2 id="guide-modal-title" data-i18n="guide_title">Your recovery guide</h2>
+        <div class="guide-modal-actions">
+          <button id="guide-download-btn" class="btn btn-secondary btn-sm" type="button" data-i18n="guide_download">Save as .txt</button>
+          <button id="guide-close-btn" class="btn btn-secondary btn-sm" type="button" data-i18n="guide_close">Close</button>
+        </div>
+      </div>
+      <pre id="guide-content" class="guide-content"></pre>
+    </div>
+  </div>
+
   <!-- QR Scanner modal -->
   <div id="qr-scanner-modal" class="qr-scanner-modal hidden" role="dialog" aria-modal="true" aria-label="QR code scanner">
     <div class="qr-scanner-header">
@@ -38,6 +52,7 @@
       </div>
       <div class="nav-links hidden" id="nav-links-bundle">
         <a href="{{GITHUB_PAGES}}/docs" target="_blank" data-i18n="nav_guide">Guide</a>
+        <button id="guide-btn" class="btn-link hidden" type="button" data-i18n="guide_btn">Your guide</button>
       </div>
       <select class="lang-select" id="lang-select" aria-label="Language">
         {{LANG_OPTIONS}}

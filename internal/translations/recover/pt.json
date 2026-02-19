@@ -85,5 +85,9 @@
   "action_try_different_shares": "Tentar partes diferentes",
   "nav_about": "Sobre",
   "nav_create": "Criar pacotes",
-  "nav_guide": "Guia"
+  "nav_guide": "Guia",
+  "guide_btn": "Seu guia",
+  "guide_title": "Seu guia de recuperação",
+  "guide_close": "Fechar",
+  "guide_download": "Salvar como .txt"
 }

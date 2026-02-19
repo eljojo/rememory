@@ -85,5 +85,9 @@
   "action_try_different_shares": "Try different pieces",
   "nav_about": "About",
   "nav_create": "Create Bundles",
-  "nav_guide": "Guide"
+  "nav_guide": "Guide",
+  "guide_btn": "Your guide",
+  "guide_title": "Your recovery guide",
+  "guide_close": "Close",
+  "guide_download": "Save as .txt"
 }

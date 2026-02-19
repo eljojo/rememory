@@ -85,5 +85,9 @@
   "action_try_different_shares": "Probar otras partes",
   "nav_about": "Acerca de",
   "nav_create": "Crear kits",
-  "nav_guide": "Manual"
+  "nav_guide": "Manual",
+  "guide_btn": "Tu guía",
+  "guide_title": "Tu guía de recuperación",
+  "guide_close": "Cerrar",
+  "guide_download": "Guardar como .txt"
 }

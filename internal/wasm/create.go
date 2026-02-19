@@ -253,6 +253,28 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			}
 		}
 
+		// Embed manifest in recover.html when small enough
+		manifestEmbedded := len(manifestData) <= html.MaxEmbeddedManifestSize
+
+		// Pre-generate README text to embed in recover.html as an in-page guide.
+		// RecoverChecksum is omitted here (not yet computed); users can't verify it from inside the file.
+		guideReadmeData := bundle.ReadmeData{
+			ProjectName:      config.ProjectName,
+			Holder:           friend.Name,
+			Share:            share,
+			OtherFriends:     otherFriends,
+			Threshold:        k,
+			Total:            n,
+			Version:          config.Version,
+			GitHubReleaseURL: config.GitHubURL,
+			ManifestChecksum: manifestChecksum,
+			Created:          now,
+			Anonymous:        config.Anonymous,
+			Language:         lang,
+			ManifestEmbedded: manifestEmbedded,
+		}
+		guideText := bundle.GenerateReadme(guideReadmeData)
+
 		// Generate personalized recover.html
 		personalization := &html.PersonalizationData{
 			Holder:       friend.Name,
@@ -261,10 +283,10 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Threshold:    k,
 			Total:        n,
 			Language:     lang,
+			ProjectName:  config.ProjectName,
+			ReadmeText:   guideText,
 		}
 
-		// Embed manifest in recover.html when small enough
-		manifestEmbedded := len(manifestData) <= html.MaxEmbeddedManifestSize
 		if manifestEmbedded {
 			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
 		}

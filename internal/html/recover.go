@@ -32,6 +32,8 @@ type PersonalizationData struct {
 	Total        int          `json:"total"`                 // Total shares (N)
 	Language     string       `json:"language,omitempty"`    // Default UI language for this friend
 	ManifestB64  string       `json:"manifestB64,omitempty"` // Base64-encoded MANIFEST.age (when <= MaxEmbeddedManifestSize)
+	ProjectName  string       `json:"projectName,omitempty"` // Project name for display in the guide
+	ReadmeText   string       `json:"readmeText,omitempty"`  // Pre-generated README text for the in-page guide
 }
 
 // GenerateRecoverHTML creates the complete recover.html with all assets embedded.

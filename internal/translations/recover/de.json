@@ -85,5 +85,9 @@
   "action_try_different_shares": "Andere Teile probieren",
   "nav_about": "Über",
   "nav_create": "Erstellen",
-  "nav_guide": "Anleitung"
+  "nav_guide": "Anleitung",
+  "guide_btn": "Deine Anleitung",
+  "guide_title": "Deine Wiederherstellungsanleitung",
+  "guide_close": "Schließen",
+  "guide_download": "Als .txt speichern"
 }

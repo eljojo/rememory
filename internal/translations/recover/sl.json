@@ -85,5 +85,9 @@
   "action_try_different_shares": "Poskusi druge dele",
   "nav_about": "O projektu",
   "nav_create": "Ustvari",
-  "nav_guide": "Vodič"
+  "nav_guide": "Vodič",
+  "guide_btn": "Tvoj vodič",
+  "guide_title": "Tvoj vodič za obnovitev",
+  "guide_close": "Zapri",
+  "guide_download": "Shrani kot .txt"
 }
