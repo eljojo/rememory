@@ -209,10 +209,10 @@ type UIShare = ParsedShare & { isHolder?: boolean };
             label: t('action_try_different_shares'),
             primary: true,
             onClick: () => {
-              const holderName = personalization?.holderName || '';
+              const holderName = personalization?.holder?.toLowerCase() || '';
               const holderShare = state.shares.find((share) => {
-                const uiShare = share as UIShare;
-                return uiShare.isHolder === true || (holderName && uiShare.name === holderName);
+                const shareHolder = share.holder?.toLowerCase();
+                return (share as UIShare).isHolder === true || (holderName !== '' && shareHolder === holderName);
               });
 
               state.shares = holderShare ? [holderShare] : [];
