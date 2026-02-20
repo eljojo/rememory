@@ -209,7 +209,13 @@ type UIShare = ParsedShare & { isHolder?: boolean };
             label: t('action_try_different_shares'),
             primary: true,
             onClick: () => {
-              state.shares = state.shares.filter(share => (share as UIShare).isHolder === true);
+              const holderName = personalization?.holderName || '';
+              const holderShare = state.shares.find((share) => {
+                const uiShare = share as UIShare;
+                return uiShare.isHolder === true || (holderName && uiShare.name === holderName);
+              });
+
+              state.shares = holderShare ? [holderShare] : [];
               state.recoveryComplete = false;
               updateSharesUI();
               elements.step1Card?.classList.remove('collapsed');
