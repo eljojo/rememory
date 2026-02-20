@@ -209,7 +209,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
             label: t('action_try_different_shares'),
             primary: true,
             onClick: () => {
-              state.shares = [];
+              state.shares = state.shares.filter(share => (share as UIShare).isHolder === true);
               state.recoveryComplete = false;
               updateSharesUI();
               elements.step1Card?.classList.remove('collapsed');

@@ -19,6 +19,8 @@ import {
 test.describe('Browser Recovery Tool', () => {
   let projectDir: string;
   let bundlesDir: string;
+  let mismatchProjectDir: string;
+  let mismatchBundlesDir: string;
 
   test.beforeAll(async () => {
     // Skip if rememory binary not available
@@ -30,6 +32,8 @@ test.describe('Browser Recovery Tool', () => {
 
     projectDir = createTestProject();
     bundlesDir = path.join(projectDir, 'output', 'bundles');
+    mismatchProjectDir = createTestProject({ noEmbedManifest: true });
+    mismatchBundlesDir = path.join(mismatchProjectDir, 'output', 'bundles');
   });
 
   test.afterAll(async () => {
@@ -261,6 +265,29 @@ test.describe('Browser Recovery Tool', () => {
     // Alice's share is already pre-loaded, try to add it again
     await recovery.addShares(bundleDir);
     await recovery.expectShareCount(1); // Still 1, duplicate ignored
+  });
+
+  test('retry after decryption failure keeps holder pre-loaded share', async ({ page }) => {
+    const aliceDir = extractBundle(bundlesDir, 'Alice');
+    const mismatchedBobDir = extractBundle(mismatchBundlesDir, 'Bob');
+    const recovery = new RecoveryPage(page, aliceDir);
+
+    await recovery.open();
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
+    await recovery.expectHolderShareLabel();
+
+    // Add a share from a different project to trigger decryption failure at threshold.
+    await recovery.addShares(mismatchedBobDir);
+
+    const retryBtn = page.locator('.toast .toast-action[data-action="retry"]');
+    await expect(retryBtn).toBeVisible();
+    await retryBtn.click();
+
+    // Holder's own pre-loaded share should remain after retry.
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
+    await recovery.expectHolderShareLabel();
   });
 });
 
