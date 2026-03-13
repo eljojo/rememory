@@ -1,0 +1,17 @@
+{
+  "loading": "Caricamento...",
+  "nav_about": "Informazioni",
+  "nav_create": "Crea Pacchetto",
+  "nav_guide": "Guida",
+  "nav_recover": "Recupera",
+  "error": "Errore: {0}",
+  "error_title": "Qualcosa è andato storto",
+  "error_not_ready_title": "Non ancora pronto",
+  "error_not_ready_guidance": "Aspetta un momento, e riprova.",
+  "action_try_again": "Riprova",
+  "remove": "Rimuovi",
+  "confirm": "Conferma",
+  "delete": "Elimina",
+  "deleting": "Eliminando...",
+  "delete_failed": "Eliminazione fallita."
+}
