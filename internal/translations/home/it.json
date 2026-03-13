@@ -1,0 +1,10 @@
+{
+  "title": "ReMemory",
+  "home_intro": "Files protetti da persone che ti fidi, conservati qui per quando servono.",
+  "home_about_link": "Informazioni su ReMemory",
+  "home_empty": "Non c'è ancora nessun pacchetto di recupero",
+  "home_create_bundle": "Crea un pacchetto",
+  "home_admin_password": "Password dell'amministratore",
+  "home_enter_password": "Inserisci la password dell'amministratore.",
+  "home_pieces_needed": "{0} su {1} pezzi necessari per il ristoro"
+}

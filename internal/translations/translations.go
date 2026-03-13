@@ -27,7 +27,7 @@ var homeFS embed.FS
 var commonFS embed.FS
 
 // Languages lists all supported language codes.
-var Languages = []string{"en", "es", "de", "fr", "nl", "sl", "pt", "zh-TW", "ca"}
+var Languages = []string{"en", "es", "de", "fr", "nl", "sl", "pt", "zh-TW", "ca", "it"}
 
 // LangNames maps language codes to their native display names, in the same
 // order as Languages. This is the single source of truth for the language
@@ -43,6 +43,7 @@ var LangNames = [][2]string{
 	{"pt", "Português"},
 	{"zh-TW", "中文（台灣）"},
 	{"ca", "Català"},
+	{"it", "Italiano"},
 }
 
 // LangSelectOptions returns HTML <option> elements for all languages,
