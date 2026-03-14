@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	filippo.io/age v1.3.1
 	github.com/drand/drand/v2 v2.0.2
-	github.com/drand/kyber v1.3.1
+	github.com/drand/kyber v1.3.2
 	github.com/drand/tlock v1.2.0
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/hashicorp/vault v1.21.4
@@ -23,7 +23,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/drand/go-clients v0.2.0 // indirect
-	github.com/drand/kyber-bls12381 v0.3.1 // indirect
+	github.com/drand/kyber-bls12381 v0.3.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
