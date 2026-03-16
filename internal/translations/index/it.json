@@ -13,7 +13,7 @@
   "bg_4": "ReMemory è uscito così: un modo che le persone di cui mi fido possono accedere alle cose che importano — <strong>senza mettere tutto il peso su uno di loro</strong>.",
   "bg_changelog": "ReMemory continua a crescere. Dai un'occhiata al <a href=\"{{GITHUB_REPO}}/blob/main/CHANGELOG.md\" target=\"_blank\">changelog</a> per vedere le novità.",
   "how_title": "Come funziona",
-  "how_subtitle": "Scegli te <strong>di chi fidarti</strong> e <strong>quanti devono essere d'accordo</strong>. I tuoi files sono crittografati, la chiave è divisa in pezzi, ed ogni persona ne tiene uno. Quando ce ne sono abbastanza insieme, i tuoi file sono sbloccati.",
+  "how_subtitle": "Scegli te <strong>di chi fidarti</strong> e <strong>quanti devono essere d'accordo</strong>. I tuoi files sono cifrati, la chiave è divisa in pezzi, ed ogni persona ne tiene uno. Quando ce ne sono abbastanza insieme, i tuoi file sono sbloccati.",
   "how_caption": "Qualsiasi tre su cinque può recuperare i file",
   "how_fallback": "<strong>I tuoi file</strong> → <strong>Crittografa</strong> → <strong>Divide la chiave in 5 pezzi</strong> → <strong>Distribuisci con gli amici</strong><br>↓<br><strong>3 amici qualsiasi</strong> → <strong>Combina i pezzi</strong> → <strong>Sblocca</strong> → <strong>File recuperati</strong>",
   "bundles_title": "Quello che ogni persona ottiene",
