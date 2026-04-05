@@ -39,6 +39,7 @@ func init() {
 	sealCmd.Flags().Bool("no-embed-manifest", false, "Do not embed MANIFEST.age in recover.html (it is embedded by default when 10 MB or less)")
 	sealCmd.Flags().String("timelock", "", "Time-lock duration or date (e.g., 5min, 30d, 6m, 1y, 2027-06-15T00:00:00Z)")
 	sealCmd.Flags().Bool("pages", false, "Generate a static pages directory (recover.html + MANIFEST.age) for hosting")
+	sealCmd.Flags().Bool("message", false, "Print distribution messages for each friend after bundling")
 	rootCmd.AddCommand(sealCmd)
 }
 
@@ -78,6 +79,14 @@ func runSeal(cmd *cobra.Command, args []string) error {
 	if pages {
 		if err := generatePages(p); err != nil {
 			return err
+		}
+	}
+
+	showMessage, _ := cmd.Flags().GetBool("message")
+	if showMessage {
+		fmt.Println()
+		if err := printMessages(p, false, ""); err != nil {
+			return fmt.Errorf("generating messages: %w", err)
 		}
 	}
 
