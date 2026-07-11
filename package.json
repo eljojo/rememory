@@ -20,7 +20,7 @@
   "devDependencies": {
     "@playwright/test": "^1.59.1",
     "@types/adm-zip": "^0.5.8",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.1.1",
     "adm-zip": "^0.5.18",
     "esbuild": "^0.28.1",
     "typescript": "^6.0.3"
