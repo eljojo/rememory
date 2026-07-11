@@ -23,6 +23,6 @@
     "@types/node": "^25.9.3",
     "adm-zip": "^0.5.18",
     "esbuild": "^0.28.1",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }
