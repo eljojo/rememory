@@ -7,7 +7,7 @@
   "step1_hint": "A friend's README, bundle, or recover.html",
   "step2_title": "Add the locked files",
   "step2_drop": "Drop recover.html or MANIFEST.age here, or click to choose it",
-  "step2_hint": "Any friend's recover.html works, or MANIFEST.age from a bundle",
+  "step2_hint": "MANIFEST.age from a friend's bundle — or, if their bundle has none, their recover.html",
   "step3_title": "Open the files",
   "decrypt_btn": "Unlock the files",
   "download_btn": "Download the files",
@@ -40,8 +40,8 @@
   "scan_title": "Scan a QR code",
   "scan_hint": "Point your camera at the QR code on a friend's printed copy",
   "scan_camera_error": "The camera couldn't be opened",
-  "error_invalid_words_title": "Some words weren't recognized",
-  "error_invalid_words_guidance": "Check the words for typos. Each one should match a word on the printed list.",
+  "error_invalid_words_title": "The recovery words couldn't be read",
+  "error_invalid_words_guidance": "Check that all 25 words match the printed list, in the same order, with none missing or repeated.",
   "error_not_ready_message": "The recovery tool is still loading.",
   "error_invalid_share_title": "This doesn't look like a piece",
   "error_invalid_share_message": "There's no piece in \"{0}\" that can be read.",
@@ -108,7 +108,7 @@
   "verification_threshold": "Opening the files takes {0} pieces.",
   "verification_manifest_ok": "The locked files are in this bundle too.",
   "verification_manifest_missing": "You'll also need the locked files: MANIFEST.age, from your bundle.",
-  "verification_keep_safe": "If you're checking that your bundle works, it does — there's nothing else to do.",
+  "verification_keep_safe": "If you're only checking your bundle, there's nothing else to do.",
   "verification_time_come": "If the time has come, the friends listed below hold the other pieces.",
   "verification_time_come_anon": "If the time has come, reach out to the others who hold a piece."
 }

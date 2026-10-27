@@ -7,7 +7,7 @@
   "step1_hint": "朋友的 README、復原包或 recover.html",
   "step2_title": "加入上鎖的檔案",
   "step2_drop": "拖放 recover.html 或 MANIFEST.age 到這裡，或點擊以選擇檔案",
-  "step2_hint": "任何一位朋友的 recover.html 都可以，或者用復原包裡的 MANIFEST.age",
+  "step2_hint": "朋友復原包裡的 MANIFEST.age——如果他們的復原包裡沒有，就用他們的 recover.html",
   "step3_title": "開啟檔案",
   "decrypt_btn": "解鎖檔案",
   "download_btn": "下載檔案",
@@ -40,8 +40,8 @@
   "scan_title": "掃描 QR 碼",
   "scan_hint": "將鏡頭對準朋友紙本上的 QR 碼",
   "scan_camera_error": "無法開啟攝影機",
-  "error_invalid_words_title": "有些字詞無法辨識",
-  "error_invalid_words_guidance": "請檢查是否有錯字。每個字詞都應該與列印清單上的字詞一致。",
+  "error_invalid_words_title": "無法讀取復原詞組",
+  "error_invalid_words_guidance": "請檢查 25 個詞是否都與列印清單一致、順序相同，沒有缺漏或重複。",
   "error_not_ready_message": "復原工具還在載入中。",
   "error_invalid_share_title": "這看起來不像金鑰片段",
   "error_invalid_share_message": "「{0}」中沒有可以讀取的金鑰片段。",
@@ -108,7 +108,7 @@
   "verification_threshold": "開啟檔案需要 {0} 個金鑰片段。",
   "verification_manifest_ok": "上鎖的檔案也在這個復原包裡。",
   "verification_manifest_missing": "你還需要上鎖的檔案：你復原包裡的 MANIFEST.age。",
-  "verification_keep_safe": "如果你是在確認復原包是否可用：它可以用，不需要再做別的事。",
+  "verification_keep_safe": "如果你只是在檢查復原包，不需要再做別的事。",
   "verification_time_come": "如果那一天已經到來，下面列出的朋友持有其餘的金鑰片段。",
   "verification_time_come_anon": "如果那一天已經到來，請聯絡其他持有金鑰片段的人。"
 }

@@ -1167,6 +1167,10 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
       const manifestLine = manifestPresent
         ? t('verification_manifest_ok')
         : t('verification_manifest_missing');
+      // "Nothing else to do" is only true when the locked files are here too.
+      const keepSafeLine = manifestPresent
+        ? `<p>${escapeHtml(t('verification_keep_safe'))}</p>`
+        : '';
       const hasContactList = (personalization?.otherFriends?.length ?? 0) > 0;
       const timeComeLine = hasContactList
         ? t('verification_time_come')
@@ -1182,7 +1186,7 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
           <p>${escapeHtml(manifestLine)}</p>
         </div>
         <div class="verification-note">
-          <p>${escapeHtml(t('verification_keep_safe'))}</p>
+          ${keepSafeLine}
           <p>${escapeHtml(timeComeLine)}</p>
         </div>
       `;

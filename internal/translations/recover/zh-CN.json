@@ -7,7 +7,7 @@
   "step1_hint": "朋友的 README、恢复包或 recover.html",
   "step2_title": "加入锁定的文件",
   "step2_drop": "拖放 recover.html 或 MANIFEST.age 到这里，或点击以选择文件",
-  "step2_hint": "任何一位朋友的 recover.html 都可以，或者用恢复包里的 MANIFEST.age",
+  "step2_hint": "朋友恢复包里的 MANIFEST.age——如果他们的恢复包里没有，就用他们的 recover.html",
   "step3_title": "打开文件",
   "decrypt_btn": "解锁文件",
   "download_btn": "下载文件",
@@ -40,8 +40,8 @@
   "scan_title": "扫描 QR 码",
   "scan_hint": "将摄像头对准朋友打印件上的 QR 码",
   "scan_camera_error": "无法打开摄像头",
-  "error_invalid_words_title": "有些字词无法识别",
-  "error_invalid_words_guidance": "请检查是否有错字。每个字词都应该与打印清单上的字词一致。",
+  "error_invalid_words_title": "无法读取恢复词组",
+  "error_invalid_words_guidance": "请检查 25 个词是否都与打印清单一致、顺序相同，没有缺漏或重复。",
   "error_not_ready_message": "恢复工具还在加载中。",
   "error_invalid_share_title": "这看起来不像密钥片段",
   "error_invalid_share_message": "「{0}」中没有可以读取的密钥片段。",
@@ -108,7 +108,7 @@
   "verification_threshold": "打开文件需要 {0} 个密钥片段。",
   "verification_manifest_ok": "锁定的文件也在这个恢复包里。",
   "verification_manifest_missing": "你还需要锁定的文件：你恢复包里的 MANIFEST.age。",
-  "verification_keep_safe": "如果你是在确认恢复包是否可用：它可以用，不需要再做别的事。",
+  "verification_keep_safe": "如果你只是在检查恢复包，不需要再做别的事。",
   "verification_time_come": "如果那一天已经到来，下面列出的朋友持有其余的密钥片段。",
   "verification_time_come_anon": "如果那一天已经到来，请联系其他持有密钥片段的人。"
 }

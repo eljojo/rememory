@@ -11,7 +11,7 @@
         <p data-i18n="step1_drop">Drop a piece here, or click to choose a file</p>
         <small data-i18n="step1_hint">A friend's README, bundle, or recover.html</small>
       </div>
-      <input type="file" id="share-file-input" accept=".txt,.zip" multiple>
+      <input type="file" id="share-file-input" accept=".txt,.pdf,.zip,.html,.htm" multiple>
 
       <div class="paste-section">
         <button id="paste-toggle-btn" class="btn btn-secondary" type="button">
@@ -45,7 +45,7 @@
       <h2><span class="step-number">2</span> <span data-i18n="step2_title">Add the locked files</span></h2>
       <div id="manifest-drop-zone" class="drop-zone" tabindex="0" aria-label="Encrypted archive drop zone">
         <p data-i18n="step2_drop">Drop recover.html or MANIFEST.age here, or click to choose it</p>
-        <small data-i18n="step2_hint">Any friend's recover.html works, or MANIFEST.age from a bundle</small>
+        <small data-i18n="step2_hint">MANIFEST.age from a friend's bundle — or, if their bundle has none, their recover.html</small>
       </div>
       <input type="file" id="manifest-file-input" accept=".age,.html,.htm,.zip">
 

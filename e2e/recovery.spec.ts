@@ -83,7 +83,50 @@ test.describe('Browser Recovery Tool', () => {
     await expect(panel).toContainText('Your piece is here');
     await expect(panel).toContainText('If the time has come');
     await expect(panel).toContainText('listed below');
+    await expect(panel).toContainText('nothing else to do');
     await expect(panel).not.toContainText('When the time comes');
+  });
+
+  // The holder's own README, added by hand to their own page, is still their
+  // piece. Someone else's is not.
+  test('own piece note follows whose README was added by hand', async ({ page }) => {
+    // Read from the ZIP: other workers may be extracting Alice's bundle right now.
+    const html = new AdmZip(path.join(bundlesDir, 'bundle-alice.zip')).readAsText('recover.html');
+    const patched = html.replace(/"holderShare":"(?:[^"\\]|\\.)*"/, '"holderShare":""');
+    expect(patched).not.toBe(html);
+    const patchedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-own-'));
+    fs.writeFileSync(path.join(patchedDir, 'recover.html'), patched);
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const panel = page.locator('#verification-status');
+
+    const recovery = new RecoveryPage(page, patchedDir);
+    await recovery.open();
+    await recovery.expectShareCount(0);
+    await recovery.addShares(bobDir);
+    await recovery.expectShareCount(1);
+    await expect(panel).toBeHidden();
+
+    await recovery.open();
+    await recovery.expectShareCount(0);
+    await recovery.addShares(aliceDir);
+    await recovery.expectShareCount(1);
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('Your piece is here');
+
+    fs.rmSync(patchedDir, { recursive: true, force: true });
+  });
+
+  // README.pdf and a friend's recover.html carry pieces too, so the file
+  // chooser must let a person pick them, not only drag them.
+  test('the piece file chooser offers every kind of file it accepts', async ({ page }) => {
+    const bundleDir = extractBundle(bundlesDir, 'Alice');
+    const recovery = new RecoveryPage(page, bundleDir);
+    await recovery.open();
+
+    const accept = (await page.locator('#share-file-input').getAttribute('accept')) ?? '';
+    for (const ext of ['.txt', '.pdf', '.zip', '.html']) {
+      expect(accept.split(',')).toContain(ext);
+    }
   });
 
   // A bundle can carry a language code this page has no table for (a
@@ -422,6 +465,43 @@ test.describe('Browser Recovery Tool', () => {
   });
 });
 
+test.describe('Three pieces needed', () => {
+  let projectDir: string;
+  let bundlesDir: string;
+
+  test.beforeAll(async () => {
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      test.skip();
+      return;
+    }
+
+    projectDir = createTestProject({ threshold: 3 });
+    bundlesDir = path.join(projectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    cleanupProject(projectDir);
+  });
+
+  // The note speaks about "your piece". Once someone is gathering more than
+  // one, it no longer describes what's on the page.
+  test('own piece note steps aside once a second piece is added', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+    const panel = page.locator('#verification-status');
+
+    await recovery.open();
+    await recovery.expectShareCount(1);
+    await expect(panel).toBeVisible();
+
+    await recovery.addShares(bobDir);
+    await recovery.expectShareCount(2);
+    await recovery.expectNeedMoreShares(1);
+    await expect(panel).toBeHidden();
+  });
+});
+
 test.describe('Anonymous Bundle Recovery', () => {
   let anonProjectDir: string;
   let anonBundlesDir: string;
@@ -741,6 +821,23 @@ test.describe('--no-embed-manifest flag', () => {
     // Share is pre-loaded but manifest is NOT
     await recovery.expectShareCount(1);
     await recovery.expectManifestDropZoneVisible();
+  });
+
+  // Until the locked files are here, checking the bundle isn't done.
+  test('own piece note waits for the locked files before saying there is nothing else to do', async ({ page }) => {
+    const bundleDir = extractBundle(noEmbedBundlesDir, 'Alice');
+    const recovery = new RecoveryPage(page, bundleDir);
+    const panel = page.locator('#verification-status');
+
+    await recovery.open();
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('also need the locked files');
+    await expect(panel).not.toContainText('nothing else to do');
+
+    await recovery.addManifest();
+    await recovery.expectManifestLoaded();
+    await expect(panel).toContainText('The locked files are in this bundle too');
+    await expect(panel).toContainText('nothing else to do');
   });
 
   test('recovery still works with manual manifest when --no-embed-manifest is used', async ({ page }) => {
