@@ -20,6 +20,8 @@ Unter der Haube verschlüsselt es deine Dateien mit [age](https://github.com/Fil
 
 Wiederherstellung heißt: eine Datei im Browser öffnen.\* Keine Server, die Website muss dafür nicht existieren.
 
+Wenn du für jemanden einen Teil aufbewahrst, fang bei [Dateien wiederherstellen](#recovering) an.
+
 <p style="font-size: 0.8125rem; color: #8A8480;">* Archive mit <a href="#timelock" style="color: #8A8480;">Zeitsperre</a> brauchen bei der Wiederherstellung eine kurze Internetverbindung.</p>
 
 <div class="tip">
@@ -59,16 +61,16 @@ Füge die Personen hinzu, die Teile deines Wiederherstellungsschlüssels aufbewa
 <figcaption>Jede Person hier bewahrt einen Teil des Schlüssels auf</figcaption>
 </figure>
 
-Dann wählst du deine **Schwelle** — wie viele Personen zusammenkommen müssen, um deine Dateien wiederherzustellen.
+Dann wählst du, wie viele von ihnen zusammenkommen müssen, um deine Dateien zu öffnen.
 
 <div class="tip">
-<strong>Schwelle wählen:</strong>
+<strong>Wie viele es sein sollten:</strong>
 <ul>
-<li><strong>3 Personen, Schwelle 2:</strong> Die einfachste Konfiguration</li>
-<li><strong>5 Personen, Schwelle 3:</strong> Eine gute Balance</li>
-<li><strong>7 Personen, Schwelle 4–5:</strong> Sicherer, mehr Koordination</li>
+<li><strong>2 von 3 Personen:</strong> Die einfachste Konfiguration</li>
+<li><strong>3 von 5 Personen:</strong> Eine gute Balance</li>
+<li><strong>4 oder 5 von 7 Personen:</strong> Sicherer, mehr Koordination</li>
 </ul>
-Hoch genug, dass Absprachen unwahrscheinlich sind. Niedrig genug, dass die Wiederherstellung klappt, wenn ein oder zwei Personen nicht erreichbar sind.
+Hoch genug, dass einige wenige die Dateien nicht ohne die anderen öffnen können. Niedrig genug, dass es noch klappt, wenn ein oder zwei nicht erreichbar sind.
 </div>
 
 ### Schritt 2: Dateien hinzufügen {#step2}
@@ -95,7 +97,7 @@ Ziehe die Dateien oder den Ordner, den du schützen willst, per Drag & Drop in d
 
 ### Schritt 3: Pakete erstellen {#step3}
 
-Klicke auf „Pakete erstellen", um deine Dateien zu verschlüsseln und für jede Person ein Paket zu erzeugen.
+Klicke auf „Umschläge erstellen", um deine Dateien zu verschließen und für jede Person ein Paket zu erzeugen.
 
 <figure class="screenshot">
 <img src="screenshots/de/bundles.png" alt="Pakete erstellen in Schritt 3">
@@ -119,9 +121,9 @@ Wenn du Pakete per E-Mail oder Messenger verschickst, lösche die Nachrichten au
 
 Sobald deine Pakete fertig sind, gibt es ein paar Dinge, die sich lohnen, bevor du das Thema beiseitelegst:
 
-- Überprüfe, dass jede Person ihr Paket bekommen hat und `recover.html` öffnen kann
+- Bitte jede Person, `recover.html` einmal zu öffnen. Wenn alles in Ordnung ist, steht dort „Dein Teil ist da".
 - Erkläre jeder Person, was das ist, warum sie es hat, und dass sie es sicher aufbewahren soll. Allein kann sie nichts damit anfangen — sie muss sich mit anderen abstimmen.
-- Bewahre eine Kopie von `MANIFEST.age` an einem sicheren Ort auf — es sind nur verschlüsselte Daten, ohne genügend Teile nutzlos
+- Sichere die verschlossenen Dateien mit „Die verschlossenen Dateien speichern (MANIFEST.age)" und bewahre diese Kopie an einem sicheren Ort auf. Sie enthält keinen Teil, also ist sie ohne genügend Teile für niemanden von Nutzen.
 - Sichere deine `project.yml`, um die Pakete später neu erstellen zu können
 - Drucke `README.pdf` als Papier-Backup aus, bevor du das digitale Paket verschickst. Papier braucht keine Adapter und keinen Strom.
 - Setze eine jährliche Erinnerung — siehe [Pakete aktuell halten](#keeping-current)
@@ -129,9 +131,9 @@ Sobald deine Pakete fertig sind, gibt es ein paar Dinge, die sich lohnen, bevor 
 
 ## Dateien wiederherstellen {#recovering}
 
-Wenn du hier bist, weil jemand, der dir wichtig ist, nicht mehr erreichbar ist — atme durch. Es gibt keinen Zeitdruck. Die Pakete laufen nicht ab, und der Ablauf ist dafür gemacht, ihn in deinem eigenen Tempo zu durchlaufen.
+Dieser Abschnitt ist für die Freunde, die einen Teil aufbewahren. Meistens tut ein Freund nichts weiter, als sein Paket sicher aufzubewahren. Eines Tages bittet ihn vielleicht jemand um seinen Teil, oder er ist derjenige, der die Teile zusammenbringt.
 
-Falls du noch kein Paket hast, kannst du das [Wiederherstellungstool](recover.html) direkt öffnen — du fügst die Teile nach und nach von Hand hinzu.
+Wenn du hier bist, weil jemand, der dir wichtig ist, nicht mehr erreichbar ist: Es eilt nicht. Nichts hier läuft ab. Nimm dir so viel Zeit, wie du brauchst — wenn du die Wiederherstellungsseite zwischendurch schließt, fügst du die Teile wieder hinzu, sobald du zurückkommst.
 
 ### Was Freunde erhalten {#bundle-contents}
 
@@ -140,199 +142,129 @@ Jedes Paket enthält:
 <div class="bundle-contents">
 <div class="file">
 <span class="file-name">README.txt</span>
-<span class="file-desc">Anleitung, dein Teil, Kontaktliste</span>
+<span class="file-desc">Worum es geht, wer sonst noch einen Teil hat, und dein Teil selbst</span>
 </div>
 <div class="file">
 <span class="file-name">README.pdf</span>
-<span class="file-desc">Gleicher Inhalt, zum Ausdrucken. Enthält einen <strong>QR-Code</strong> zum Importieren des Teils.</span>
+<span class="file-desc">Dasselbe, bereit zum Ausdrucken. Dein Teil steht darauf als <strong>QR-Code</strong> und als Wörter.</span>
 </div>
 <div class="file">
 <span class="file-name">MANIFEST.age</span>
-<span class="file-desc">Die verschlüsselten Dateien. Als separate Datei enthalten, falls das Archiv größer ist.</span>
+<span class="file-desc">Die verschlossenen Dateien. Nur in manchen Paketen — die meisten tragen sie stattdessen in recover.html.</span>
 </div>
 <div class="file">
 <span class="file-name">recover.html</span>
-<span class="file-desc">Wiederherstellungstool (~300 KB), läuft in jedem Browser</span>
+<span class="file-desc">Die Wiederherstellungsseite. Sie öffnet sich in jedem Webbrowser, mit deinem Teil schon darin.</span>
 </div>
 </div>
 
 <p style="margin-top: 1rem;">
-Jedes Paket ist personalisiert — der Teil deines Freundes ist bereits geladen, und eine Kontaktliste zeigt, wer sonst Teile hat. Wenn die verschlüsselten Daten klein genug sind, sind sie ebenfalls eingebettet.
+Jedes Paket ist für einen bestimmten Freund gemacht: Sein Teil steckt bereits in seiner recover.html, zusammen mit den Namen der anderen und wie man sie erreicht.
 </p>
 
-### Weg A: Ich habe die Paket-ZIP {#recovery-bundle}
+### Dein Paket aufbewahren {#keeping-bundle}
 
-Der einfachste Weg. Wenn du die Paket-ZIP hast (oder die Dateien daraus):
+Bewahre es an einem sicheren Ort auf, und wenn möglich auch einen Ausdruck von README.pdf. Bis es so weit ist, gibt es nichts weiter zu tun.
+
+Um zu prüfen, ob es funktioniert, öffne recover.html. Dort steht „Dein Teil ist da", welchen Teil du hast und wie viele nötig sind, um die Dateien zu öffnen.
+
+### Wenn dich jemand um deinen Teil bittet {#sharing-piece}
+
+Prüfe zuerst, ob die Anfrage echt ist. Frag, wenn möglich, bei der Person nach, die das Paket erstellt hat. Wenn du sie nicht erreichen kannst, frag bei einem anderen Freund nach, der einen Teil hat.
+
+Dann schick ihn auf dem Weg, der für dich am einfachsten ist:
+
+- **Das ganze Paket** (die ZIP-Datei) — am einfachsten.
+- **Deine README.txt** — sie enthält deinen Teil auch für sich allein.
+- **Deine Wiederherstellungswörter**, am Telefon vorgelesen.
+- **Deine ausgedruckte Seite**, per Post — der QR-Code darauf enthält deinen Teil.
+
+### Die Teile zusammenbringen {#recovery-bundle}
+
+Eine Person sammelt die Teile. Das kann jeder der Freunde sein — wer es eben übernimmt.
 
 <div class="step-guide">
 <div class="step-number">1</div>
 <div class="step-content">
-<h4>ZIP entpacken und recover.html öffnen</h4>
-<p>Öffne die Datei in einem modernen Browser. Dein Teil ist bereits geladen.</p>
+<h4>recover.html öffnen</h4>
+<p>Doppelklicke auf das Paket, um es zu öffnen, dann doppelklicke auf recover.html. Es öffnet sich in deinem Webbrowser wie eine Webseite, mit deinem eigenen Teil schon darin. Wenn du kein Paket hast, kann dir jeder Freund seine recover.html schicken, oder du nutzt die <a href="recover.html">Wiederherstellungsseite</a> hier.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">2</div>
 <div class="step-content">
-<h4>Verschlüsseltes Archiv laden</h4>
-<p>Bei kleinen Archiven (10 MB oder weniger) passiert das automatisch — die Daten sind bereits eingebettet. Andernfalls ziehe <code>MANIFEST.age</code> aus dem Paket auf die Seite.</p>
+<h4>Die anderen kontaktieren</h4>
+<p>Die Seite zeigt, wer sonst noch einen Teil hat und wie man diese Personen erreicht. Erzähl ihnen, was passiert ist, und bitte sie um ihren Teil. Manche werden erst bei dir nachfragen wollen, ob die Anfrage echt ist — ihre Anleitung bittet sie darum.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">3</div>
 <div class="step-content">
-<h4>Mit anderen Freunden abstimmen</h4>
-<p>Das Tool zeigt eine Kontaktliste mit den Namen und Kontaktdaten der anderen Freunde. Bitte sie, ihre <code>README.txt</code> zu schicken.</p>
+<h4>Jeden Teil hinzufügen, sobald er ankommt</h4>
+<p>Zieh ihr Paket oder ihre README.txt auf die Seite, füge ihren Text ein, tippe die Wiederherstellungswörter ein, die sie dir vorlesen, oder scanne den QR-Code auf ihrer ausgedruckten Seite. Neben jedem Namen erscheint ein Häkchen.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">4</div>
 <div class="step-content">
-<h4>Teile anderer Freunde hinzufügen</h4>
-<p>Für jeden Teil eines Freundes: Ziehe die <code>README.txt</code> auf die Seite, füge den Text ein, oder scanne den QR-Code aus dem PDF. Ein Häkchen erscheint, wenn ein Teil hinzugefügt wird.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>Die Wiederherstellung läuft automatisch</h4>
-<p>Sobald genügend Teile zusammen sind (z.B. 3 von 5), startet die Wiederherstellung von selbst.</p>
+<h4>Die Dateien öffnen sich von selbst</h4>
+<p>Sobald genug Teile da sind, entsperrt die Seite die Dateien, ohne dass du etwas tun musst. Lade sie herunter und bewahre sie an einem privaten Ort auf.</p>
 </div>
 </div>
 
 <div class="tip">
-<strong>Tipp:</strong> Wenn ein Freund dir sein gesamtes <code>.zip</code>-Paket schickt, ziehe es einfach auf die Seite — Teil und Archiv werden auf einmal importiert.
+<strong>Wenn die Seite nach den verschlossenen Dateien fragt:</strong> Zieh <code>MANIFEST.age</code> aus einem Paket auf die Seite, oder die recover.html eines beliebigen Freundes. Die meisten Pakete enthalten sie bereits, deshalb wirst du diesen Schritt meist gar nicht sehen.
 </div>
 
 <figure class="screenshot">
-<img src="screenshots/de/recovery-1.png" alt="Wiederherstellung - Teile sammeln">
-<figcaption>Das Wiederherstellungstool zeigt die gesammelten Teile und die Kontaktliste</figcaption>
+<img src="screenshots/de/recovery-1.png" alt="Wiederherstellungsseite mit den bisher gesammelten Teilen">
+<figcaption>Die bisher gesammelten Teile, und wen du kontaktieren kannst</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/de/recovery-2.png" alt="Wiederherstellung - Entschlüsselung abgeschlossen">
-<figcaption>Wenn die Schwelle erreicht ist, werden die Dateien entschlüsselt und stehen zum Download bereit</figcaption>
+<img src="screenshots/de/recovery-2.png" alt="Wiederherstellungsseite, nachdem die Dateien entsperrt wurden">
+<figcaption>Sobald genug Teile da sind, werden die Dateien entsperrt und können heruntergeladen werden</figcaption>
 </figure>
 
-### Weg B: Ich habe ein ausgedrucktes PDF mit Wörtern {#recovery-words}
+### Wiederherstellungswörter eingeben {#recovery-words}
 
-Jedes ausgedruckte PDF enthält deinen Teil als Liste nummerierter Wörter. Tippe sie in das Wiederherstellungstool ein — keine Kamera und kein Scanner nötig.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Wiederherstellungstool öffnen</h4>
-<p>Rufe die URL auf, die auf dem PDF steht, oder öffne <code>recover.html</code> aus dem Paket eines Freundes.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Wiederherstellungswörter eingeben</h4>
-<p>Finde die Wortliste auf deinem PDF und tippe die Wörter in das Textfeld. Du brauchst die Nummern nicht — nur die Wörter, durch Leerzeichen getrennt.</p>
-</div>
-</div>
+Auf jeder ausgedruckten Seite steht der Teil als Liste nummerierter Wörter. Wenn dir ein Freund seine Wörter am Telefon vorliest, oder wenn du nur Papier hast, tippe die Wörter in die Wiederherstellungsseite ein. Drücke auf „Teil einfügen oder Wiederherstellungswörter eingeben" und tippe sie ein, getrennt durch Leerzeichen. Es zählen nur die Wörter, nicht die Nummern.
 
 <figure class="screenshot">
-<img src="screenshots/de/recovery-words-typing.png" alt="Wiederherstellungswörter aus einem ausgedruckten PDF eingeben">
-<figcaption>Tippe die nummerierten Wörter aus deinem ausgedruckten PDF in das Textfeld</figcaption>
+<img src="screenshots/de/recovery-words-typing.png" alt="Wiederherstellungswörter von einer ausgedruckten Seite in die Wiederherstellungsseite eingeben">
+<figcaption>Tippe die Wörter von der ausgedruckten Seite ein</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/de/recovery-words-recognized.png" alt="Wiederherstellungstool nach Eingabe der Wörter">
-<figcaption>Das Tool erkennt die Wörter und lädt deinen Teil</figcaption>
+<img src="screenshots/de/recovery-words-recognized.png" alt="Wiederherstellungsseite nach Eingabe der Wörter, der Teil wurde hinzugefügt">
+<figcaption>Die Seite erkennt die Wörter und fügt den Teil hinzu</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Verschlüsseltes Archiv laden</h4>
-<p>Möglicherweise brauchst du die Datei <code>MANIFEST.age</code> — ziehe sie auf die Seite oder klicke zum Durchsuchen. Falls du sie nicht hast, kann dir jeder Freund seine schicken. Alle Pakete enthalten dieselbe Kopie.</p>
-</div>
-</div>
+### Einen QR-Code scannen {#recovery-pdf}
 
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Teile anderer Freunde sammeln</h4>
-<p>Kontaktiere andere Freunde und bitte sie um ihre Teile. Sie können ihre <code>README.txt</code> senden, die Wörter am Telefon vorlesen, oder du scannst ihren QR-Code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>Die Wiederherstellung läuft automatisch</h4>
-<p>Sobald die Schwelle erreicht ist, beginnt die Entschlüsselung sofort.</p>
-</div>
-</div>
-
-<div class="tip">
-<strong>Tipp:</strong> Wörter sind am einfachsten telefonisch zu teilen. Wenn ein Freund seinen Teil nicht digital senden kann, liest er die Wörter vor und du tippst sie ein.
-</div>
-
-### Weg C: Ich habe ein ausgedrucktes PDF mit QR-Code {#recovery-pdf}
-
-Wenn dein Gerät eine Kamera hat, scanne den QR-Code auf dem PDF, um deinen Teil direkt zu importieren.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Wiederherstellungstool öffnen</h4>
-<p>Scanne den QR-Code mit deiner Handykamera — das Wiederherstellungstool öffnet sich mit deinem Teil bereits geladen. Oder rufe die URL auf dem PDF auf und gib den kurzen Code unter dem QR-Code ein.</p>
-</div>
-</div>
+Drücke an einem Computer oder Handy mit Kamera auf der Wiederherstellungsseite auf „QR-Code scannen" und halte die ausgedruckte Seite vor die Kamera.
 
 <figure class="screenshot">
-<img src="screenshots/qr-camera-permission.png" alt="Browser fragt nach Kamerazugriff">
-<figcaption>Dein Browser fragt nach der Erlaubnis, die Kamera zu verwenden</figcaption>
+<img src="screenshots/qr-camera-permission.png" alt="Browser fragt nach der Erlaubnis, die Kamera zu nutzen">
+<figcaption>Dein Browser fragt, ob er die Kamera nutzen darf</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/qr-scanning.png" alt="QR-Code von einem ausgedruckten PDF scannen">
-<figcaption>Richte deine Kamera auf den QR-Code des ausgedruckten PDFs, um den Teil zu importieren</figcaption>
+<img src="screenshots/qr-scanning.png" alt="QR-Code von einer ausgedruckten Seite scannen">
+<figcaption>Halte den QR-Code vor die Kamera, um den Teil hinzuzufügen</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Verschlüsseltes Archiv laden</h4>
-<p>Möglicherweise brauchst du die Datei <code>MANIFEST.age</code> — ziehe sie auf die Seite oder klicke zum Durchsuchen. Falls du sie nicht hast, kann dir jeder Freund seine schicken. Alle Pakete enthalten dieselbe Kopie.</p>
-</div>
-</div>
-
-<figure class="screenshot">
-<img src="screenshots/manifest-file-picker.png" alt="MANIFEST.age aus einem Ordner auswählen">
-<figcaption>Wähle die Datei MANIFEST.age von dort, wo du sie gespeichert hast</figcaption>
-</figure>
-
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Teile anderer Freunde sammeln</h4>
-<p>Kontaktiere andere Freunde und bitte sie um ihre Teile. Sie können ihre <code>README.txt</code> senden, oder du scannst ihren QR-Code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Die Wiederherstellung läuft automatisch</h4>
-<p>Sobald die Schwelle erreicht ist, beginnt die Entschlüsselung sofort.</p>
-</div>
-</div>
+Du kannst den QR-Code auch mit der Kamera-App eines Handys scannen: Dann öffnet sich die Wiederherstellungsseite auf dieser Website, mit dem Teil schon eingetragen.
 
 <div class="tip">
 <strong>Zur Wiederherstellung:</strong>
 <ul>
-<li>Funktioniert komplett <span title="Kein Internet nötig. Archive mit Zeitsperre brauchen eine Verbindung zur Prüfung des Entsperrdatums.">offline*</span></li>
-<li>Nichts verlässt den Browser</li>
-<li>Freunde können überall sein — sie müssen nur ihre README.txt-Dateien schicken</li>
+<li>Funktioniert ohne <span title="Archive mit Zeitsperre brauchen eine Verbindung, um das Entsperrdatum zu prüfen.">Internetverbindung*</span></li>
+<li>Die Teile und die Dateien bleiben auf deinem Gerät</li>
+<li>Freunde können überall sein — jeder muss dir nur seinen Teil zukommen lassen</li>
 </ul>
 </div>
 
@@ -342,7 +274,7 @@ Wenn dein Gerät eine Kamera hat, scanne den QR-Code auf dem PDF, um deinen Teil
 
 - **Langfristigkeit:** Personen, die du in 5 bis 10 Jahren noch erreichen kannst
 - **Geografische Verteilung:** Nicht alle am gleichen Ort
-- **Technisches Wissen:** Jedes Niveau ist in Ordnung — das Tool ist für alle gemacht
+- **Technisches Wissen:** Niemand muss sich mit Technik auskennen. Die Anleitung führt alle Schritt für Schritt hindurch, und eine [Wiederherstellungsübung](#recovery-drills) zeigt dir, wo jemand hängen bleibt.
 - **Beziehungen:** Werden sie miteinander kooperieren?
 - **Vertrauen:** Ein einzelner Teil verrät nichts, aber du vertraust ihnen eine Verantwortung an
 
@@ -356,12 +288,12 @@ Wenn dein Gerät eine Kamera hat, scanne den QR-Code auf dem PDF, um deinen Teil
 
 Pakete sind klein (unter 10 MB) und dafür gedacht, an ganz normalen Orten aufbewahrt zu werden. Das funktioniert gut:
 
-- **E-Mail** ist eine überraschend gute Wahl. Die meisten Menschen behalten dieselbe E-Mail-Adresse jahrzehntelang, und Pakete sind klein genug als Anhang. Viele Anbieter speichern Nachrichten unbegrenzt.
+- **E-Mail** funktioniert gut. Die meisten Menschen behalten dieselbe E-Mail-Adresse jahrzehntelang, und Pakete sind klein genug als Anhang. Viele Anbieter speichern Nachrichten unbegrenzt.
 - **Cloud-Speicher** (Google Drive, Dropbox, iCloud) eignet sich gut als Zweitkopie.
 - **USB-Sticks** können funktionieren, aber bedenke: Anschlüsse ändern sich (USB-A weicht bereits USB-C), und Flash-Speicher kann über Jahre ohne Strom an Qualität verlieren. Nicht ideal als einzige Kopie.
-- **Papier** ist die haltbarste Option. `README.pdf` ausdrucken gibt deinen Freunden eine Kopie, die keine Adapter, keinen Strom und kein funktionierendes Gerät braucht.
+- **Papier** ist die haltbarste Option. `README.pdf` ausdrucken gibt deinen Freunden eine Kopie ihres Teils, die keine Adapter, keinen Strom und kein funktionierendes Gerät braucht.
 
-Am besten ist Redundanz — E-Mail plus Papier, oder Cloud plus Papier. Mehr als eine Kopie, in mehr als einer Form.
+Auf Papier stehen die Teile, aber nicht die verschlossenen Dateien selbst — die gibt es nur in den digitalen Paketen. Am besten ist deshalb Redundanz — E-Mail plus Papier, oder Cloud plus Papier. Mehr als eine Kopie, in mehr als einer Form.
 
 ### Pakete aktuell halten {#keeping-current}
 
@@ -377,7 +309,7 @@ Denk daran wie ans Aktualisieren deiner Notfallkontakte. Kurz, regelmäßig, es 
 
 ### Wiederherstellungsübung {#recovery-drills}
 
-Niemand testet seinen Notfallplan. Eine Wiederherstellungsübung ändert das — und es stellt sich heraus, dass es im Grunde ein Escape Room ist.
+Niemand testet seinen Notfallplan. Eine Wiederherstellungsübung ändert das — und es spielt sich ein bisschen wie ein Escape Room.
 
 Erstelle ein Test-Paket mit einem harmlosen Geheimnis (ein Foto, eine Nachricht, ein Rezept). Verteile die Teile an deine Freunde. Setze einen [Zeitschloss](#timelock), wenn du einen echten Countdown willst. Dann tritt zurück und lass sie es herausfinden: koordinieren, Teile zusammenführen, Dateien entsperren — ohne deine Hilfe.
 
@@ -414,7 +346,7 @@ Wenn du Pakete erstellst, wird dein Projekt in einer `project.yml`-Datei gespeic
 - Einen Prüf-Hash, um festzustellen, ob Pakete zusammengehören
 - Prüfsummen der Teile, um die Integrität der Pakete zu bestätigen
 
-Sie enthält **keine** Geheimnisse — kein Passwort, kein Schlüsselmaterial, keine Dateiinhalte. Du kannst sie bedenkenlos bei deinen anderen Projektdateien aufbewahren.
+Sie enthält **keine** Geheimnisse — kein Passwort, kein Schlüsselmaterial, keine Dateiinhalte. Du kannst sie bedenkenlos bei deinen anderen Unterlagen aufbewahren.
 
 Mit `project.yml` kannst du Pakete neu erstellen, bestehende überprüfen und den Stand deiner Konfiguration einsehen.
 

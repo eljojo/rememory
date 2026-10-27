@@ -20,6 +20,8 @@ Under the hood, it encrypts your files with [age](https://github.com/FiloSottile
 
 Recovery is opening a file in a browser.\* No servers, no need for this website to exist.
 
+If you hold a piece for someone, start at [Recovering Files](#recovering).
+
 <p style="font-size: 0.8125rem; color: #8A8480;">* <a href="#timelock" style="color: #8A8480;">Time-locked</a> archives need a brief internet connection at recovery time.</p>
 
 <div class="tip">
@@ -59,16 +61,16 @@ Add the people who will hold pieces of your recovery key. For each, provide a na
 <figcaption>Each person here will hold one piece of the key</figcaption>
 </figure>
 
-Then choose your **threshold** — how many people must come together to recover your files.
+Then choose how many of them must come together to open your files.
 
 <div class="tip">
-<strong>Choosing a threshold:</strong>
+<strong>Choosing how many:</strong>
 <ul>
-<li><strong>3 people, threshold 2:</strong> The simplest setup</li>
-<li><strong>5 people, threshold 3:</strong> A good balance</li>
-<li><strong>7 people, threshold 4–5:</strong> More secure, more coordination</li>
+<li><strong>2 of 3 people:</strong> The simplest setup</li>
+<li><strong>3 of 5 people:</strong> A good balance</li>
+<li><strong>4 or 5 of 7 people:</strong> More secure, more coordination</li>
 </ul>
-High enough that collusion is unlikely. Low enough that recovery works if one or two people are unavailable.
+High enough that a few people can't open it without the others. Low enough that it still works if one or two can't be reached.
 </div>
 
 ### Step 2: Add Files {#step2}
@@ -95,7 +97,7 @@ Drag and drop the files or folder you want to protect.
 
 ### Step 3: Generate Bundles {#step3}
 
-Click "Generate Bundles" to encrypt your files and create a bundle for each person.
+Click "Generate Bundles" to lock your files and make a bundle for each person.
 
 <figure class="screenshot">
 <img src="screenshots/en/bundles.png" alt="Generating bundles in Step 3">
@@ -119,9 +121,9 @@ If you send bundles by email or messaging, delete the messages from your sent fo
 
 Once your bundles are ready, there are a few things worth doing before you put this out of your mind:
 
-- Verify each person received their bundle and can open `recover.html`
+- Ask each person to open `recover.html` once. It shows "Your piece is here" when everything is in order.
 - Tell each person what this is, why they have it, and that they should keep it safe. They cannot use it alone — they will need to coordinate with others.
-- Keep a copy of `MANIFEST.age` somewhere safe — it's just encrypted data, useless without enough pieces
+- Save the locked files with "Save the locked files (MANIFEST.age)" and keep that copy somewhere safe. It holds no piece, so it's useless to anyone without enough of them.
 - Save your `project.yml` so you can regenerate bundles later
 - Print `README.pdf` as a paper backup before sending the digital bundle. Paper doesn't need adapters or power.
 - Set a yearly reminder to check in — see [Keeping Bundles Current](#keeping-current)
@@ -129,9 +131,9 @@ Once your bundles are ready, there are a few things worth doing before you put t
 
 ## Recovering Files {#recovering}
 
-If you're here because someone you care about is no longer available — take a breath. There's no rush. The bundles don't expire, and the process is designed to be done at your own pace.
+This part is for the friends who hold a piece. Most of the time, all a friend does is keep their bundle safe. One day, someone may ask them for their piece, or they may be the one who brings the pieces together.
 
-If you don't have a bundle yet, you can open the [recovery tool](recover.html) directly — you'll add pieces manually as you collect them from other holders.
+If you're here because someone you care about can't be reached anymore, there's no hurry. Nothing here expires. You can take as long as you need — if you close the recovery page partway, you'll add the pieces again when you come back.
 
 ### What Friends Receive {#bundle-contents}
 
@@ -140,199 +142,129 @@ Each bundle contains:
 <div class="bundle-contents">
 <div class="file">
 <span class="file-name">README.txt</span>
-<span class="file-desc">Instructions, your unique piece, contact list</span>
+<span class="file-desc">What this is, who else holds a piece, and your piece itself</span>
 </div>
 <div class="file">
 <span class="file-name">README.pdf</span>
-<span class="file-desc">Same content, formatted for printing. Includes a <strong>QR code</strong> for importing the piece.</span>
+<span class="file-desc">The same, ready to print. Your piece is on it as a <strong>QR code</strong> and as words.</span>
 </div>
 <div class="file">
 <span class="file-name">MANIFEST.age</span>
-<span class="file-desc">Your encrypted files. Included as a separate file for larger archives.</span>
+<span class="file-desc">The locked files. Only in some bundles — most carry them inside recover.html instead.</span>
 </div>
 <div class="file">
 <span class="file-name">recover.html</span>
-<span class="file-desc">Recovery tool (~300 KB), runs in any browser</span>
+<span class="file-desc">The recovery page. It opens in any web browser, with your piece already in it.</span>
 </div>
 </div>
 
 <p style="margin-top: 1rem;">
-Each bundle is personalized — the friend's share is pre-loaded, and a contact list shows who else holds pieces. When the encrypted data is small enough, it's embedded too.
+Each bundle is made for one friend: their piece is already inside their recover.html, along with the names of the others and how to reach them.
 </p>
 
-### Path A: I Have the Bundle ZIP {#recovery-bundle}
+### Keeping Your Bundle {#keeping-bundle}
 
-The simplest path. If you have the bundle ZIP (or the files from it):
+Keep it somewhere safe, and a printed copy of README.pdf too if you can. There's nothing else to do until the time comes.
+
+To check that it works, open recover.html. It shows "Your piece is here", which piece you hold, and how many are needed to open the files.
+
+### If Someone Asks for Your Piece {#sharing-piece}
+
+First, make sure the request is real. If you can, check with the person who made the bundle. If you can't reach them, check with another friend who holds a piece.
+
+Then send it whichever way is easiest:
+
+- **The whole bundle** (the ZIP file) — the simplest.
+- **Your README.txt** — it holds your piece on its own.
+- **Your recovery words**, read aloud over the phone.
+- **Your printed page**, by post — the QR code on it holds your piece.
+
+### Bringing the Pieces Together {#recovery-bundle}
+
+One person gathers the pieces. It can be any of the friends — whoever takes it on.
 
 <div class="step-guide">
 <div class="step-number">1</div>
 <div class="step-content">
-<h4>Extract the ZIP and open recover.html</h4>
-<p>Open it in any modern browser. Your share is already loaded.</p>
+<h4>Open recover.html</h4>
+<p>Double-click the bundle to open it, then double-click recover.html. It opens in your web browser, like a web page, with your own piece already in it. If you don't have a bundle, any friend can send you their recover.html, or you can use the <a href="recover.html">recovery page</a> here.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">2</div>
 <div class="step-content">
-<h4>Load the encrypted manifest</h4>
-<p>For small archives (≤ 10 MB), this is automatic — the data is already embedded. Otherwise, drag <code>MANIFEST.age</code> from the bundle onto the page.</p>
+<h4>Reach out to the others</h4>
+<p>The page lists who else holds a piece and how to reach them. Tell them what has happened and ask for their piece. Some will want to check with you first that the request is real — their instructions ask them to.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">3</div>
 <div class="step-content">
-<h4>Coordinate with other friends</h4>
-<p>The tool shows a contact list with other friends' names and how to reach them. Ask them to send their <code>README.txt</code>.</p>
+<h4>Add each piece as it arrives</h4>
+<p>Drag their bundle or README.txt onto the page, paste their text, type the recovery words they read to you, or scan the QR code on their printed page. A checkmark appears next to each name.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">4</div>
 <div class="step-content">
-<h4>Add shares from other friends</h4>
-<p>For each friend's piece: drag their <code>README.txt</code> onto the page, paste the text, or scan a QR code from their PDF. A checkmark appears as each piece is added.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>Recovery happens automatically</h4>
-<p>Once enough pieces are gathered (e.g., 3 of 5), recovery starts on its own.</p>
+<h4>The files unlock on their own</h4>
+<p>Once there are enough pieces, the page opens the files without you doing anything. Download them and keep them somewhere private.</p>
 </div>
 </div>
 
 <div class="tip">
-<strong>Tip:</strong> If a friend sends their entire <code>.zip</code> bundle, drag it onto the page — both the piece and the archive are imported at once.
+<strong>If the page asks for the locked files:</strong> drag <code>MANIFEST.age</code> from a bundle onto it, or any friend's recover.html. Most bundles carry them already, so you won't see this step.
 </div>
 
 <figure class="screenshot">
-<img src="screenshots/en/recovery-1.png" alt="Recovery interface - collecting shares">
-<figcaption>The recovery tool showing collected shares and contact list</figcaption>
+<img src="screenshots/en/recovery-1.png" alt="Recovery page with pieces gathered so far">
+<figcaption>The pieces gathered so far, and who to contact</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/en/recovery-2.png" alt="Recovery interface - decryption complete">
-<figcaption>Once threshold is met, files are decrypted and ready to download</figcaption>
+<img src="screenshots/en/recovery-2.png" alt="Recovery page after the files are unlocked">
+<figcaption>Once there are enough pieces, the files are unlocked and ready to download</figcaption>
 </figure>
 
-### Path B: I Have a Printed PDF with Words {#recovery-words}
+### Typing Recovery Words {#recovery-words}
 
-Each printed PDF includes your share as a list of numbered words. Type them into the recovery tool — no camera or scanner needed.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Open the recovery tool</h4>
-<p>Visit the URL printed on the PDF, or open <code>recover.html</code> from any friend's bundle.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Type in your recovery words</h4>
-<p>Find the word list on your PDF and type the words into the text area. You don't need the numbers — just the words, separated by spaces.</p>
-</div>
-</div>
+Each printed page has the piece as a list of numbered words. If a friend reads you theirs over the phone, or all you have is paper, type the words into the recovery page. Press "Paste a piece or type recovery words" and type them in, separated by spaces. Only the words matter, not the numbers.
 
 <figure class="screenshot">
-<img src="screenshots/en/recovery-words-typing.png" alt="Typing recovery words from a printed PDF into the recovery tool">
-<figcaption>Type the numbered words from your printed PDF into the text area</figcaption>
+<img src="screenshots/en/recovery-words-typing.png" alt="Typing recovery words from a printed page into the recovery page">
+<figcaption>Type the words from the printed page</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/en/recovery-words-recognized.png" alt="Recovery tool after words have been entered, showing the share was recognized">
-<figcaption>The recovery tool recognizes the words and loads your share</figcaption>
+<img src="screenshots/en/recovery-words-recognized.png" alt="Recovery page after the words were entered, showing the piece was added">
+<figcaption>The page recognizes the words and adds the piece</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Load the encrypted manifest</h4>
-<p>You may need the <code>MANIFEST.age</code> file — drag it onto the page or click to browse. If you don't have it, any friend can send theirs. Every bundle has the same copy.</p>
-</div>
-</div>
+### Scanning a QR Code {#recovery-pdf}
 
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Collect shares from other friends</h4>
-<p>Contact other friends and ask for their pieces. They can send their <code>README.txt</code>, read their words over the phone, or you can scan their QR code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>Recovery happens automatically</h4>
-<p>Once the threshold is met, decryption starts immediately.</p>
-</div>
-</div>
-
-<div class="tip">
-<strong>Tip:</strong> Words are the easiest to share over the phone. If a friend can't send their share digitally, they can read the words aloud and you type them in.
-</div>
-
-### Path C: I Have a Printed PDF with QR Code {#recovery-pdf}
-
-If your device has a camera, scan the QR code on the PDF to import your share directly.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Open the recovery tool</h4>
-<p>Scan the QR code with your phone camera — it opens the recovery tool with your share pre-filled. Or visit the URL on the PDF and type the short code shown below the QR code.</p>
-</div>
-</div>
+On a computer or phone with a camera, press "Scan QR code" on the recovery page and hold the printed page up to it.
 
 <figure class="screenshot">
-<img src="screenshots/qr-camera-permission.png" alt="Browser asking for camera permission">
-<figcaption>Your browser will ask for permission to use the camera</figcaption>
+<img src="screenshots/qr-camera-permission.png" alt="Browser asking for permission to use the camera">
+<figcaption>Your browser will ask to use the camera</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/qr-scanning.png" alt="Scanning a QR code from a printed PDF">
-<figcaption>Point your camera at the QR code on the printed PDF to import the share</figcaption>
+<img src="screenshots/qr-scanning.png" alt="Scanning a QR code from a printed page">
+<figcaption>Hold the QR code up to the camera to add the piece</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Load the encrypted manifest</h4>
-<p>You may need the <code>MANIFEST.age</code> file — drag it onto the page or click to browse. If you don't have it, any friend can send theirs. Every bundle has the same copy.</p>
-</div>
-</div>
-
-<figure class="screenshot">
-<img src="screenshots/manifest-file-picker.png" alt="Selecting MANIFEST.age from a folder">
-<figcaption>Select the MANIFEST.age file from where you stored it</figcaption>
-</figure>
-
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Collect shares from other friends</h4>
-<p>Contact other friends and ask for their pieces. They can send their <code>README.txt</code>, or you can scan their QR code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Recovery happens automatically</h4>
-<p>Once the threshold is met, decryption starts immediately.</p>
-</div>
-</div>
+Scanning the QR code with a phone's camera app works too: it opens the recovery page on this website, with the piece filled in.
 
 <div class="tip">
 <strong>About recovery:</strong>
 <ul>
-<li>Works entirely <span title="No internet needed. Time-locked archives need a connection to verify the unlock date.">offline*</span></li>
-<li>Nothing leaves the browser</li>
-<li>Friends can be anywhere — they just need to send their README.txt files</li>
+<li>Works without an internet <span title="Time-locked archives need a connection to check the unlock date.">connection*</span></li>
+<li>The pieces and the files stay on your device</li>
+<li>Friends can be anywhere — each one only needs to get their piece to you</li>
 </ul>
 </div>
 
@@ -342,7 +274,7 @@ If your device has a camera, scan the QR code on the PDF to import your share di
 
 - **Longevity:** People likely to be reachable in 5–10 years
 - **Geographic spread:** Not all in the same place
-- **Technical ability:** Any mix is fine — the tool is designed for everyone
+- **Technical ability:** People don't need to be technical. Their instructions walk them through it, and a [recovery drill](#recovery-drills) will show you where anyone gets stuck.
 - **Relationships:** Will they cooperate with each other?
 - **Trust:** A single piece reveals nothing, but you're trusting them with responsibility
 
@@ -356,12 +288,12 @@ If your device has a camera, scan the QR code on the PDF to import your share di
 
 Bundles are small (under 10 MB) and designed to be stored in everyday places. Here's what works well:
 
-- **Email** is a surprisingly good option. Most people keep the same email address for decades, and bundles are small enough to attach. Many email providers retain messages indefinitely.
+- **Email** works well. Most people keep the same email address for decades, and bundles are small enough to attach. Many email providers retain messages indefinitely.
 - **Cloud storage** (Google Drive, Dropbox, iCloud) works well as a secondary copy.
 - **USB drives** can work, but keep in mind that connectors change over time (USB-A is already giving way to USB-C) and flash memory can degrade if left unpowered for years. Not ideal as the only copy.
-- **Paper** is the most durable option. Printing `README.pdf` gives your friends a copy that doesn't need adapters, power, or any working device.
+- **Paper** is the most durable option. Printing `README.pdf` gives your friends a copy of their piece that doesn't need adapters, power, or any working device.
 
-The best approach is redundancy — email plus paper, or cloud plus paper. More than one copy, in more than one form.
+Paper holds the pieces, but not the locked files themselves — those only live in the digital bundles. So the best approach is redundancy — email plus paper, or cloud plus paper. More than one copy, in more than one form.
 
 ### Keeping Bundles Current {#keeping-current}
 
@@ -377,7 +309,7 @@ Think of it like updating your emergency contacts. Brief, periodic, worth doing.
 
 ### Recovery Drills {#recovery-drills}
 
-Nobody tests their backup plan. A recovery drill changes that — and it turns out, it's basically an escape room.
+Nobody tests their backup plan. A recovery drill changes that — and it plays a little like an escape room.
 
 Create a test bundle with a harmless secret (a photo, a message, a recipe). Hand out pieces to your friends. Set a [timelock](#timelock) if you want a real countdown. Then step back and let them figure it out: coordinate, combine pieces, unlock the files — without your help.
 
@@ -414,7 +346,7 @@ When you create bundles, your project is saved in a `project.yml` file. This fil
 - A verification hash for checking if bundles match
 - Share checksums for verifying bundle integrity
 
-It does **not** store any secrets — no passphrase, no key material, no file contents. It's safe to keep alongside your other project files.
+It does **not** store any secrets — no passphrase, no key material, no file contents. It's safe to keep with your other records.
 
 With `project.yml`, you can regenerate bundles, verify existing ones, and check the status of your setup.
 
