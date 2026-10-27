@@ -95,6 +95,7 @@ rememory serve
 | `--host` | `REMEMORY_HOST` | `127.0.0.1` | Host to bind to |
 | `--data, -d` | `REMEMORY_DATA` | `./rememory-data` | Data directory for bundles and config |
 | `--max-manifest-size` | `REMEMORY_MAX_MANIFEST_SIZE` | `50MB` | Maximum MANIFEST.age size (e.g. `50MB`, `1GB`) |
+| `--open-uploads` | `REMEMORY_OPEN_UPLOADS` | `false` | Let anyone who can reach the server create bundles, without the admin password |
 | | `REMEMORY_ADMIN_PASSWORD` | | Admin password. If unset, a server listening beyond `127.0.0.1` generates one and prints it once |
 
 Flags take precedence over environment variables.
@@ -129,7 +130,9 @@ server {
 
 ### Authentication
 
-The admin password only protects bundle deletion. For access control, use an auth proxy:
+The admin password protects creating and deleting bundles. Your browser asks for it when you open the maker; any user name works. Recovery pages stay open, so friends never need it. To let anyone who can reach the server create bundles, start it with `--open-uploads`.
+
+For access control beyond that, use an auth proxy:
 
 - [Authelia](https://www.authelia.com/)
 - [Cloudflare Access](https://www.cloudflare.com/products/zero-trust/access/)

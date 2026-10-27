@@ -20,13 +20,21 @@ type Config struct {
 	MaxManifestSize int // Maximum MANIFEST.age size in bytes
 	Version         string
 	BuildDate       string
+	// OpenUploads lets anyone who reaches the server create bundles on it.
+	// By default the maker page and uploads need the admin password.
+	OpenUploads bool
 }
+
+// maxAuthWaiting is how many password checks may be running or waiting at
+// once; more are turned away rather than queued without bound.
+const maxAuthWaiting = 8
 
 // Server implements http.Handler for the self-hosted ReMemory web app.
 type Server struct {
 	store           *Store
 	maxManifestSize int
 	version         string
+	openUploads     bool
 	// reachable: listening beyond loopback. Such a server gets its admin
 	// password at startup and never offers setup.
 	reachable bool
@@ -36,6 +44,8 @@ type Server struct {
 	// authMu serializes admin setup and password checks: each runs a 256 MiB
 	// scrypt, so concurrent requests queue instead of exhausting memory.
 	authMu sync.Mutex
+	// authQueue bounds how many password checks may wait for authMu.
+	authQueue chan struct{}
 }
 
 // New creates a new Server from the given config.
@@ -52,8 +62,10 @@ func New(cfg Config) (*Server, error) {
 		store:           store,
 		maxManifestSize: cfg.MaxManifestSize,
 		version:         cfg.Version,
+		openUploads:     cfg.OpenUploads,
 		reachable:       !isLoopback(cfg.Host),
 		mux:             http.NewServeMux(),
+		authQueue:       make(chan struct{}, maxAuthWaiting),
 	}
 
 	s.routes()
@@ -68,7 +80,7 @@ func New(cfg Config) (*Server, error) {
 func (s *Server) routes() {
 	// Pages (filename-based routes)
 	s.mux.HandleFunc("GET /", s.handleRoot)
-	s.mux.HandleFunc("GET /maker.html", s.handleCreate)
+	s.mux.HandleFunc("GET /maker.html", s.requireAdmin(s.handleCreate))
 	s.mux.HandleFunc("GET /recover.html", s.handleRecover)
 	s.mux.HandleFunc("GET /about.html", s.handleAbout)
 	s.mux.HandleFunc("GET /docs.html", s.docsHandler("en"))
@@ -120,7 +132,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/status", s.handleAPIStatus)
 	s.mux.HandleFunc("POST /api/setup", s.handleAPISetup)
 	s.mux.HandleFunc("GET /api/bundles", s.handleAPIListBundles)
-	s.mux.HandleFunc("POST /api/bundle", s.handleAPISaveBundle)
+	s.mux.HandleFunc("POST /api/bundle", s.requireAdmin(s.handleAPISaveBundle))
 	s.mux.HandleFunc("DELETE /api/bundle", s.handleAPIDeleteBundle)
 	s.mux.HandleFunc("GET /api/bundle/manifest", s.handleAPIManifest)
 }

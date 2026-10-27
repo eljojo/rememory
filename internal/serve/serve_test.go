@@ -2,6 +2,7 @@ package serve
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"mime/multipart"
@@ -34,8 +35,13 @@ func newTestServer(t *testing.T) *Server {
 	return srv
 }
 
+// adminPasswords remembers each test server's password, so helpers can
+// authenticate the requests that need it.
+var adminPasswords sync.Map
+
 func setupPassword(t *testing.T, srv *Server, password string) {
 	t.Helper()
+	adminPasswords.Store(srv, password)
 	body := `{"password":"` + password + `"}`
 	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -65,6 +71,9 @@ func uploadManifest(t *testing.T, srv *Server, manifest []byte, meta map[string]
 
 	req := httptest.NewRequest("POST", "/api/bundle", &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
+	if pw, ok := adminPasswords.Load(srv); ok {
+		req.SetBasicAuth("admin", pw.(string))
+	}
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	return w
@@ -303,8 +312,14 @@ func TestManifestPathTraversal(t *testing.T) {
 }
 
 func TestConcurrentAccess(t *testing.T) {
-	srv := newTestServer(t)
+	// Concurrent writes to the store; open uploads keep password checks
+	// (one at a time, at most maxAuthWaiting queued) out of the picture.
+	srv, err := New(Config{Host: "127.0.0.1", DataDir: t.TempDir(), MaxManifestSize: 10 << 20, Version: "test", OpenUploads: true})
+	if err != nil {
+		t.Fatal(err)
+	}
 	setupPassword(t, srv, "concurrentpass")
+	adminPasswords.Delete(srv)
 
 	var wg sync.WaitGroup
 	errors := make(chan error, 10)
@@ -735,5 +750,75 @@ func TestEnsureAdminPassword(t *testing.T) {
 	}
 	if !CheckPassword(store, "changed-in-the-env") || CheckPassword(store, "from-the-env") {
 		t.Error("a changed REMEMORY_ADMIN_PASSWORD should replace the stored one")
+	}
+}
+
+// Uploads, and the maker page that makes them, need the admin password
+// unless the owner opens them up.
+func TestUploadsNeedTheAdminPassword(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	adminPasswords.Delete(srv)
+	manifest := []byte(agePrefix + "data")
+
+	for _, path := range []string{"/maker.html"} {
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		if w.Code != http.StatusUnauthorized || !strings.HasPrefix(w.Header().Get("WWW-Authenticate"), "Basic") {
+			t.Errorf("GET %s without password: got %d %q, want 401 with a Basic challenge", path, w.Code, w.Header().Get("WWW-Authenticate"))
+		}
+	}
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusUnauthorized {
+		t.Errorf("upload without password: got %d, want 401", w.Code)
+	}
+	adminPasswords.Store(srv, "wrong-password")
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusUnauthorized {
+		t.Errorf("upload with wrong password: got %d, want 401", w.Code)
+	}
+	adminPasswords.Store(srv, "owner-password")
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusOK {
+		t.Errorf("upload with password: got %d %s", w.Code, w.Body.String())
+	}
+
+	open, err := New(Config{Host: "127.0.0.1", DataDir: t.TempDir(), MaxManifestSize: 10 << 20, Version: "test", OpenUploads: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	setupPassword(t, open, "owner-password")
+	adminPasswords.Delete(open)
+	if w := uploadManifest(t, open, manifest, nil); w.Code != http.StatusOK {
+		t.Errorf("open uploads without password: got %d %s", w.Code, w.Body.String())
+	}
+}
+
+// A password over the length limit must be refused, not waved through.
+func TestOversizedPasswordIsRefused(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	for _, n := range []int{maxPasswordLen, maxPasswordLen + 1, 1 << 16} {
+		adminPasswords.Store(srv, strings.Repeat("a", n))
+		if w := uploadManifest(t, srv, []byte(agePrefix+"data"), nil); w.Code != http.StatusUnauthorized {
+			t.Errorf("%d-byte password: got %d, want 401", n, w.Code)
+		}
+	}
+}
+
+// Password checks run one at a time; a request whose client has gone away
+// by its turn must not cost a scrypt derivation.
+func TestPasswordCheckSkippedForCancelledRequest(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	req := httptest.NewRequest("GET", "/maker.html", nil).WithContext(ctx)
+	req.SetBasicAuth("admin", "owner-password")
+	w := httptest.NewRecorder()
+	start := time.Now()
+	srv.ServeHTTP(w, req)
+	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
+		t.Errorf("cancelled request took %v; the password was checked anyway", elapsed)
+	}
+	if w.Code == http.StatusOK {
+		t.Error("cancelled request was served")
 	}
 }

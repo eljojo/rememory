@@ -24,6 +24,52 @@ const (
 	maxBundleName     = 256
 )
 
+// requireAdmin asks for the admin password (HTTP Basic, any user name)
+// before creating bundles, unless uploads are open. The browser asks once on
+// the maker page and resends it with the maker's upload. Before setup the
+// handlers redirect or refuse on their own.
+func (s *Server) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.openUploads || !IsSetup(s.store) {
+			next(w, r)
+			return
+		}
+		_, password, _ := r.BasicAuth()
+		ok, busy := s.checkAdminPassword(r, password)
+		if busy {
+			http.Error(w, "The server is busy. Please try again in a moment.", http.StatusServiceUnavailable)
+			return
+		}
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="ReMemory admin", charset="UTF-8"`)
+			http.Error(w, "Enter the admin password to create bundles on this server.", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
+
+// checkAdminPassword verifies password, one scrypt derivation at a time.
+// busy reports that too many checks are already waiting; a request whose
+// client has gone away by its turn is refused without a derivation.
+func (s *Server) checkAdminPassword(r *http.Request, password string) (ok, busy bool) {
+	if password == "" || len(password) > maxPasswordLen {
+		return false, false
+	}
+	select {
+	case s.authQueue <- struct{}{}:
+		defer func() { <-s.authQueue }()
+	default:
+		return false, true
+	}
+	s.authMu.Lock()
+	defer s.authMu.Unlock()
+	if r.Context().Err() != nil {
+		return false, false
+	}
+	return CheckPassword(s.store, password), false
+}
+
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	if !IsSetup(s.store) {
 		s.handleSetupPage(w, r)
@@ -314,9 +360,11 @@ func (s *Server) handleAPIDeleteBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.authMu.Lock()
-	ok := CheckPassword(s.store, body.Password)
-	s.authMu.Unlock()
+	ok, busy := s.checkAdminPassword(r, body.Password)
+	if busy {
+		http.Error(w, "The server is busy. Please try again in a moment.", http.StatusServiceUnavailable)
+		return
+	}
 	if !ok {
 		http.Error(w, "Wrong password.", http.StatusUnauthorized)
 		return
