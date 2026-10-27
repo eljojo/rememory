@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/translations"
@@ -104,7 +105,7 @@ func GenerateMakerHTML(createWASMBytes []byte, opts MakerHTMLOptions) string {
 	}
 
 	// Embed create.wasm as gzip-compressed base64
-	createWASMB64 := compressAndEncode(createWASMBytes)
+	createWASMB64 := encodedWASM(createWASMBytes)
 
 	// Build all scripts
 	var scripts strings.Builder
@@ -162,4 +163,28 @@ func GenerateMakerHTML(createWASMBytes []byte, opts MakerHTMLOptions) string {
 	result = applyCSPNonce(result)
 
 	return result
+}
+
+// rememory serve renders maker.html on every request, and gzip -9 over the
+// ~14 MB create.wasm takes about a second, so the encoded form is kept for
+// the slice it was computed from (set once at startup).
+var wasmEncodeCache struct {
+	sync.Mutex
+	first *byte
+	n     int
+	b64   string
+}
+
+func encodedWASM(data []byte) string {
+	if len(data) == 0 {
+		return compressAndEncode(data)
+	}
+	c := &wasmEncodeCache
+	c.Lock()
+	defer c.Unlock()
+	if c.first != &data[0] || c.n != len(data) {
+		c.b64 = compressAndEncode(data)
+		c.first, c.n = &data[0], len(data)
+	}
+	return c.b64
 }
