@@ -73,6 +73,7 @@ declare const __SELFHOSTED__: boolean;
     chosenThreshold: 2,
     files: [],
     bundles: [],
+    manifest: null,
     wasmReady: false,
     generating: false,
     generationComplete: false,
@@ -120,6 +121,7 @@ declare const __SELFHOSTED__: boolean;
     downloadAllSection: HTMLElement | null;
     downloadAllBtn: HTMLButtonElement | null;
     downloadYamlBtn: HTMLElement | null;
+    downloadManifestBtn: HTMLElement | null;
     stepNumber2: HTMLElement | null;
     stepNumber3: HTMLElement | null;
   }
@@ -155,6 +157,7 @@ declare const __SELFHOSTED__: boolean;
     downloadAllSection: document.getElementById('download-all-section'),
     downloadAllBtn: document.getElementById('download-all-btn') as HTMLButtonElement | null,
     downloadYamlBtn: document.getElementById('download-yaml-btn'),
+    downloadManifestBtn: document.getElementById('download-manifest-btn'),
     stepNumber2: document.getElementById('step-number-2'),
     stepNumber3: document.getElementById('step-number-3'),
   };
@@ -715,6 +718,10 @@ declare const __SELFHOSTED__: boolean;
       e.preventDefault();
       downloadProjectYaml();
     });
+    elements.downloadManifestBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      downloadManifest();
+    });
   }
 
   // ============================================
@@ -988,6 +995,7 @@ declare const __SELFHOSTED__: boolean;
     state.generating = true;
     state.generationComplete = false;
     state.bundles = [];
+    state.manifest = null;
 
     if (elements.generateBtn) {
       elements.generateBtn.disabled = true;
@@ -1082,6 +1090,7 @@ declare const __SELFHOSTED__: boolean;
       setProgress(80);
 
       state.bundles = result.bundles;
+      state.manifest = result.manifest ?? null;
 
       // Expose bundles for testing
       (window as unknown as { rememoryBundles?: GeneratedBundle[] }).rememoryBundles = result.bundles;
@@ -1175,6 +1184,20 @@ declare const __SELFHOSTED__: boolean;
     const a = document.createElement('a');
     a.href = url;
     a.download = bundle.fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Small archives travel only inside each recover.html, so without this the
+  // person making the bundles keeps no copy of the locked files. It holds no
+  // piece, so it's safe to keep anywhere.
+  function downloadManifest(): void {
+    if (!state.manifest) return;
+    const blob = new Blob([state.manifest as BlobPart], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'MANIFEST.age';
     a.click();
     URL.revokeObjectURL(url);
   }

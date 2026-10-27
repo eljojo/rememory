@@ -698,4 +698,47 @@ friends:
     await recovery.expectFileCount(2);
     await recovery.expectDownloadVisible();
   });
+
+  // Small archives live only inside each recover.html, so the person making
+  // the bundles has no copy of the locked files unless the maker offers one.
+  test('the locked files can be saved on their own and opened with enough pieces', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, 'Alice', 'alice@test.com');
+    await creation.setFriend(1, 'Bob', 'bob@test.com');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'locked-copy'));
+    await creation.generate();
+    await creation.expectGenerationComplete();
+
+    const download = page.waitForEvent('download');
+    await page.locator('#download-manifest-btn').click();
+    const saved = await download;
+    expect(saved.suggestedFilename()).toBe('MANIFEST.age');
+
+    const bundlesDir = path.join(tmpDir, 'locked-copy-bundles');
+    fs.mkdirSync(bundlesDir, { recursive: true });
+    const manifestPath = path.join(bundlesDir, 'MANIFEST.age');
+    await saved.saveAs(manifestPath);
+    expect(fs.readFileSync(manifestPath).subarray(0, 21).toString('latin1')).toBe('age-encryption.org/v1');
+
+    const friendDirs = [];
+    for (const [index, name] of ['alice', 'bob'].entries()) {
+      const data = await creation.downloadBundle(index);
+      expect(data).toBeTruthy();
+      const dir = path.join(bundlesDir, name);
+      new AdmZip(Buffer.from(data!)).extractAllTo(dir, true);
+      friendDirs.push(dir);
+    }
+
+    // Pieces from the READMEs only; the locked files come from the saved copy.
+    const recovery = new RecoveryPage(page, bundlesDir);
+    await recovery.openFile(generateStandaloneHTML(tmpDir, 'recover'));
+    await recovery.addShares(...friendDirs);
+    await recovery.addManifestFile(manifestPath);
+
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(2);
+  });
 });

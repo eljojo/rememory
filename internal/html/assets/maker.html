@@ -28,7 +28,7 @@
           <ul>
             <li data-i18n="how_security_local">Everything runs in your browser — nothing leaves your device</li>
             <li data-i18n="how_security_offline">This page works offline — save it with File &#x203A; Save As</li>
-            <li data-i18n="how_security_encryption">Protected with age encryption</li>
+            <li data-i18n="how_security_encryption">Locked with age, a well-reviewed open-source encryption tool</li>
             <li data-i18n="how_security_opensource">Open source (Apache-2.0)</li>
           </ul>
         </div>
@@ -48,7 +48,7 @@
 
       <!-- Anonymous mode: shares input -->
       <div id="shares-input" class="shares-input hidden">
-        <label for="num-shares" data-i18n="num_shares_label">Number of shares:</label>
+        <label for="num-shares" data-i18n="num_shares_label">Number of pieces:</label>
         <input type="number" id="num-shares" min="2" max="20" value="5">
       </div>
 
@@ -68,16 +68,16 @@
       </div>
 
       <div id="threshold-section" class="threshold-selector hidden">
-        <label for="threshold-select" data-i18n="threshold_label">Threshold:</label>
+        <label for="threshold-select" data-i18n="threshold_label">Needed:</label>
         <select id="threshold-select"></select>
         <span data-i18n="threshold_desc">must agree to recover</span>
       </div>
       <p id="threshold-guidance" class="threshold-guidance hidden" data-i18n="threshold_guidance">Think about who might be reachable at the same time. A lower number is more forgiving if someone is unavailable.</p>
 
       <details id="import-section" class="import-section">
-        <summary data-i18n="import_summary">Import contacts from existing project.yml</summary>
-        <textarea id="yaml-import" placeholder="Paste your project.yml content here..." data-i18n-placeholder="import_placeholder"></textarea>
-        <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Import Contacts</button>
+        <summary data-i18n="import_summary">Bring in people from a saved project.yml</summary>
+        <textarea id="yaml-import" placeholder="Paste the contents of your saved project.yml" data-i18n-placeholder="import_placeholder"></textarea>
+        <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Bring them in</button>
       </details>
 
       <div id="friends-validation" class="validation-error hidden"></div>
@@ -89,7 +89,7 @@
 
       <div id="files-drop-zone" class="drop-zone">
         <p data-i18n="files_drop">Drag &amp; drop a folder here, or click to select files</p>
-        <small data-i18n="files_hint">These files will be encrypted and split among your friends</small>
+        <small data-i18n="files_hint">These will be locked. Each person gets a copy, and only enough of them together can open it.</small>
       </div>
       <input type="file" id="files-input" multiple>
       <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
@@ -131,6 +131,6 @@
         <button id="download-all-btn" class="btn btn-success">
           <span data-i18n="download_all_btn">Download All Bundles</span>
         </button>
-        <p class="next-steps-hint"><a href="{{GITHUB_PAGES}}/docs.html#distributing" target="_blank" data-i18n="next_steps_link">What to do next</a> &#xB7; <a href="#" id="download-yaml-btn" data-i18n="download_yaml_btn">Save project.yml</a></p>
+        <p class="next-steps-hint"><a href="{{GITHUB_PAGES}}/docs.html#distributing" target="_blank" data-i18n="next_steps_link">What to do next</a> &#xB7; <a href="#" id="download-yaml-btn" data-i18n="download_yaml_btn">Save your setup (project.yml)</a> &#xB7; <a href="#" id="download-manifest-btn" data-i18n="download_manifest_btn">Save the locked files (MANIFEST.age)</a></p>
       </div>
     </div>
