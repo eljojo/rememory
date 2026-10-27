@@ -88,10 +88,15 @@ func createBundlesFromArchive(config CreateBundlesFromArchiveConfig) ([]BundleOu
 	if len(config.ArchiveData) == 0 {
 		return nil, nil, fmt.Errorf("no archive data provided")
 	}
+	names := make([]string, len(config.Friends))
 	for i, f := range config.Friends {
 		if f.Name == "" {
 			return nil, nil, fmt.Errorf("friend %d: name is required", i+1)
 		}
+		names[i] = f.Name
+	}
+	if _, err := core.FriendFileStems(names); err != nil {
+		return nil, nil, err
 	}
 
 	// Generate random passphrase
@@ -289,7 +294,7 @@ func bundleFromManifest(manifestData, raw []byte, config bundleGenConfig) ([]Bun
 
 		bundles[i] = BundleOutput{
 			FriendName: friend.Name,
-			FileName:   fmt.Sprintf("bundle-%s.zip", core.SanitizeFilename(friend.Name)),
+			FileName:   fmt.Sprintf("bundle-%s.zip", core.FriendFileStem(friend.Name, i+1)),
 			Data:       zipData,
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/eljojo/rememory/internal/core"
 	"gopkg.in/yaml.v3"
 )
 
@@ -102,10 +103,16 @@ func (p *Project) Validate() error {
 		return fmt.Errorf("threshold (%d) cannot exceed number of friends (%d)", p.Threshold, len(p.Friends))
 	}
 
+	names := make([]string, len(p.Friends))
 	for i, f := range p.Friends {
 		if f.Name == "" {
 			return fmt.Errorf("friend %d: name is required", i+1)
 		}
+		names[i] = f.Name
+	}
+
+	if _, err := core.FriendFileStems(names); err != nil {
+		return err
 	}
 
 	return nil
@@ -119,6 +126,27 @@ func (p *Project) ManifestPath() string {
 // OutputPath returns the path to the output directory.
 func (p *Project) OutputPath() string {
 	return filepath.Join(p.Path, OutputDir)
+}
+
+// SharePath returns where friend i's share file is. Older versions named some
+// files differently (SHARE-.txt for names without Latin letters), so the
+// file recorded at seal time comes first, then the current naming.
+func (p *Project) SharePath(i int) string {
+	current := filepath.Join(p.SharesPath(), fmt.Sprintf("SHARE-%s.txt", core.FriendFileStem(p.Friends[i].Name, i+1)))
+	if p.Sealed == nil || i >= len(p.Sealed.Shares) || p.Sealed.Shares[i].File == "" ||
+		p.Sealed.Shares[i].Friend != p.Friends[i].Name {
+		return current
+	}
+	recorded := p.Sealed.Shares[i].File
+	for _, candidate := range []string{
+		filepath.Join(p.Path, recorded),                        // seal records it relative to the project
+		filepath.Join(p.SharesPath(), filepath.Base(recorded)), // or as a bare file name
+	} {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+	return current
 }
 
 // SharesPath returns the path to the shares directory.

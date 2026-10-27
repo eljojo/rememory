@@ -382,6 +382,36 @@ friends:
     await creation.expectBundleFor('Share 4');
   });
 
+  test('friends without latin letters in their names get distinct bundle files', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, '小明');
+    await creation.setFriend(1, '小華');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'nonlatin'));
+
+    await creation.generate();
+    await creation.expectGenerationComplete();
+    await creation.expectBundleCount(2);
+    await expect(page.locator('.bundle-item .meta').nth(0)).toContainText('bundle-1.zip');
+    await expect(page.locator('.bundle-item .meta').nth(1)).toContainText('bundle-2.zip');
+  });
+
+  test('friends whose names give the same file name are refused', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, 'José');
+    await creation.setFriend(1, 'Jose');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'collide'));
+
+    await creation.generate();
+    await expect(page.locator('#status-message')).toContainText('SHARE-jose.txt', { timeout: 120000 });
+    await creation.expectBundleCount(0);
+  });
+
   test('anonymous mode validates files required', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 

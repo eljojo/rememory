@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/spf13/cobra"
 )
@@ -59,7 +58,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	// Friends
 	fmt.Println("\nShare holders:")
 	for i, friend := range p.Friends {
-		shareExists := checkShareExists(p, friend)
+		shareExists := checkShareExists(p, i)
 		status := green("✓")
 		if !shareExists {
 			status = yellow("○")
@@ -100,10 +99,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func checkShareExists(p *project.Project, friend project.Friend) bool {
-	sharesDir := p.SharesPath()
-	filename := fmt.Sprintf("SHARE-%s.txt", core.SanitizeFilename(friend.Name))
-	_, err := os.Stat(filepath.Join(sharesDir, filename))
+func checkShareExists(p *project.Project, i int) bool {
+	_, err := os.Stat(p.SharePath(i))
 	return err == nil
 }
 

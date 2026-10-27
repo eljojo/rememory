@@ -274,6 +274,7 @@ func TestShareFilename(t *testing.T) {
 		{"Bob Smith", "SHARE-bob-smith.txt"},
 		{"Carol!", "SHARE-carol.txt"},
 		{"", "SHARE-1.txt"},
+		{"小明", "SHARE-1.txt"},
 	}
 
 	for _, tt := range tests {
@@ -282,6 +283,40 @@ func TestShareFilename(t *testing.T) {
 		if got != tt.expected {
 			t.Errorf("holder %q: got %q, want %q", tt.holder, got, tt.expected)
 		}
+	}
+}
+
+func TestFriendFileStems(t *testing.T) {
+	tests := []struct {
+		name    string
+		names   []string
+		want    []string
+		wantErr bool
+	}{
+		{"latin names", []string{"Alice", "Bob Smith", "José"}, []string{"alice", "bob-smith", "jose"}, false},
+		{"no latin letters falls back to index", []string{"小明", "小華", "小美"}, []string{"1", "2", "3"}, false},
+		{"mixed", []string{"Alice", "小華", "Олег"}, []string{"alice", "2", "3"}, false},
+		{"case collision", []string{"Alice", "alice"}, nil, true},
+		{"accent collision", []string{"José", "Jose"}, nil, true},
+		{"fallback collides with a name", []string{"2", "小華"}, nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := FriendFileStems(tt.names)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got %q", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if strings.Join(got, ",") != strings.Join(tt.want, ",") {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 

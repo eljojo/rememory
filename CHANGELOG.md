@@ -5,6 +5,7 @@ All notable changes to ReMemory are documented here.
 ## Unreleased
 
 - **Forged pieces are refused** — A specially crafted piece could make recovery open files chosen by whoever made it, instead of failing. Both the recovery tool and `rememory recover` now reject such pieces. Real pieces are never affected, and existing bundles work as before. Thanks @lyrixx for reporting this!
+- **Every friend gets their own files** — Friends whose names use no Latin letters (小明, Олег) used to share one file name in `rememory seal`, so each piece overwrote the last and the secret could become unrecoverable. Their files are now numbered instead (`bundle-2.zip`). Names that differ only by capitalization or accents, like José and Jose, are now refused with a clear message, in the CLI and in the web maker. If you sealed a project with such names, please seal it again and send out the new bundles. Thanks @lyrixx for reporting this!
 
 ## v0.0.21 — 2026-04-13
 

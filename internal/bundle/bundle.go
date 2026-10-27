@@ -107,7 +107,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 		recoverHTML := html.GenerateRecoverHTML(personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 
-		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", core.SanitizeFilename(friend.Name)))
+		bundlePath := filepath.Join(bundlesDir, fmt.Sprintf("bundle-%s.zip", core.FriendFileStem(friend.Name, i+1)))
 
 		err := GenerateBundle(BundleParams{
 			OutputPath:       bundlePath,
@@ -232,13 +232,10 @@ func GenerateBundle(params BundleParams) error {
 
 // loadShares reads all share files from the project's shares directory.
 func loadShares(p *project.Project) ([]*core.Share, error) {
-	sharesDir := p.SharesPath()
-
 	shares := make([]*core.Share, len(p.Friends))
 	for i, friend := range p.Friends {
-		// Try to find share file for this friend
-		filename := fmt.Sprintf("SHARE-%s.txt", core.SanitizeFilename(friend.Name))
-		sharePath := filepath.Join(sharesDir, filename)
+		sharePath := p.SharePath(i)
+		filename := filepath.Base(sharePath)
 
 		data, err := os.ReadFile(sharePath)
 		if err != nil {
@@ -248,6 +245,11 @@ func loadShares(p *project.Project) ([]*core.Share, error) {
 		share, err := core.ParseShare(data)
 		if err != nil {
 			return nil, fmt.Errorf("parsing share for %s: %w", friend.Name, err)
+		}
+		// Guards against a share file overwritten by another friend's, which
+		// older versions allowed when two names produced the same file name.
+		if share.Index != i+1 {
+			return nil, fmt.Errorf("share file %s holds piece #%d, but %s is friend #%d — run 'rememory seal' again", filename, share.Index, friend.Name, i+1)
 		}
 
 		shares[i] = share
