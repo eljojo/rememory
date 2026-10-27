@@ -35,10 +35,12 @@ A pre-built image is published to GitHub Container Registry on every release.
 ```bash
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:latest
 ```
+
+The examples publish the port on `127.0.0.1`, so only this machine can reach it; to share it, put the [reverse proxy](#reverse-proxy) below in front.
 
 Because the container listens on every interface, the server chooses its admin password at first start and prints it once. Find it in the logs:
 
@@ -53,7 +55,7 @@ To pin a specific version:
 ```bash
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:v0.0.16
 ```
@@ -65,7 +67,7 @@ services:
   rememory:
     image: ghcr.io/eljojo/rememory:latest
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - rememory-data:/data
     restart: unless-stopped

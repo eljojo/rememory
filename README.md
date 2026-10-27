@@ -75,7 +75,7 @@ sudo mv rememory /usr/local/bin/
 # Docker (self-hosted)
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:latest
 
