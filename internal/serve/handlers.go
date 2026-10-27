@@ -2,6 +2,7 @@ package serve
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,11 @@ import (
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
+)
+
+const (
+	maxSetupBody   = 4 << 10
+	maxPasswordLen = 1 << 10
 )
 
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -108,11 +114,16 @@ func (s *Server) handleAPIStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
+	s.setupMu.Lock()
+	defer s.setupMu.Unlock()
+
 	if IsSetup(s.store) {
 		http.Error(w, "Admin password is already set.", http.StatusConflict)
 		return
 	}
 
+	// Anyone can reach this endpoint before setup, so keep the body small.
+	r.Body = http.MaxBytesReader(w, r.Body, maxSetupBody)
 	var body struct {
 		Password string `json:"password"`
 	}
@@ -125,8 +136,16 @@ func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Password cannot be empty.", http.StatusBadRequest)
 		return
 	}
+	if len(body.Password) > maxPasswordLen {
+		http.Error(w, "Password is too long.", http.StatusBadRequest)
+		return
+	}
 
 	if err := SetPassword(s.store, body.Password); err != nil {
+		if errors.Is(err, ErrAlreadySet) {
+			http.Error(w, "Admin password is already set.", http.StatusConflict)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

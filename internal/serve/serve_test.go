@@ -529,3 +529,45 @@ func TestCrossSiteRequestsRefused(t *testing.T) {
 		t.Errorf("same-origin setup: got %d %s", w.Code, w.Body.String())
 	}
 }
+
+// Before setup, the endpoint is open: its body must be small, and two
+// setups racing must not both be told "ok" while only one password is kept.
+func TestSetupIsBoundedAndAtomic(t *testing.T) {
+	srv := newTestServer(t)
+	huge := `{"password":"` + strings.Repeat("a", 1<<20) + `"}`
+	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(huge))
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code == http.StatusOK || IsSetup(srv.Store()) {
+		t.Fatalf("1 MiB setup body was accepted (%d)", w.Code)
+	}
+
+	srv = newTestServer(t)
+	passwords := []string{"first-password", "second-password", "third-password"}
+	codes := make([]int, len(passwords))
+	var wg sync.WaitGroup
+	for i, pw := range passwords {
+		wg.Add(1)
+		go func(i int, pw string) {
+			defer wg.Done()
+			req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"`+pw+`"}`))
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+			codes[i] = w.Code
+		}(i, pw)
+	}
+	wg.Wait()
+
+	winners := 0
+	for i, code := range codes {
+		if code == http.StatusOK {
+			winners++
+			if !CheckPassword(srv.Store(), passwords[i]) {
+				t.Errorf("setup with %q was told ok but another password is stored", passwords[i])
+			}
+		}
+	}
+	if winners != 1 {
+		t.Errorf("%d concurrent setups succeeded, want 1 (codes %v)", winners, codes)
+	}
+}

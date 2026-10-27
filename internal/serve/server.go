@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/eljojo/rememory/docs"
 	"github.com/eljojo/rememory/internal/html"
@@ -27,6 +28,9 @@ type Server struct {
 	version         string
 	mux             *http.ServeMux
 	handler         http.Handler
+
+	// setupMu serializes admin setup: one scrypt derivation at a time.
+	setupMu sync.Mutex
 }
 
 // New creates a new Server from the given config.
