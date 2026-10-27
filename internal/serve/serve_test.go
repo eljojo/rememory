@@ -23,6 +23,7 @@ func newTestServer(t *testing.T) *Server {
 	t.Helper()
 	dir := t.TempDir()
 	srv, err := New(Config{
+		Host:            "127.0.0.1",
 		DataDir:         dir,
 		MaxManifestSize: 10 << 20, // 10 MB
 		Version:         "test",
@@ -207,6 +208,7 @@ func TestSetupRequired(t *testing.T) {
 func TestLargeManifest(t *testing.T) {
 	dir := t.TempDir()
 	srv, err := New(Config{
+		Host:            "127.0.0.1",
 		DataDir:         dir,
 		MaxManifestSize: 1 << 10, // 1 KB for testing
 		Version:         "test",
@@ -523,7 +525,8 @@ func TestCrossSiteRequestsRefused(t *testing.T) {
 
 	// Same-origin browser requests and scripts without browser headers work.
 	req = httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"owner-password"}`))
-	req.Header.Set("Origin", "http://example.com")
+	req.Host = "localhost:8080"
+	req.Header.Set("Origin", "http://localhost:8080")
 	req.Header.Set("Sec-Fetch-Site", "same-origin")
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -686,5 +689,51 @@ func TestRecoverWithoutIDOnlyFallsBackToASoleBundle(t *testing.T) {
 	uploadManifest(t, srv, []byte(agePrefix+"two"), map[string]any{"name": "Someone else"})
 	if strings.Contains(get(), `"manifestURL"`) {
 		t.Error("with two bundles, /recover.html loaded one without being asked")
+	}
+}
+
+// A server reachable from other machines must not wait for the first
+// visitor to choose its admin password.
+func TestEnsureAdminPassword(t *testing.T) {
+	newStore := func() *Store {
+		s, err := NewStore(t.TempDir())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+
+	for _, host := range []string{"127.0.0.1", "localhost", "::1"} {
+		store := newStore()
+		generated, err := EnsureAdminPassword(store, host, "")
+		if err != nil || generated != "" || IsSetup(store) {
+			t.Errorf("%s: generated %q (err %v); local servers keep the setup page", host, generated, err)
+		}
+	}
+
+	for _, host := range []string{"0.0.0.0", "", "192.168.1.10", "::"} {
+		store := newStore()
+		generated, err := EnsureAdminPassword(store, host, "")
+		if err != nil || generated == "" || !CheckPassword(store, generated) {
+			t.Errorf("%q: generated %q (err %v), want a stored password", host, generated, err)
+		}
+		again, _ := EnsureAdminPassword(store, host, "")
+		if again != "" {
+			t.Errorf("%q: generated a second password on restart", host)
+		}
+	}
+
+	store := newStore()
+	if generated, err := EnsureAdminPassword(store, "0.0.0.0", "from-the-env"); err != nil || generated != "" {
+		t.Fatalf("env password: generated %q, err %v", generated, err)
+	}
+	if !CheckPassword(store, "from-the-env") {
+		t.Error("REMEMORY_ADMIN_PASSWORD was not stored")
+	}
+	if _, err := EnsureAdminPassword(store, "127.0.0.1", "changed-in-the-env"); err != nil {
+		t.Fatal(err)
+	}
+	if !CheckPassword(store, "changed-in-the-env") || CheckPassword(store, "from-the-env") {
+		t.Error("a changed REMEMORY_ADMIN_PASSWORD should replace the stored one")
 	}
 }

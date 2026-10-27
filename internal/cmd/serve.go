@@ -20,7 +20,12 @@ The server provides a web interface for bundle creation (using WASM) and
 recovery (using native JavaScript crypto). An admin password protects
 bundle deletion.
 
-The first visit prompts for an admin password. After that:
+On localhost, the first visit prompts for an admin password. A server
+listening on other interfaces (--host 0.0.0.0, as in Docker) generates one
+at first start and prints it once, so no visitor can claim it. Set
+REMEMORY_ADMIN_PASSWORD to choose it yourself; it replaces a stored one.
+
+After setup:
   - If no manifest exists, the create page is shown
   - If a manifest exists, the recover page is shown
 
@@ -79,6 +84,17 @@ func runServe(cmd *cobra.Command, args []string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("starting server: %w", err)
+	}
+
+	generated, err := serve.EnsureAdminPassword(srv.Store(), host, os.Getenv("REMEMORY_ADMIN_PASSWORD"))
+	if err != nil {
+		return fmt.Errorf("setting admin password: %w", err)
+	}
+	if generated != "" {
+		fmt.Printf("\nThis server is reachable from other machines, so it chose its admin password:\n\n")
+		fmt.Printf("    %s\n\n", generated)
+		fmt.Printf("It won't be printed again. Keep it somewhere safe. To choose your own,\n")
+		fmt.Printf("set REMEMORY_ADMIN_PASSWORD, or delete admin.age from the data directory and restart.\n\n")
 	}
 
 	addr := host + ":" + port

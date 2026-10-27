@@ -27,8 +27,11 @@ type Server struct {
 	store           *Store
 	maxManifestSize int
 	version         string
-	mux             *http.ServeMux
-	handler         http.Handler
+	// reachable: listening beyond loopback. Such a server gets its admin
+	// password at startup and never offers setup.
+	reachable bool
+	mux       *http.ServeMux
+	handler   http.Handler
 
 	// authMu serializes admin setup and password checks: each runs a 256 MiB
 	// scrypt, so concurrent requests queue instead of exhausting memory.
@@ -49,6 +52,7 @@ func New(cfg Config) (*Server, error) {
 		store:           store,
 		maxManifestSize: cfg.MaxManifestSize,
 		version:         cfg.Version,
+		reachable:       !isLoopback(cfg.Host),
 		mux:             http.NewServeMux(),
 	}
 
@@ -143,7 +147,7 @@ func (s *Server) httpServer(addr string) *http.Server {
 	}
 }
 
-// Store returns the server's store (for testing).
+// Store returns the server's store.
 func (s *Server) Store() *Store {
 	return s.store
 }

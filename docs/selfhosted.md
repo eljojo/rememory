@@ -40,7 +40,13 @@ docker run -d \
   ghcr.io/eljojo/rememory:latest
 ```
 
-Visit `http://localhost:8080` to set up. The first page asks you to choose an admin password for deleting bundles.
+Because the container listens on every interface, the server chooses its admin password at first start and prints it once. Find it in the logs:
+
+```bash
+docker logs rememory
+```
+
+To choose the password yourself, set `REMEMORY_ADMIN_PASSWORD` (it replaces a stored one, so changing it later works too). Without Docker, `rememory serve` listens on `127.0.0.1` and the first page asks you to choose the password.
 
 To pin a specific version:
 
@@ -65,6 +71,7 @@ services:
     restart: unless-stopped
     # environment:
     #   REMEMORY_MAX_MANIFEST_SIZE: 200MB
+    #   REMEMORY_ADMIN_PASSWORD: choose-a-long-password
 
 volumes:
   rememory-data:
@@ -88,6 +95,7 @@ rememory serve
 | `--host` | `REMEMORY_HOST` | `127.0.0.1` | Host to bind to |
 | `--data, -d` | `REMEMORY_DATA` | `./rememory-data` | Data directory for bundles and config |
 | `--max-manifest-size` | `REMEMORY_MAX_MANIFEST_SIZE` | `50MB` | Maximum MANIFEST.age size (e.g. `50MB`, `1GB`) |
+| | `REMEMORY_ADMIN_PASSWORD` | | Admin password. If unset, a server listening beyond `127.0.0.1` generates one and prints it once |
 
 Flags take precedence over environment variables.
 
@@ -95,7 +103,7 @@ Flags take precedence over environment variables.
 
 ### Reverse proxy
 
-Put the server behind a reverse proxy with TLS.
+Put the server behind a reverse proxy with TLS. Set `REMEMORY_ADMIN_PASSWORD` before you expose it: the setup page refuses requests that come through a proxy, so no visitor can choose the password. A proxy that adds no forwarding headers (`X-Forwarded-For`, `X-Real-IP`, `Forwarded`) can't be told apart, so don't skip this step.
 
 **Caddy:**
 ```

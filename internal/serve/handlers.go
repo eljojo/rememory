@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -126,6 +127,41 @@ func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
 	if IsSetup(s.store) {
 		http.Error(w, "Admin password is already set.", http.StatusConflict)
 		return
+	}
+
+	// A reachable server got its password at startup; if admin.age is gone
+	// while it runs, setup stays closed until a restart sets a new one.
+	if s.reachable {
+		http.Error(w, "This server is reachable from other machines, so its admin password can't be chosen here. "+
+			"Restart it to generate a new one, or set REMEMORY_ADMIN_PASSWORD.", http.StatusForbidden)
+		return
+	}
+
+	// Behind a reverse proxy the server listens on 127.0.0.1 and keeps this
+	// setup page, but anyone can reach it through the proxy. Proxies add
+	// these headers; the owner sets the password from the server instead.
+	for _, h := range []string{"Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Real-IP"} {
+		if r.Header.Get(h) != "" {
+			http.Error(w, "This server is behind a proxy, so its admin password can't be chosen here. "+
+				"Set REMEMORY_ADMIN_PASSWORD when starting the server, or open the setup page from the server itself.",
+				http.StatusForbidden)
+			return
+		}
+	}
+
+	// A browser must address this machine by name. With DNS rebinding, a page
+	// on another site points its own name at 127.0.0.1, and the browser then
+	// treats its requests as same-origin, so cross-origin protection passes.
+	if r.Header.Get("Origin") != "" || r.Header.Get("Sec-Fetch-Site") != "" {
+		host := r.Host
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+		if !isLoopback(host) {
+			http.Error(w, "Open the setup page as http://localhost on the server itself, "+
+				"or set REMEMORY_ADMIN_PASSWORD when starting the server.", http.StatusForbidden)
+			return
+		}
 	}
 
 	// Anyone can reach this endpoint before setup, so keep the body small.
