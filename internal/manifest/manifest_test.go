@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/eljojo/rememory/internal/core"
 )
 
 func TestArchiveExtract(t *testing.T) {
@@ -531,5 +533,45 @@ func TestExtractAutoUnknownFormat(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unrecognized archive format") {
 		t.Errorf("expected 'unrecognized archive format' error, got: %v", err)
+	}
+}
+
+// Archives ReMemory makes must be extractable by `rememory recover`, which
+// caps files at core.MaxFileSize. A file over it used to be archived, then
+// refused halfway through extraction, leaving a partial folder.
+func TestOversizedFileRefusedBeforeWriting(t *testing.T) {
+	src := t.TempDir()
+	if err := os.WriteFile(filepath.Join(src, "a.txt"), []byte("small"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	big, err := os.Create(filepath.Join(src, "z-video.mp4"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	big.Truncate(core.MaxFileSize + 1) // sparse: cheap to create
+	big.Close()
+
+	err = CheckSizes(src)
+	if err == nil || !strings.Contains(err.Error(), "z-video.mp4") {
+		t.Errorf("CheckSizes: got %v, want an error naming z-video.mp4", err)
+	}
+
+	// An archive that holds such a file (made by an older version) is refused
+	// before anything is written.
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, _ := zw.Create("manifest/a.txt")
+	w.Write([]byte("small"))
+	w, _ = zw.Create("manifest/z-video.mp4")
+	w.Write(make([]byte, core.MaxFileSize+1))
+	zw.Close()
+
+	dest := filepath.Join(t.TempDir(), "recovered") // as `rememory recover` would name it
+	_, err = ExtractZip(bytes.NewReader(buf.Bytes()), int64(buf.Len()), dest)
+	if err == nil || !strings.Contains(err.Error(), "z-video.mp4") {
+		t.Errorf("ExtractZip: got %v, want an error naming z-video.mp4", err)
+	}
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Errorf("ExtractZip created %s before refusing", filepath.Base(dest))
 	}
 }

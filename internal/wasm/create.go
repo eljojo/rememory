@@ -311,6 +311,15 @@ func createZip(files []FileEntry) ([]byte, error) {
 	// Use "manifest" as the root directory name
 	rootDir := "manifest"
 
+	// Same limits `rememory recover` applies when extracting.
+	var total int64
+	for _, f := range files {
+		total += int64(len(f.Data))
+		if err := core.CheckArchiveLimits(f.Name, int64(len(f.Data)), total); err != nil {
+			return nil, err
+		}
+	}
+
 	for _, f := range files {
 		// Normalize the file path - ensure it's under manifest/
 		name := f.Name

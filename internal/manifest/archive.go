@@ -194,12 +194,9 @@ func ExtractTarGz(r io.Reader, destDir string) (*ExtractResult, error) {
 
 		case tar.TypeReg:
 			// Security: enforce file size limit
-			if header.Size > core.MaxFileSize {
-				return nil, fmt.Errorf("file exceeds maximum size of %d bytes", core.MaxFileSize)
-			}
 			totalSize += header.Size
-			if totalSize > core.MaxTotalSize {
-				return nil, fmt.Errorf("archive exceeds maximum total size of %d bytes", core.MaxTotalSize)
+			if err := core.CheckArchiveLimits(header.Name, header.Size, totalSize); err != nil {
+				return nil, err
 			}
 
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
@@ -375,17 +372,29 @@ func ExtractZip(r io.ReaderAt, size int64, destDir string) (*ExtractResult, erro
 		return nil, fmt.Errorf("resolving path: %w", err)
 	}
 
-	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return nil, fmt.Errorf("creating destination: %w", err)
-	}
-
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, fmt.Errorf("opening zip: %w", err)
 	}
 
-	var rootDir string
+	// Check every size before creating or writing anything, so a refused
+	// archive leaves no partial folder behind.
 	var totalSize int64
+	for _, f := range zr.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		totalSize += int64(f.UncompressedSize64)
+		if err := core.CheckArchiveLimits(f.Name, int64(f.UncompressedSize64), totalSize); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return nil, fmt.Errorf("creating destination: %w", err)
+	}
+
+	var rootDir string
 
 	for _, f := range zr.File {
 		// Track the root directory
@@ -406,15 +415,6 @@ func ExtractZip(r io.ReaderAt, size int64, destDir string) (*ExtractResult, erro
 				return nil, fmt.Errorf("creating directory %s: %w", target, err)
 			}
 			continue
-		}
-
-		// Security: enforce file size limit
-		if int64(f.UncompressedSize64) > core.MaxFileSize {
-			return nil, fmt.Errorf("file exceeds maximum size of %d bytes", core.MaxFileSize)
-		}
-		totalSize += int64(f.UncompressedSize64)
-		if totalSize > core.MaxTotalSize {
-			return nil, fmt.Errorf("archive exceeds maximum total size of %d bytes", core.MaxTotalSize)
 		}
 
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
@@ -486,10 +486,67 @@ func ExtractAuto(r io.ReadSeeker, destDir string) (*ExtractResult, error) {
 
 	// gzip: starts with \x1f\x8b
 	if magic[0] == 0x1f && magic[1] == 0x8b {
+		// tar streams, so read the headers once first: a refused archive
+		// then leaves no partial folder behind.
+		if err := checkTarGzSizes(r); err != nil {
+			return nil, err
+		}
+		if _, err := r.Seek(0, io.SeekStart); err != nil {
+			return nil, fmt.Errorf("rewinding reader: %w", err)
+		}
 		return ExtractTarGz(r, destDir)
 	}
 
 	return nil, fmt.Errorf("unrecognized archive format (expected ZIP or tar.gz)")
+}
+
+// checkTarGzSizes applies core.CheckArchiveLimits to the regular files in a
+// tar.gz stream without writing anything.
+func checkTarGzSizes(r io.Reader) error {
+	gzr, err := gzip.NewReader(r)
+	if err != nil {
+		return fmt.Errorf("creating gzip reader: %w", err)
+	}
+	defer gzr.Close()
+	tr := tar.NewReader(gzr)
+	var total int64
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("reading tar: %w", err)
+		}
+		if header.Typeflag != tar.TypeReg {
+			continue
+		}
+		total += header.Size
+		if err := core.CheckArchiveLimits(header.Name, header.Size, total); err != nil {
+			return err
+		}
+	}
+}
+
+// CheckSizes applies core.CheckArchiveLimits to the regular files under
+// dir (the ones ArchiveZip includes), so an archive is refused before it is
+// made rather than when someone tries to recover it.
+func CheckSizes(dir string) error {
+	var total int64
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			rel = path
+		}
+		total += info.Size()
+		return core.CheckArchiveLimits(filepath.ToSlash(rel), info.Size(), total)
+	})
 }
 
 // CountFiles counts the number of regular files in a directory.

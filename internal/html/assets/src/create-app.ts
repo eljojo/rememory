@@ -664,12 +664,16 @@ declare const __SELFHOSTED__: boolean;
 
     state.files.forEach((file, index) => {
       totalSize += file.data.length;
+      const tooLarge = file.data.length > maxFileSize;
       const item = document.createElement('div');
-      item.className = 'file-item';
+      item.className = tooLarge ? 'file-item size-warning' : 'file-item';
+      const sizeText = tooLarge
+        ? `${formatSize(file.data.length)} — ${t('files_too_large', formatSize(maxFileSize))}`
+        : formatSize(file.data.length);
       item.innerHTML = `
         <span class="icon">&#128196;</span>
         <span class="name">${escapeHtml(file.name)}</span>
-        <span class="size">${formatSize(file.data.length)}</span>
+        <span class="size">${escapeHtml(sizeText)}</span>
         <button type="button" class="file-remove-btn" data-index="${index}" title="${t('remove')}">&times;</button>
       `;
       const removeBtn = item.querySelector('.file-remove-btn');
@@ -844,9 +848,12 @@ declare const __SELFHOSTED__: boolean;
 
   }
 
-  // Maximum total file size — injected by Go from core.MaxTotalSize (standalone)
-  // or the server's configured limit (selfhosted).
+  // Maximum total file size — injected by Go from core.MaxTotalSize, or the
+  // server's configured limit when smaller (selfhosted).
   const maxTotalFileSize = window.MAX_TOTAL_FILE_SIZE ?? 1024 * 1024 * 1024;
+  // Maximum size of one file — injected by Go from core.MaxFileSize, the
+  // most `rememory recover` extracts.
+  const maxFileSize = window.MAX_FILE_SIZE ?? 100 * 1024 * 1024;
 
   function getTotalFileSize(): number {
     let total = 0;
@@ -857,7 +864,8 @@ declare const __SELFHOSTED__: boolean;
   }
 
   function isOverSizeLimit(): boolean {
-    return state.files.length > 0 && getTotalFileSize() > maxTotalFileSize;
+    return state.files.length > 0 &&
+      (getTotalFileSize() > maxTotalFileSize || state.files.some(f => f.data.length > maxFileSize));
   }
 
   function checkGenerateReady(): void {

@@ -191,6 +191,7 @@ declare global {
     VERSION?: string;
     BUILD_DATE?: string;
     MAX_TOTAL_FILE_SIZE?: number;
+    MAX_FILE_SIZE?: number;
 
     // Localized README filenames (embedded in recover.html)
     README_NAMES?: string[];

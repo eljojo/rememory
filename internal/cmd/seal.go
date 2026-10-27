@@ -124,6 +124,11 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 		}
 	}
 
+	// Refuse what `rememory recover` couldn't extract, before writing anything.
+	if err := manifest.CheckSizes(manifestDir); err != nil {
+		return fmt.Errorf("cannot seal %s: %w", manifestDir, err)
+	}
+
 	dirSize, err := manifest.DirSize(manifestDir)
 	if err != nil {
 		return fmt.Errorf("calculating manifest size: %w", err)

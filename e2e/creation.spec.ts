@@ -362,6 +362,26 @@ friends:
     await creation.expectFileCount(250);
   });
 
+  // `rememory recover` extracts files of up to 100 MiB; the maker must not
+  // put a larger one in an archive.
+  test('a file over 100 MiB is marked and blocks creation', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    const dir = path.join(tmpDir, 'oversized');
+    fs.mkdirSync(dir, { recursive: true });
+    const big = path.join(dir, 'video.mp4');
+    fs.writeFileSync(big, '');
+    fs.truncateSync(big, 100 * 1024 * 1024 + 1);
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+    await creation.addFiles([big]);
+
+    await expect(page.locator('#files-preview')).toContainText('Too large');
+    await creation.expectGenerateDisabled();
+  });
+
   test('adding more files appends to existing files', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 

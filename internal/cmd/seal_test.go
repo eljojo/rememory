@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -167,5 +168,29 @@ func TestSealOutputIsPrivate(t *testing.T) {
 		if perm := info.Mode().Perm(); perm&0077 != 0 {
 			t.Errorf("%s is %v, readable by other accounts", filepath.Base(path), perm)
 		}
+	}
+}
+
+// `rememory recover` refuses files over core.MaxFileSize, so seal must not
+// archive one: refuse before anything is written, naming the file.
+func TestSealRefusesFilesRecoverCannotExtract(t *testing.T) {
+	dir := t.TempDir()
+	p, err := project.New(dir, "test", 2, []project.Friend{{Name: "Ann"}, {Name: "Bo"}})
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+	big, err := os.Create(filepath.Join(p.ManifestPath(), "video.mp4"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	big.Truncate(core.MaxFileSize + 1)
+	big.Close()
+
+	err = sealProject(p, "", false, "")
+	if err == nil || !strings.Contains(err.Error(), "video.mp4") {
+		t.Fatalf("got %v, want an error naming video.mp4", err)
+	}
+	if _, err := os.Stat(p.ManifestAgePath()); !os.IsNotExist(err) {
+		t.Error("MANIFEST.age was written for a project that can't be recovered")
 	}
 }

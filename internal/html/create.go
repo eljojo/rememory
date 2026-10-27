@@ -90,13 +90,13 @@ func GenerateMakerHTML(createWASMBytes []byte, opts MakerHTMLOptions) string {
 		selfhostedConfigJSON = "null"
 	}
 
-	// Max total file size
-	var maxTotalFileSize string
+	// Max total file size: what `rememory recover` extracts, or the server's
+	// manifest limit if that's smaller.
+	maxTotal := core.MaxTotalSize
 	if opts.Selfhosted && opts.SelfhostedConfig != nil {
-		maxTotalFileSize = strconv.Itoa(opts.SelfhostedConfig.MaxManifestSize)
-	} else {
-		maxTotalFileSize = strconv.Itoa(core.MaxTotalSize)
+		maxTotal = min(maxTotal, opts.SelfhostedConfig.MaxManifestSize)
 	}
+	maxTotalFileSize := strconv.Itoa(maxTotal)
 
 	// Select app JS variant
 	appScript := createAppJS
@@ -130,6 +130,7 @@ func GenerateMakerHTML(createWASMBytes []byte, opts MakerHTMLOptions) string {
     window.BUILD_DATE = "{{BUILD_DATE}}";
     window.SELFHOSTED_CONFIG = ` + selfhostedConfigJSON + `;
     window.MAX_TOTAL_FILE_SIZE = ` + maxTotalFileSize + `;
+    window.MAX_FILE_SIZE = ` + strconv.Itoa(core.MaxFileSize) + `;
   </script>`)
 
 	// Tlock encryption config

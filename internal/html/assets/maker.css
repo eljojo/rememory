@@ -173,6 +173,9 @@
       background: var(--rose);
       color: var(--text);
     }
+    .file-item.size-warning {
+      background: var(--rose);
+    }
 
     /* Bundle list */
     .bundle-item {
