@@ -327,6 +327,41 @@ friends:
     await expect(page.locator('#files-preview')).toContainText('.env');
   });
 
+  // Chrome's directory reader returns at most 100 entries per call; a dropped
+  // folder must be read until the reader says it's done.
+  test('dropping a folder with more than 100 files keeps them all', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    await page.evaluate(() => {
+      const fileEntry = (name: string) => ({
+        isFile: true, isDirectory: false, name,
+        file: (cb: (f: File) => void) => cb(new File([name], name)),
+      });
+      const all = Array.from({ length: 250 }, (_, i) => fileEntry(`f${i}.txt`));
+      const folder = {
+        isFile: false, isDirectory: true, name: 'big',
+        createReader: () => {
+          let offset = 0;
+          return {
+            readEntries: (cb: (entries: unknown[]) => void) => {
+              const batch = all.slice(offset, offset + 100);
+              offset += batch.length;
+              setTimeout(() => cb(batch));
+            },
+          };
+        },
+      };
+      const drop = new Event('drop', { bubbles: true, cancelable: true });
+      Object.defineProperty(drop, 'dataTransfer', {
+        value: { items: [{ kind: 'file', webkitGetAsEntry: () => folder }] },
+      });
+      document.getElementById('files-drop-zone')!.dispatchEvent(drop);
+    });
+
+    await creation.expectFileCount(250);
+  });
+
   test('adding more files appends to existing files', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 

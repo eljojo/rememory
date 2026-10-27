@@ -550,19 +550,24 @@ declare const __SELFHOSTED__: boolean;
 
       const items = e.dataTransfer?.items;
       if (items && items.length > 0) {
-        const files: { file: File; path: string }[] = [];
+        // The browser empties the item list once this handler first awaits,
+        // so take every entry (or plain file) out of it before reading any.
+        const dropped: (FileSystemEntry | File)[] = [];
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.kind === 'file') {
-            const entry = item.webkitGetAsEntry?.();
-            if (entry) {
-              await traverseFileTree(entry, '', files);
-            } else {
-              const file = item.getAsFile();
-              if (file) {
-                files.push({ file, path: file.name });
-              }
-            }
+          if (item.kind !== 'file') continue;
+          const entry = item.webkitGetAsEntry?.();
+          const file = entry ? null : item.getAsFile();
+          if (entry) dropped.push(entry);
+          else if (file) dropped.push(file);
+        }
+
+        const files: { file: File; path: string }[] = [];
+        for (const d of dropped) {
+          if (d instanceof File) {
+            files.push({ file: d, path: d.name });
+          } else {
+            await traverseFileTree(d, '', files);
           }
         }
         await loadFiles(files);
@@ -602,9 +607,16 @@ declare const __SELFHOSTED__: boolean;
     } else if (entry.isDirectory) {
       const dirEntry = entry as FileSystemDirectoryEntry;
       const dirReader = dirEntry.createReader();
-      const entries = await new Promise<FileSystemEntry[]>((resolve) => {
-        dirReader.readEntries(resolve);
-      });
+      // readEntries returns entries in batches (Chrome: at most 100) and an
+      // empty batch once the folder has been read in full.
+      const entries: FileSystemEntry[] = [];
+      for (;;) {
+        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+          dirReader.readEntries(resolve, reject);
+        });
+        if (batch.length === 0) break;
+        entries.push(...batch);
+      }
       const newBasePath = basePath ? `${basePath}/${entry.name}` : entry.name;
       for (const childEntry of entries) {
         await traverseFileTree(childEntry, newBasePath, files);
