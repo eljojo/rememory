@@ -379,7 +379,7 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.SetFont(fontMono, "", monoSize)
 	p.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
 	p.Ln(2)
-	addBody(p, t("recover_cli_usage"))
+	addBody(p, t("recover_cli_usage", data.Threshold))
 	p.Ln(5)
 
 	// Footer: Metadata — keep header with all metadata lines

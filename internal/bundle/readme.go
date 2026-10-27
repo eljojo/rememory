@@ -185,7 +185,7 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli_hint")))
 	sb.WriteString(fmt.Sprintf("%s\n\n", data.GitHubReleaseURL))
-	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_cli_usage")))
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_cli_usage", data.Threshold)))
 
 	sb.WriteString(fmt.Sprintf("%s\n", t("metadata_note")))
 	// Metadata footer (use fixed English marker for machine parsing)

@@ -123,15 +123,31 @@ func TestReadmeAnonymousHasNoContactStep(t *testing.T) {
 	}
 }
 
-// The command-line example must work for every bundle. Reading the locked
-// files from recover.html fails when they ship as MANIFEST.age instead.
-func TestReadmeProgramExampleWorksForEveryBundle(t *testing.T) {
-	readme := GenerateReadme(testReadmeData())
+// The command-line instructions must hold for every bundle. Reading the
+// locked files from recover.html fails when they ship as MANIFEST.age
+// instead, and the program refuses fewer bundles than the threshold.
+func TestReadmeProgramInstructionsNameHowManyBundles(t *testing.T) {
+	data := testReadmeData()
+	data.Threshold = 3
+	data.Total = 5
+	readme := GenerateReadme(data)
 	if strings.Contains(readme, "--manifest recover.html") {
 		t.Error("README still suggests --manifest recover.html")
 	}
 	if !strings.Contains(readme, "rememory recover ") {
-		t.Error("README has no command-line example")
+		t.Error("README has no command-line instructions")
+	}
+	if !strings.Contains(readme, en("recover_cli_usage", 3)) || !strings.Contains(readme, "at least 3") {
+		t.Error("command-line instructions don't say how many bundles are needed")
+	}
+}
+
+// Opening someone else's recover.html, or the hosted page, means the
+// reader's own piece isn't loaded yet.
+func TestReadmeFallbackPageAsksForYourPiece(t *testing.T) {
+	readme := GenerateReadme(testReadmeData())
+	if !strings.Contains(readme, "add your piece from this README") {
+		t.Error("README doesn't say to add your piece when using another copy of the page")
 	}
 }
 

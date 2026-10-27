@@ -44,7 +44,7 @@
   "recover_browser": "PARÇALARI BİR ARAYA GETİREN SENSEN",
   "recover_step_open": "Bu paketteki recover.html dosyasını aç. Web tarayıcında, bir web sayfası gibi açılır.",
   "recover_share_loaded": "Senin parçan zaten içinde.",
-  "recover_no_html": "Bulamazsan, herhangi bir arkadaş kendininkini sana gönderebilir. Bir kopyası da şurada: {0}",
+  "recover_no_html": "Bulamazsan, herhangi bir arkadaş kendininkini sana gönderebilir ya da şuradaki kopyayı kullanabilirsin: {0} — sonra parçanı bu BENİOKU'dan ekle.",
   "recover_step_locked_files": "Kilitli dosyaları ekle: yine bu paketteki MANIFEST.age dosyasını sayfaya sürükle.",
   "recover_step_contact": "Yukarıda listelenen arkadaşlara neler olduğunu anlat ve parçalarını iste.",
   "recover_step_add": "Her parçayı geldikçe ekle:",
@@ -60,7 +60,7 @@
 
   "recover_cli": "RECOVER.HTML AÇILMAZSA",
   "recover_cli_hint": "Bilgisayarlarla arası iyi olan biri bunun yerine ReMemory programını kullanabilir. Şuradan indirilebilir:",
-  "recover_cli_usage": "Paketler aynı klasördeyken: rememory recover birinci-paket.zip ikinci-paket.zip",
+  "recover_cli_usage": "En az {0} paketi aynı klasöre koy ve rememory recover komutunu dosya adlarıyla birlikte çalıştır.",
 
   "metadata_note": "Aşağıdaki satırlar kurtarma araçları içindir. Onları görmezden gelebilirsin.",
   "recovery_rule": "GEREKEN PARÇALAR",
