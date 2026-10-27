@@ -40,7 +40,7 @@ type PersonalizationData struct {
 const tlockWaitingHTML = `<div id="tlock-waiting" class="tlock-waiting hidden" aria-live="polite">
         <div class="tlock-waiting-icon">&#128336;</div>
         <div class="tlock-waiting-body">
-          <strong id="tlock-waiting-title" data-i18n="tlock_waiting_title">Time lock active</strong>
+          <strong id="tlock-waiting-title" data-i18n="tlock_waiting_title">Not yet</strong>
           <p id="tlock-waiting-date"></p>
           <p class="tlock-waiting-hint"><a href="{{GITHUB_PAGES}}/docs#timelock" target="_blank" data-i18n="tlock_learn_more">What is this?</a></p>
         </div>
@@ -205,7 +205,7 @@ func GenerateRecoverHTML(personalization *PersonalizationData, opts ...RecoverHT
       <div class="qr-scanner-overlay"></div>
     </div>
     <div class="qr-scanner-hint">
-      <span data-i18n="scan_hint">Point your camera at a QR code from a friend's PDF</span>
+      <span data-i18n="scan_hint">Point your camera at the QR code on a friend's printed copy</span>
     </div>
   </div>`,
 		Content: content,
@@ -213,7 +213,7 @@ func GenerateRecoverHTML(personalization *PersonalizationData, opts ...RecoverHT
     <p>
       <span data-i18n="need_help">Need help?</span>
       <a href="{{GITHUB_PAGES}}/docs#recovering" target="_blank">Docs</a> &#xB7;
-      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">Download CLI tool from GitHub</a>
+      <a href="{{GITHUB_URL}}" target="_blank" data-i18n="download_cli">ReMemory on GitHub</a>
     </p>`,
 		Scripts: scripts.String(),
 	})

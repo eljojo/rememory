@@ -70,6 +70,22 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectNeedMoreShares(1);
   });
 
+  // A friend opens their own recover.html to check it, and again on the day
+  // it's needed. The note about their piece has to read true at either moment.
+  test('own piece note reads true whether checking or gathering', async ({ page }) => {
+    const bundleDir = extractBundle(bundlesDir, 'Alice');
+    const recovery = new RecoveryPage(page, bundleDir);
+
+    await recovery.open();
+
+    const panel = page.locator('#verification-status');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('Your piece is here');
+    await expect(panel).toContainText('If the time has come');
+    await expect(panel).toContainText('listed below');
+    await expect(panel).not.toContainText('When the time comes');
+  });
+
   // A bundle can carry a language code this page has no table for (a
   // project.yml edited by hand before languages were validated, or a code
   // saved by a newer version). The page must still work, in the closest
@@ -441,6 +457,11 @@ test.describe('Anonymous Bundle Recovery', () => {
 
     // Contact list should NOT be visible for anonymous bundles
     await expect(page.locator('#contact-list-section')).not.toBeVisible();
+
+    // No list to point at, so the note doesn't point at one
+    const panel = page.locator('#verification-status');
+    await expect(panel).toContainText('If the time has come');
+    await expect(panel).not.toContainText('listed below');
   });
 
   test('anonymous full recovery workflow', async ({ page }) => {
@@ -535,6 +556,20 @@ test.describe('Generic recover.html (no personalization)', () => {
     if (tmpDir && fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
+  });
+
+  // Someone gathering on a plain recover.html adds a friend's piece first.
+  // It isn't theirs, so the note about "your piece" must not appear.
+  test('a piece added by hand is not called the reader\'s own', async ({ page }) => {
+    const [bobDir] = extractBundles(bundlesDir, ['Bob']);
+    const recovery = new RecoveryPage(page, tmpDir);
+
+    await recovery.openFile(standaloneRecoverHtml);
+    await recovery.addShares(bobDir);
+
+    await recovery.expectShareCount(1);
+    await recovery.expectNeedMoreShares(1);
+    await expect(page.locator('#verification-status')).toBeHidden();
   });
 
   // Once the archive is unlocked (age authenticates it), failing to list its
