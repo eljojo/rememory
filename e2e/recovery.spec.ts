@@ -238,6 +238,32 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectShareCount(2);
   });
 
+  // The 25th word has room for indices 1-15; from friend #16 on it says 0.
+  // Two such pieces used to be refused as duplicates of each other.
+  test('word pieces from friends #16 and #17 are both accepted', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const friends = Array.from({ length: 17 }, (_, i) => ({
+      name: `P${String(i + 1).padStart(2, '0')}`,
+      email: `p${i + 1}@test.com`,
+    }));
+    const bigProject = createTestProject({ friends, threshold: 3 });
+    const bigBundlesDir = path.join(bigProject, 'output', 'bundles');
+    const [p01Dir, p16Dir, p17Dir] = extractBundles(bigBundlesDir, ['P01', 'P16', 'P17']);
+
+    const recovery = new RecoveryPage(page, p01Dir);
+    await recovery.open();
+    await recovery.expectShareCount(1);
+
+    for (const dir of [p16Dir, p17Dir]) {
+      await recovery.clickPasteButton();
+      await recovery.pasteShare(extractWordsFromReadme(findReadmeFile(dir)));
+      await recovery.submitPaste();
+    }
+
+    await recovery.expectShareCount(3);
+    await recovery.expectRecoveryComplete();
+  });
+
   test('paste area accepts numbered word grid directly', async ({ page }) => {
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
     const recovery = new RecoveryPage(page, aliceDir);

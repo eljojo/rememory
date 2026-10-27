@@ -379,6 +379,20 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
   // URL Fragment Share Loading
   // ============================================
 
+  // A piece is identified by its x-coordinate, the last byte of its data. The
+  // index alone can't do it: the 25th recovery word only has room for 1-15,
+  // so pieces typed as words from friend #16 on all carry index 0.
+  function isDuplicateShare(share: UIShare): boolean {
+    const x = (s: UIShare) => {
+      const bytes = base64ToBytes(s.dataB64);
+      return bytes[bytes.length - 1];
+    };
+    // A matching index still counts too: the same friend's piece from an
+    // older seal has a different x but the same index. 0 means "unknown"
+    // (recovery words from friend #16 on), so it can't match.
+    return state.shares.some(s => x(s) === x(share) || (share.index !== 0 && s.index === share.index));
+  }
+
   async function loadShareFromFragment(): Promise<void> {
     const hash = window.location.hash;
     if (!hash || !hash.startsWith('#share=')) return;
@@ -389,7 +403,7 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
     try {
       const share = await parseCompactShare(compact);
 
-      if (state.shares.some(s => s.index === share.index)) return;
+      if (isDuplicateShare(share)) return;
 
       if (state.shares.length === 0 || (state.threshold === 0 && share.threshold > 0)) {
         state.threshold = share.threshold;
@@ -551,7 +565,7 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
     const share = await parseShare(shareContent);
     share.compact = await encodeCompact(share);
 
-    if (state.shares.some(s => s.index === share.index)) {
+    if (isDuplicateShare(share)) {
       if (!quiet) errorHandlers.duplicateShare(share.index);
       return false;
     }
@@ -873,8 +887,8 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
       }
     }
 
-    if (state.shares.some(s => s.index === share!.index)) {
-      errorHandlers.duplicateShare(share!.index);
+    if (isDuplicateShare(share)) {
+      errorHandlers.duplicateShare(share.index);
       return;
     }
 
