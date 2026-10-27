@@ -311,6 +311,22 @@ friends:
     await creation.expectFileCount(2);
   });
 
+  // Hidden files are often the secrets themselves (.env, .ssh, .password-store);
+  // they used to be dropped without a word. The CLI archives them too.
+  test('hidden files are kept', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    const dir = path.join(tmpDir, 'hidden-files');
+    fs.mkdirSync(dir, { recursive: true });
+    const dotenv = path.join(dir, '.env');
+    fs.writeFileSync(dotenv, 'API_KEY=secret');
+    await creation.addFiles([...creation.createTestFiles(tmpDir, 'hidden'), dotenv]);
+
+    await creation.expectFileCount(3);
+    await expect(page.locator('#files-preview')).toContainText('.env');
+  });
+
   test('adding more files appends to existing files', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 

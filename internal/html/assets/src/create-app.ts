@@ -621,11 +621,6 @@ declare const __SELFHOSTED__: boolean;
     const existingPaths = new Set(state.files.map(f => f.name));
 
     for (const { file, path } of filesWithPaths) {
-      // Skip hidden files
-      if (path.split('/').some(part => part.startsWith('.'))) {
-        continue;
-      }
-
       // Skip duplicates
       if (existingPaths.has(path)) {
         continue;
