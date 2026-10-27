@@ -26,6 +26,7 @@ type Server struct {
 	maxManifestSize int
 	version         string
 	mux             *http.ServeMux
+	handler         http.Handler
 }
 
 // New creates a new Server from the given config.
@@ -46,6 +47,10 @@ func New(cfg Config) (*Server, error) {
 	}
 
 	s.routes()
+	// Refuse cross-site state-changing requests (setup, upload, delete), so
+	// a page the owner visits can't act on a server reachable from their
+	// browser. Same-origin requests and non-browser clients pass.
+	s.handler = http.NewCrossOriginProtection().Handler(s.mux)
 	return s, nil
 }
 
@@ -112,7 +117,7 @@ func (s *Server) routes() {
 
 // ServeHTTP implements http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	s.handler.ServeHTTP(w, r)
 }
 
 // ListenAndServe starts the HTTP server.

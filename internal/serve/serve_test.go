@@ -500,3 +500,32 @@ func TestEmptyPasswordRejected(t *testing.T) {
 		t.Errorf("expected 400 for empty password, got %d", w.Code)
 	}
 }
+
+// Any page the owner visits could otherwise post to a server on their
+// network, e.g. claim the admin password of a fresh instance on localhost.
+func TestCrossSiteRequestsRefused(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"attacker-pw"}`))
+	req.Header.Set("Content-Type", "text/plain")
+	req.Header.Set("Origin", "https://evil.example")
+	req.Header.Set("Sec-Fetch-Site", "cross-site")
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Errorf("cross-site setup: got %d, want 403", w.Code)
+	}
+	if IsSetup(srv.Store()) {
+		t.Fatal("cross-site request set the admin password")
+	}
+
+	// Same-origin browser requests and scripts without browser headers work.
+	req = httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"owner-password"}`))
+	req.Header.Set("Origin", "http://example.com")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("same-origin setup: got %d %s", w.Code, w.Body.String())
+	}
+}
