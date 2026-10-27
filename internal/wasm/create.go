@@ -445,6 +445,11 @@ func parseProjectYAML(yamlText string) (*ProjectYAML, error) {
 			return nil, err
 		}
 	}
+	for _, f := range proj.Friends {
+		if f.Language != "" && !translations.IsSupported(f.Language) {
+			return nil, fmt.Errorf("friend %q: unsupported language %q (supported: %s)", f.Name, f.Language, strings.Join(translations.Languages, ", "))
+		}
+	}
 	return &proj, nil
 }
 

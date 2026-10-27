@@ -130,6 +130,21 @@ func TestValidate(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "supported languages",
+			project: Project{Name: "test", Threshold: 2, Language: "zh-TW", Friends: []Friend{{Name: "A", Language: "es"}, {Name: "B"}}},
+			wantErr: false,
+		},
+		{
+			name:    "unsupported project language",
+			project: Project{Name: "test", Threshold: 2, Language: "pt-BR", Friends: []Friend{{Name: "A"}, {Name: "B"}}},
+			wantErr: true,
+		},
+		{
+			name:    "unsupported friend language",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "A", Language: "zh-tw"}, {Name: "B"}}},
+			wantErr: true,
+		},
+		{
 			name: "anonymous valid without email",
 			project: Project{
 				Name:      "test",

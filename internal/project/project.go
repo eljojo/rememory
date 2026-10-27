@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/eljojo/rememory/internal/core"
+	"github.com/eljojo/rememory/internal/translations"
 	"gopkg.in/yaml.v3"
 )
 
@@ -103,10 +105,19 @@ func (p *Project) Validate() error {
 		return fmt.Errorf("threshold (%d) cannot exceed number of friends (%d)", p.Threshold, len(p.Friends))
 	}
 
+	// recover.html falls back for codes it doesn't know, but README.txt and
+	// README.pdf would silently come out in English.
+	if p.Language != "" && !translations.IsSupported(p.Language) {
+		return fmt.Errorf("unsupported language %q (supported: %s)", p.Language, strings.Join(translations.Languages, ", "))
+	}
+
 	names := make([]string, len(p.Friends))
 	for i, f := range p.Friends {
 		if f.Name == "" {
 			return fmt.Errorf("friend %d: name is required", i+1)
+		}
+		if f.Language != "" && !translations.IsSupported(f.Language) {
+			return fmt.Errorf("friend %q: unsupported language %q (supported: %s)", f.Name, f.Language, strings.Join(translations.Languages, ", "))
 		}
 		names[i] = f.Name
 	}

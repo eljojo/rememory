@@ -57,19 +57,9 @@ func init() {
 	initCmd.Flags().StringVar(&initLanguage, "language", "", "Default bundle language (en, es, de, fr, sl)")
 }
 
-// validLanguage returns true if the given language code is supported.
-func validLanguage(lang string) bool {
-	for _, l := range translations.Languages {
-		if l == lang {
-			return true
-		}
-	}
-	return false
-}
-
 func runInit(cmd *cobra.Command, args []string) error {
 	// Validate language flag if provided
-	if initLanguage != "" && !validLanguage(initLanguage) {
+	if initLanguage != "" && !translations.IsSupported(initLanguage) {
 		return fmt.Errorf("unsupported language %q (supported: %s)", initLanguage, strings.Join(translations.Languages, ", "))
 	}
 
@@ -301,7 +291,7 @@ func parseFriendFlags(flags []string) ([]project.Friend, error) {
 		}
 		if len(parts) >= 3 {
 			lang = strings.TrimSpace(parts[2])
-			if lang != "" && !validLanguage(lang) {
+			if lang != "" && !translations.IsSupported(lang) {
 				return nil, fmt.Errorf("friend %q: unsupported language %q (supported: %s)", name, lang, strings.Join(translations.Languages, ", "))
 			}
 		}

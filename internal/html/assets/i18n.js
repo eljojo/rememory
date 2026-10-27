@@ -3,8 +3,20 @@ const translations = {{TRANSLATIONS_JSON}};
 
 let currentLang = 'en';
 
+// A bundle can carry a language code this page has no table for: a
+// hand-edited project.yml, or a code saved by a newer version. Map it to
+// the closest one we have (zh-tw → zh-TW, pt-BR → pt), else English.
+function supportedLang(lang) {
+  if (lang && translations[lang]) return lang;
+  const lower = String(lang || '').toLowerCase();
+  const codes = Object.keys(translations);
+  return codes.find((c) => c.toLowerCase() === lower)
+    || codes.find((c) => c.toLowerCase() === lower.split('-')[0])
+    || 'en';
+}
+
 function t(key, ...args) {
-  let text = translations[currentLang][key] || translations['en'][key] || key;
+  let text = (translations[currentLang] || {})[key] || translations['en'][key] || key;
   args.forEach((arg, i) => {
     text = text.replace(`{${i}}`, arg);
   });
@@ -12,6 +24,7 @@ function t(key, ...args) {
 }
 
 function setLanguage(lang) {
+  lang = supportedLang(lang);
   currentLang = lang;
   localStorage.setItem('rememory-lang', lang);
 
@@ -63,16 +76,17 @@ function setLanguage(lang) {
   const langs = {{LANG_DETECT_ARRAY}};
   const detected = navigator.languages.find((l) => langs.includes(l))
     || navigator.languages.map((l) => l.split('-')[0]).find((l) => langs.includes(l));
-  currentLang = saved || detected || 'en';
+  currentLang = supportedLang(saved || detected);
 })();
 
 // Initialize language select after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   {{DOM_CONTENT_LOADED_PRE}}
 
-  setLanguage(currentLang);
-
+  // Attached first so the picker keeps working even if rendering throws.
   document.getElementById('lang-select')?.addEventListener('change', (e) => {
     setLanguage(e.target.value);
   });
+
+  setLanguage(currentLang);
 });

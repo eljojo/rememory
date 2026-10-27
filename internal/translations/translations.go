@@ -30,6 +30,16 @@ var commonFS embed.FS
 // Languages lists all supported language codes.
 var Languages = []string{"en", "es", "de", "fr", "nl", "sl", "pt", "zh-TW", "zh-CN", "ca", "it", "tr"}
 
+// IsSupported reports whether lang is one of Languages (exact match).
+func IsSupported(lang string) bool {
+	for _, l := range Languages {
+		if l == lang {
+			return true
+		}
+	}
+	return false
+}
+
 // LangNames maps language codes to their native display names, in the same
 // order as Languages. This is the single source of truth for the language
 // picker UI — HTML templates use the generator functions below instead of

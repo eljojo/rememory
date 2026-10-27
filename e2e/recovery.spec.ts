@@ -2,6 +2,7 @@ import { test, expect } from './fixtures';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import AdmZip from 'adm-zip';
 import {
   getRememoryBin,
   createTestProject,
@@ -67,6 +68,42 @@ test.describe('Browser Recovery Tool', () => {
 
     // Still need 1 more share (threshold is 2)
     await recovery.expectNeedMoreShares(1);
+  });
+
+  // A bundle can carry a language code this page has no table for (a
+  // project.yml edited by hand before languages were validated, or a code
+  // saved by a newer version). The page must still work, in the closest
+  // language it has.
+  test('personalized recover.html with an unsupported language still works', async ({ page }) => {
+    // Read from the ZIP: other workers may be extracting Alice's bundle right now.
+    const html = new AdmZip(path.join(bundlesDir, 'bundle-alice.zip')).readAsText('recover.html');
+    const patched = html.replace(/("holder":"Alice"[^]*?"language":")[^"]*(")/, '$1pt-BR$2');
+    expect(patched).not.toBe(html);
+    const patchedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-lang-'));
+    fs.writeFileSync(path.join(patchedDir, 'recover.html'), patched);
+
+    const recovery = new RecoveryPage(page, patchedDir);
+    await recovery.open();
+
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
+    await expect(page.locator('#lang-select')).toHaveValue('pt');
+
+    await page.locator('#lang-select').selectOption('es');
+    await expect(page.locator('#lang-select')).toHaveValue('es');
+    await expect(page.locator('html')).toContainText('Alice');
+
+    fs.rmSync(patchedDir, { recursive: true, force: true });
+  });
+
+  test('an unsupported saved language falls back instead of breaking the page', async ({ page }) => {
+    const bundleDir = extractBundle(bundlesDir, 'Alice');
+    await page.addInitScript(() => localStorage.setItem('rememory-lang', 'xx'));
+    const recovery = new RecoveryPage(page, bundleDir);
+    await recovery.open();
+
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
   });
 
   test('shows contact list for other friends', async ({ page }) => {

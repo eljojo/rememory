@@ -232,6 +232,25 @@ friends:
     await creation.expectFriendData(1, 'Bob');
   });
 
+  test('YAML import refuses a language the bundles cannot use', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+
+    await creation.importYAML(`
+name: regional
+friends:
+  - name: Charlie
+    language: pt-BR
+  - name: Diana
+`);
+
+    await expect(page.locator('.toast-error')).toBeVisible();
+    await creation.expectFriendCount(2);
+    await creation.expectFriendData(0, 'Alice');
+  });
+
   test('YAML import keeps a valid threshold from the file', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
     await creation.open();

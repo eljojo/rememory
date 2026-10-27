@@ -54,6 +54,10 @@ func runBundle(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("loading project: %w", err)
 	}
 
+	if err := p.Validate(); err != nil {
+		return fmt.Errorf("invalid project: %w", err)
+	}
+
 	// Check if sealed
 	if p.Sealed == nil {
 		return fmt.Errorf("project must be sealed before generating bundles (run 'rememory seal' first)")
