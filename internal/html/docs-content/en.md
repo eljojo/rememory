@@ -121,7 +121,7 @@ If you send bundles by email or messaging, delete the messages from your sent fo
 
 Once your bundles are ready, there are a few things worth doing before you put this out of your mind:
 
-- Ask each person to open `recover.html` once. It shows "Your piece is here" when everything is in order.
+- Ask each person to open `recover.html` once. It shows "Your piece is here" when it can read their piece.
 - Tell each person what this is, why they have it, and that they should keep it safe. They cannot use it alone — they will need to coordinate with others.
 - Save the locked files with "Save the locked files (MANIFEST.age)" and keep that copy somewhere safe. It holds no piece, so it's useless to anyone without enough of them.
 - Save your `project.yml` so you can regenerate bundles later
@@ -166,7 +166,7 @@ Each bundle is made for one friend: their piece is already inside their recover.
 
 Keep it somewhere safe, and a printed copy of README.pdf too if you can. There's nothing else to do until the time comes.
 
-To check that it works, open recover.html. It shows "Your piece is here", which piece you hold, and how many are needed to open the files.
+To check it, open recover.html. It shows "Your piece is here", which piece you hold, how many are needed to open the files, and whether the locked files are there too.
 
 ### If Someone Asks for Your Piece {#sharing-piece}
 
@@ -195,7 +195,7 @@ One person gathers the pieces. It can be any of the friends — whoever takes it
 <div class="step-number">2</div>
 <div class="step-content">
 <h4>Reach out to the others</h4>
-<p>The page lists who else holds a piece and how to reach them. Tell them what has happened and ask for their piece. Some will want to check with you first that the request is real — their instructions ask them to.</p>
+<p>If you have a bundle, its recover.html and README list who else holds a piece and how to reach them — unless the bundles were made without names. Tell them what has happened and ask for their piece. Some will want to check with you first that the request is real — their instructions ask them to.</p>
 </div>
 </div>
 
@@ -203,7 +203,7 @@ One person gathers the pieces. It can be any of the friends — whoever takes it
 <div class="step-number">3</div>
 <div class="step-content">
 <h4>Add each piece as it arrives</h4>
-<p>Drag their bundle or README.txt onto the page, paste their text, type the recovery words they read to you, or scan the QR code on their printed page. A checkmark appears next to each name.</p>
+<p>Drag their bundle or README.txt onto the page, paste their text, type the recovery words they read to you, or scan the QR code on their printed page. If names are listed, a checkmark appears next to each one.</p>
 </div>
 </div>
 
@@ -216,7 +216,7 @@ One person gathers the pieces. It can be any of the friends — whoever takes it
 </div>
 
 <div class="tip">
-<strong>If the page asks for the locked files:</strong> drag <code>MANIFEST.age</code> from a bundle onto it, or any friend's recover.html. Most bundles carry them already, so you won't see this step.
+<strong>If the page asks for the locked files:</strong> drag <code>MANIFEST.age</code> from a friend's bundle onto it — or, if their bundle has none, their recover.html. Most bundles carry them already, so you won't see this step.
 </div>
 
 <figure class="screenshot">
@@ -293,7 +293,7 @@ Bundles are small (under 10 MB) and designed to be stored in everyday places. He
 - **USB drives** can work, but keep in mind that connectors change over time (USB-A is already giving way to USB-C) and flash memory can degrade if left unpowered for years. Not ideal as the only copy.
 - **Paper** is the most durable option. Printing `README.pdf` gives your friends a copy of their piece that doesn't need adapters, power, or any working device.
 
-Paper holds the pieces, but not the locked files themselves — those only live in the digital bundles. So the best approach is redundancy — email plus paper, or cloud plus paper. More than one copy, in more than one form.
+Paper holds the pieces, but not the locked files themselves — those only live in digital copies. So the best approach is redundancy — email plus paper, or cloud plus paper. More than one copy, in more than one form.
 
 ### Keeping Bundles Current {#keeping-current}
 

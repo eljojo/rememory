@@ -121,11 +121,11 @@ Si envías los kits por correo o mensajería, borra los mensajes de tu carpeta d
 
 Una vez que tus kits están listos, hay algunas cosas que vale la pena hacer antes de dejarlo de lado:
 
-- Pide a cada persona que abra `recover.html` una vez. Muestra "Tu parte está aquí" cuando todo está en orden.
+- Pide a cada persona que abra `recover.html` una vez. Muestra "Tu parte está aquí" cuando puede leer su parte.
 - Dile a cada persona qué es esto, por qué lo tiene, y que debe guardarlo en un lugar seguro. No puede usarlo solo — necesitará coordinarse con otros.
 - Guarda los archivos bloqueados con "Guardar los archivos bloqueados (MANIFEST.age)" y conserva esa copia en un lugar seguro. No contiene ninguna parte, así que no le sirve a nadie que no tenga suficientes partes.
 - Guarda tu `project.yml` para poder regenerar los kits más adelante
-- Imprime `README.pdf` como respaldo en papel antes de enviar el kit digital. El papel no necesita adaptadores ni electricidad.
+- Imprime `LEEME.pdf` como respaldo en papel antes de enviar el kit digital. El papel no necesita adaptadores ni electricidad.
 - Pon un recordatorio anual para verificar — consulta [Mantener los kits actualizados](#keeping-current)
 - Considera hacer un [simulacro de recuperación](#recovery-drills) — es la única forma de saber si tu plan realmente funciona
 
@@ -141,11 +141,11 @@ Cada kit contiene:
 
 <div class="bundle-contents">
 <div class="file">
-<span class="file-name">README.txt</span>
+<span class="file-name">LEEME.txt</span>
 <span class="file-desc">Qué es esto, quién más tiene una parte, y tu propia parte</span>
 </div>
 <div class="file">
-<span class="file-name">README.pdf</span>
+<span class="file-name">LEEME.pdf</span>
 <span class="file-desc">Lo mismo, listo para imprimir. Tu parte aparece como <strong>código QR</strong> y como palabras.</span>
 </div>
 <div class="file">
@@ -164,9 +164,9 @@ Cada kit está hecho para un amigo: su parte ya está dentro de su recover.html,
 
 ### Guardar tu kit {#keeping-bundle}
 
-Guárdalo en un lugar seguro y, si puedes, también una copia impresa de README.pdf. No hay nada más que hacer hasta que llegue el momento.
+Guárdalo en un lugar seguro y, si puedes, también una copia impresa de LEEME.pdf. No hay nada más que hacer hasta que llegue el momento.
 
-Para comprobar que funciona, abre recover.html. Muestra "Tu parte está aquí", qué parte tienes y cuántas hacen falta para abrir los archivos.
+Para comprobarlo, abre recover.html. Muestra "Tu parte está aquí", qué parte tienes, cuántas hacen falta para abrir los archivos y si los archivos bloqueados también están ahí.
 
 ### Si alguien te pide tu parte {#sharing-piece}
 
@@ -175,7 +175,7 @@ Primero, confirma que la petición es real. Si puedes, consúltalo con la person
 Luego envíala de la forma que te resulte más fácil:
 
 - **El kit completo** (el archivo ZIP) — lo más sencillo.
-- **Tu README.txt** — contiene tu parte por sí solo.
+- **Tu LEEME.txt** — contiene tu parte por sí solo.
 - **Tus palabras de recuperación**, leídas en voz alta por teléfono.
 - **Tu página impresa**, por correo postal — el código QR de la página contiene tu parte.
 
@@ -195,7 +195,7 @@ Una persona reúne las partes. Puede ser cualquiera de los amigos — quien se h
 <div class="step-number">2</div>
 <div class="step-content">
 <h4>Contacta a los demás</h4>
-<p>La página muestra quién más tiene una parte y cómo contactarlos. Cuéntales lo que pasó y pídeles su parte. Algunos querrán confirmar contigo primero que la petición es real — sus instrucciones les piden hacerlo.</p>
+<p>Si tienes un kit, su recover.html y su LEEME muestran quién más tiene una parte y cómo contactarlos — salvo que los kits se hayan hecho sin nombres. Cuéntales lo que pasó y pídeles su parte. Algunos querrán confirmar contigo primero que la petición es real — sus instrucciones les piden hacerlo.</p>
 </div>
 </div>
 
@@ -203,7 +203,7 @@ Una persona reúne las partes. Puede ser cualquiera de los amigos — quien se h
 <div class="step-number">3</div>
 <div class="step-content">
 <h4>Agrega cada parte a medida que llegue</h4>
-<p>Arrastra su kit o su README.txt a la página, pega su texto, escribe las palabras de recuperación que te lean, o escanea el código QR de su página impresa. Aparece una marca junto a cada nombre.</p>
+<p>Arrastra su kit o su LEEME.txt a la página, pega su texto, escribe las palabras de recuperación que te lean, o escanea el código QR de su página impresa. Si hay nombres en la lista, aparece una marca junto a cada uno.</p>
 </div>
 </div>
 
@@ -216,7 +216,7 @@ Una persona reúne las partes. Puede ser cualquiera de los amigos — quien se h
 </div>
 
 <div class="tip">
-<strong>Si la página te pide los archivos bloqueados:</strong> arrastra a la página el <code>MANIFEST.age</code> de un kit, o el recover.html de cualquier amigo. La mayoría de los kits ya los llevan, así que probablemente no veas este paso.
+<strong>Si la página te pide los archivos bloqueados:</strong> arrastra a la página el <code>MANIFEST.age</code> del kit de un amigo — o, si su kit no lo trae, su recover.html. La mayoría de los kits ya los llevan, así que probablemente no veas este paso.
 </div>
 
 <figure class="screenshot">
@@ -281,7 +281,7 @@ Escanear el código QR con la cámara del teléfono también funciona: abre la p
 ### Consideraciones de seguridad
 
 - No guardes todos los kits juntos — eso anula el propósito de dividirlos
-- Considera imprimir `README.pdf` — el papel sobrevive desastres digitales
+- Considera imprimir `LEEME.pdf` — el papel sobrevive desastres digitales
 - Guarda `project.yml` si quieres regenerar los kits más adelante
 
 ### Almacenar los kits de forma segura {#storing-bundles}
@@ -291,9 +291,9 @@ Los kits son pequeños (menos de 10 MB) y están diseñados para guardarse en lu
 - **El correo electrónico** funciona bien. La mayoría de las personas mantiene la misma dirección de correo durante décadas, y los kits son lo suficientemente pequeños para adjuntarlos. Muchos proveedores conservan los mensajes indefinidamente.
 - **El almacenamiento en la nube** (Google Drive, Dropbox, iCloud) funciona bien como copia secundaria.
 - **Las memorias USB** pueden servir, pero ten en cuenta que los conectores cambian con el tiempo (el USB-A ya está dando paso al USB-C) y la memoria flash puede degradarse si pasa años sin energía. No es ideal como única copia.
-- **El papel** es la opción más duradera. Imprimir `README.pdf` le da a tus amigos una copia de su parte que no necesita adaptadores, electricidad ni ningún dispositivo funcional.
+- **El papel** es la opción más duradera. Imprimir `LEEME.pdf` le da a tus amigos una copia de su parte que no necesita adaptadores, electricidad ni ningún dispositivo funcional.
 
-El papel guarda las partes, pero no los archivos bloqueados en sí — esos solo están en los kits digitales. Por eso el mejor enfoque es la redundancia — correo más papel, o nube más papel. Más de una copia, en más de una forma.
+El papel guarda las partes, pero no los archivos bloqueados en sí — esos solo están en copias digitales. Por eso el mejor enfoque es la redundancia — correo más papel, o nube más papel. Más de una copia, en más de una forma.
 
 ### Mantener los kits actualizados {#keeping-current}
 
@@ -391,7 +391,7 @@ Cada kit también lista sumas de verificación de sus archivos, para que `rememo
 </div>
 <div class="file">
 <span class="file-name">Olvidas cómo funciona esto</span>
-<span class="file-desc">El README.txt de cada kit lo explica todo. Tus amigos no necesitan recordar nada — todo está escrito para ellos.</span>
+<span class="file-desc">El LEEME.txt de cada kit lo explica todo. Tus amigos no necesitan recordar nada — todo está escrito para ellos.</span>
 </div>
 </div>
 

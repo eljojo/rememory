@@ -121,11 +121,11 @@ Wenn du Pakete per E-Mail oder Messenger verschickst, lösche die Nachrichten au
 
 Sobald deine Pakete fertig sind, gibt es ein paar Dinge, die sich lohnen, bevor du das Thema beiseitelegst:
 
-- Bitte jede Person, `recover.html` einmal zu öffnen. Wenn alles in Ordnung ist, steht dort „Dein Teil ist da".
+- Bitte jede Person, `recover.html` einmal zu öffnen. Wenn die Seite ihren Teil lesen kann, steht dort „Dein Teil ist da".
 - Erkläre jeder Person, was das ist, warum sie es hat, und dass sie es sicher aufbewahren soll. Allein kann sie nichts damit anfangen — sie muss sich mit anderen abstimmen.
 - Sichere die verschlossenen Dateien mit „Die verschlossenen Dateien speichern (MANIFEST.age)" und bewahre diese Kopie an einem sicheren Ort auf. Sie enthält keinen Teil, also ist sie ohne genügend Teile für niemanden von Nutzen.
 - Sichere deine `project.yml`, um die Pakete später neu erstellen zu können
-- Drucke `README.pdf` als Papier-Backup aus, bevor du das digitale Paket verschickst. Papier braucht keine Adapter und keinen Strom.
+- Drucke `LIESMICH.pdf` als Papier-Backup aus, bevor du das digitale Paket verschickst. Papier braucht keine Adapter und keinen Strom.
 - Setze eine jährliche Erinnerung — siehe [Pakete aktuell halten](#keeping-current)
 - Erwäge eine [Wiederherstellungsübung](#recovery-drills) — nur so weißt du, ob dein Plan wirklich funktioniert
 
@@ -141,11 +141,11 @@ Jedes Paket enthält:
 
 <div class="bundle-contents">
 <div class="file">
-<span class="file-name">README.txt</span>
+<span class="file-name">LIESMICH.txt</span>
 <span class="file-desc">Worum es geht, wer sonst noch einen Teil hat, und dein Teil selbst</span>
 </div>
 <div class="file">
-<span class="file-name">README.pdf</span>
+<span class="file-name">LIESMICH.pdf</span>
 <span class="file-desc">Dasselbe, bereit zum Ausdrucken. Dein Teil steht darauf als <strong>QR-Code</strong> und als Wörter.</span>
 </div>
 <div class="file">
@@ -164,9 +164,9 @@ Jedes Paket ist für einen bestimmten Freund gemacht: Sein Teil steckt bereits i
 
 ### Dein Paket aufbewahren {#keeping-bundle}
 
-Bewahre es an einem sicheren Ort auf, und wenn möglich auch einen Ausdruck von README.pdf. Bis es so weit ist, gibt es nichts weiter zu tun.
+Bewahre es an einem sicheren Ort auf, und wenn möglich auch einen Ausdruck von LIESMICH.pdf. Bis es so weit ist, gibt es nichts weiter zu tun.
 
-Um zu prüfen, ob es funktioniert, öffne recover.html. Dort steht „Dein Teil ist da", welchen Teil du hast und wie viele nötig sind, um die Dateien zu öffnen.
+Um es zu prüfen, öffne recover.html. Dort steht „Dein Teil ist da", welchen Teil du hast, wie viele nötig sind, um die Dateien zu öffnen, und ob die verschlossenen Dateien auch da sind.
 
 ### Wenn dich jemand um deinen Teil bittet {#sharing-piece}
 
@@ -175,7 +175,7 @@ Prüfe zuerst, ob die Anfrage echt ist. Frag, wenn möglich, bei der Person nach
 Dann schick ihn auf dem Weg, der für dich am einfachsten ist:
 
 - **Das ganze Paket** (die ZIP-Datei) — am einfachsten.
-- **Deine README.txt** — sie enthält deinen Teil auch für sich allein.
+- **Deine LIESMICH.txt** — sie enthält deinen Teil auch für sich allein.
 - **Deine Wiederherstellungswörter**, am Telefon vorgelesen.
 - **Deine ausgedruckte Seite**, per Post — der QR-Code darauf enthält deinen Teil.
 
@@ -195,7 +195,7 @@ Eine Person sammelt die Teile. Das kann jeder der Freunde sein — wer es eben �
 <div class="step-number">2</div>
 <div class="step-content">
 <h4>Die anderen kontaktieren</h4>
-<p>Die Seite zeigt, wer sonst noch einen Teil hat und wie man diese Personen erreicht. Erzähl ihnen, was passiert ist, und bitte sie um ihren Teil. Manche werden erst bei dir nachfragen wollen, ob die Anfrage echt ist — ihre Anleitung bittet sie darum.</p>
+<p>Wenn du ein Paket hast, zeigen seine recover.html und seine LIESMICH, wer sonst noch einen Teil hat und wie man diese Personen erreicht — außer die Pakete wurden ohne Namen erstellt. Erzähl ihnen, was passiert ist, und bitte sie um ihren Teil. Manche werden erst bei dir nachfragen wollen, ob die Anfrage echt ist — ihre Anleitung bittet sie darum.</p>
 </div>
 </div>
 
@@ -203,7 +203,7 @@ Eine Person sammelt die Teile. Das kann jeder der Freunde sein — wer es eben �
 <div class="step-number">3</div>
 <div class="step-content">
 <h4>Jeden Teil hinzufügen, sobald er ankommt</h4>
-<p>Zieh ihr Paket oder ihre README.txt auf die Seite, füge ihren Text ein, tippe die Wiederherstellungswörter ein, die sie dir vorlesen, oder scanne den QR-Code auf ihrer ausgedruckten Seite. Neben jedem Namen erscheint ein Häkchen.</p>
+<p>Zieh ihr Paket oder ihre LIESMICH.txt auf die Seite, füge ihren Text ein, tippe die Wiederherstellungswörter ein, die sie dir vorlesen, oder scanne den QR-Code auf ihrer ausgedruckten Seite. Wenn Namen aufgeführt sind, erscheint neben jedem ein Häkchen.</p>
 </div>
 </div>
 
@@ -216,7 +216,7 @@ Eine Person sammelt die Teile. Das kann jeder der Freunde sein — wer es eben �
 </div>
 
 <div class="tip">
-<strong>Wenn die Seite nach den verschlossenen Dateien fragt:</strong> Zieh <code>MANIFEST.age</code> aus einem Paket auf die Seite, oder die recover.html eines beliebigen Freundes. Die meisten Pakete enthalten sie bereits, deshalb wirst du diesen Schritt meist gar nicht sehen.
+<strong>Wenn die Seite nach den verschlossenen Dateien fragt:</strong> Zieh <code>MANIFEST.age</code> aus dem Paket eines Freundes auf die Seite — oder, wenn sein Paket keine hat, seine recover.html. Die meisten Pakete enthalten sie bereits, deshalb wirst du diesen Schritt meist gar nicht sehen.
 </div>
 
 <figure class="screenshot">
@@ -281,7 +281,7 @@ Du kannst den QR-Code auch mit der Kamera-App eines Handys scannen: Dann öffnet
 ### Sicherheitshinweise
 
 - Bewahre nicht alle Pakete zusammen auf — das würde den Sinn des Aufteilens zunichtemachen
-- Erwäge, `README.pdf` auszudrucken — Papier übersteht digitale Katastrophen
+- Erwäge, `LIESMICH.pdf` auszudrucken — Papier übersteht digitale Katastrophen
 - Sichere `project.yml`, um die Pakete später neu erstellen zu können
 
 ### Pakete sicher aufbewahren {#storing-bundles}
@@ -291,9 +291,9 @@ Pakete sind klein (unter 10 MB) und dafür gedacht, an ganz normalen Orten aufbe
 - **E-Mail** funktioniert gut. Die meisten Menschen behalten dieselbe E-Mail-Adresse jahrzehntelang, und Pakete sind klein genug als Anhang. Viele Anbieter speichern Nachrichten unbegrenzt.
 - **Cloud-Speicher** (Google Drive, Dropbox, iCloud) eignet sich gut als Zweitkopie.
 - **USB-Sticks** können funktionieren, aber bedenke: Anschlüsse ändern sich (USB-A weicht bereits USB-C), und Flash-Speicher kann über Jahre ohne Strom an Qualität verlieren. Nicht ideal als einzige Kopie.
-- **Papier** ist die haltbarste Option. `README.pdf` ausdrucken gibt deinen Freunden eine Kopie ihres Teils, die keine Adapter, keinen Strom und kein funktionierendes Gerät braucht.
+- **Papier** ist die haltbarste Option. `LIESMICH.pdf` ausdrucken gibt deinen Freunden eine Kopie ihres Teils, die keine Adapter, keinen Strom und kein funktionierendes Gerät braucht.
 
-Auf Papier stehen die Teile, aber nicht die verschlossenen Dateien selbst — die gibt es nur in den digitalen Paketen. Am besten ist deshalb Redundanz — E-Mail plus Papier, oder Cloud plus Papier. Mehr als eine Kopie, in mehr als einer Form.
+Auf Papier stehen die Teile, aber nicht die verschlossenen Dateien selbst — die gibt es nur in digitalen Kopien. Am besten ist deshalb Redundanz — E-Mail plus Papier, oder Cloud plus Papier. Mehr als eine Kopie, in mehr als einer Form.
 
 ### Pakete aktuell halten {#keeping-current}
 
@@ -391,7 +391,7 @@ Jedes Paket listet außerdem Prüfsummen seiner Dateien auf, damit `rememory ver
 </div>
 <div class="file">
 <span class="file-name">Du vergisst, wie das funktioniert</span>
-<span class="file-desc">Die README.txt in jedem Paket erklärt alles. Deine Freunde müssen sich nichts merken — alles ist für sie aufgeschrieben.</span>
+<span class="file-desc">Die LIESMICH.txt in jedem Paket erklärt alles. Deine Freunde müssen sich nichts merken — alles ist für sie aufgeschrieben.</span>
 </div>
 </div>
 

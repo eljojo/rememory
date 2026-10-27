@@ -121,11 +121,11 @@ Si vous envoyez les enveloppes par e-mail ou messagerie, supprimez les messages 
 
 Une fois vos enveloppes prêtes, quelques choses valent la peine d'être faites avant de passer à autre chose :
 
-- Demandez à chaque personne d'ouvrir `recover.html` une fois. La page affiche « Votre part est là » quand tout est en ordre.
+- Demandez à chaque personne d'ouvrir `recover.html` une fois. La page affiche « Votre part est là » quand elle peut lire leur part.
 - Expliquez à chacun ce que c'est, pourquoi il l'a, et qu'il doit le garder en lieu sûr. Seul, il ne peut rien en faire — il devra se coordonner avec d'autres.
 - Enregistrez les fichiers verrouillés avec « Enregistrer les fichiers verrouillés (MANIFEST.age) » et gardez cette copie en lieu sûr. Elle ne contient aucune part : sans assez de parts, elle ne sert à personne.
 - Sauvegardez votre `project.yml` pour pouvoir recréer les enveloppes plus tard
-- Imprimez `README.pdf` comme sauvegarde papier avant d'envoyer l'enveloppe numérique. Le papier n'a besoin ni d'adaptateur, ni d'électricité.
+- Imprimez `LISEZMOI.pdf` comme sauvegarde papier avant d'envoyer l'enveloppe numérique. Le papier n'a besoin ni d'adaptateur, ni d'électricité.
 - Programmez un rappel annuel — voir [Garder les enveloppes à jour](#keeping-current)
 - Envisagez un [exercice de récupération](#recovery-drills) — c'est le seul moyen de savoir si votre plan fonctionne vraiment
 
@@ -141,11 +141,11 @@ Chaque enveloppe contient :
 
 <div class="bundle-contents">
 <div class="file">
-<span class="file-name">README.txt</span>
+<span class="file-name">LISEZMOI.txt</span>
 <span class="file-desc">Ce dont il s'agit, qui d'autre détient une part, et votre part elle-même</span>
 </div>
 <div class="file">
-<span class="file-name">README.pdf</span>
+<span class="file-name">LISEZMOI.pdf</span>
 <span class="file-desc">La même chose, prête à imprimer. Votre part y figure sous forme de <strong>QR code</strong> et de mots.</span>
 </div>
 <div class="file">
@@ -164,9 +164,9 @@ Chaque enveloppe est préparée pour un ami : sa part se trouve déjà dans son 
 
 ### Garder votre enveloppe {#keeping-bundle}
 
-Gardez-la en lieu sûr, ainsi qu'une copie imprimée de README.pdf si vous le pouvez. Il n'y a rien d'autre à faire en attendant le moment venu.
+Gardez-la en lieu sûr, ainsi qu'une copie imprimée de LISEZMOI.pdf si vous le pouvez. Il n'y a rien d'autre à faire en attendant le moment venu.
 
-Pour vérifier qu'elle fonctionne, ouvrez recover.html. La page affiche « Votre part est là », la part que vous détenez, et combien de parts il faut pour ouvrir les fichiers.
+Pour la vérifier, ouvrez recover.html. La page affiche « Votre part est là », la part que vous détenez, combien de parts il faut pour ouvrir les fichiers, et si les fichiers verrouillés sont là aussi.
 
 ### Si quelqu'un vous demande votre part {#sharing-piece}
 
@@ -175,7 +175,7 @@ Vérifiez d'abord que la demande est réelle. Si vous le pouvez, renseignez-vous
 Envoyez-la ensuite de la manière la plus simple pour vous :
 
 - **L'enveloppe entière** (le fichier ZIP) — le plus simple.
-- **Votre README.txt** — il contient votre part à lui seul.
+- **Votre LISEZMOI.txt** — il contient votre part à lui seul.
 - **Vos mots de récupération**, lus à voix haute au téléphone.
 - **Votre page imprimée**, par la poste — le QR code qui y figure contient votre part.
 
@@ -195,7 +195,7 @@ Une seule personne rassemble les parts. Ce peut être n'importe lequel des amis 
 <div class="step-number">2</div>
 <div class="step-content">
 <h4>Contacter les autres</h4>
-<p>La page indique qui d'autre détient une part et comment joindre ces personnes. Dites-leur ce qui s'est passé et demandez-leur leur part. Certaines voudront d'abord vérifier auprès de vous que la demande est réelle — leurs instructions le leur demandent.</p>
+<p>Si vous avez une enveloppe, son recover.html et son LISEZMOI indiquent qui d'autre détient une part et comment joindre ces personnes — sauf si les enveloppes ont été créées sans noms. Dites-leur ce qui s'est passé et demandez-leur leur part. Certaines voudront d'abord vérifier auprès de vous que la demande est réelle — leurs instructions le leur demandent.</p>
 </div>
 </div>
 
@@ -203,7 +203,7 @@ Une seule personne rassemble les parts. Ce peut être n'importe lequel des amis 
 <div class="step-number">3</div>
 <div class="step-content">
 <h4>Ajouter chaque part à son arrivée</h4>
-<p>Glissez leur enveloppe ou leur README.txt sur la page, collez leur texte, saisissez les mots de récupération qu'ils vous lisent, ou scannez le QR code de leur page imprimée. Une coche apparaît à côté de chaque nom.</p>
+<p>Glissez leur enveloppe ou leur LISEZMOI.txt sur la page, collez leur texte, saisissez les mots de récupération qu'ils vous lisent, ou scannez le QR code de leur page imprimée. Si des noms sont listés, une coche apparaît à côté de chacun.</p>
 </div>
 </div>
 
@@ -216,7 +216,7 @@ Une seule personne rassemble les parts. Ce peut être n'importe lequel des amis 
 </div>
 
 <div class="tip">
-<strong>Si la page demande les fichiers verrouillés :</strong> glissez-y <code>MANIFEST.age</code> depuis une enveloppe, ou le recover.html de n'importe quel ami. La plupart des enveloppes les contiennent déjà, vous ne verrez donc probablement pas cette étape.
+<strong>Si la page demande les fichiers verrouillés :</strong> glissez-y <code>MANIFEST.age</code> depuis l'enveloppe d'un ami — ou, si son enveloppe n'en contient pas, son recover.html. La plupart des enveloppes les contiennent déjà, vous ne verrez donc probablement pas cette étape.
 </div>
 
 <figure class="screenshot">
@@ -281,7 +281,7 @@ Scanner le QR code avec l'appareil photo d'un téléphone fonctionne aussi : cel
 ### Considérations de sécurité
 
 - Ne gardez pas toutes les enveloppes ensemble — cela irait à l'encontre du principe de répartition
-- Pensez à imprimer `README.pdf` — le papier résiste aux catastrophes numériques
+- Pensez à imprimer `LISEZMOI.pdf` — le papier résiste aux catastrophes numériques
 - Sauvegardez `project.yml` pour pouvoir recréer les enveloppes plus tard
 
 ### Stocker les enveloppes en sécurité {#storing-bundles}
@@ -291,9 +291,9 @@ Les enveloppes sont petites (moins de 10 Mo) et conçues pour être conservées 
 - **L'e-mail** fonctionne bien. La plupart des gens gardent la même adresse pendant des décennies, et les enveloppes sont assez légères pour être jointes en pièce attachée. Beaucoup de fournisseurs conservent les messages indéfiniment.
 - **Le stockage en ligne** (Google Drive, Dropbox, iCloud) convient bien comme copie secondaire.
 - **Les clés USB** peuvent convenir, mais gardez à l'esprit que les connecteurs changent (l'USB-A cède déjà la place à l'USB-C) et que la mémoire flash peut se dégrader après des années sans alimentation. Pas idéal comme seule copie.
-- **Le papier** est l'option la plus durable. Imprimer `README.pdf` offre à vos amis une copie de leur part qui n'a besoin ni d'adaptateur, ni d'électricité, ni d'appareil fonctionnel.
+- **Le papier** est l'option la plus durable. Imprimer `LISEZMOI.pdf` offre à vos amis une copie de leur part qui n'a besoin ni d'adaptateur, ni d'électricité, ni d'appareil fonctionnel.
 
-Le papier contient les parts, mais pas les fichiers verrouillés eux-mêmes — ceux-ci n'existent que dans les enveloppes numériques. La meilleure approche est donc la redondance — e-mail et papier, ou cloud et papier. Plus d'une copie, sous plus d'une forme.
+Le papier contient les parts, mais pas les fichiers verrouillés eux-mêmes — ceux-ci n'existent que dans des copies numériques. La meilleure approche est donc la redondance — e-mail et papier, ou cloud et papier. Plus d'une copie, sous plus d'une forme.
 
 ### Garder les enveloppes à jour {#keeping-current}
 
@@ -391,7 +391,7 @@ Chaque enveloppe liste aussi les sommes de contrôle de ses fichiers, pour que `
 </div>
 <div class="file">
 <span class="file-name">Vous oubliez comment tout cela fonctionne</span>
-<span class="file-desc">Le README.txt de chaque enveloppe explique tout. Vos amis n'ont rien à retenir — tout est écrit pour eux.</span>
+<span class="file-desc">Le LISEZMOI.txt de chaque enveloppe explique tout. Vos amis n'ont rien à retenir — tout est écrit pour eux.</span>
 </div>
 </div>
 

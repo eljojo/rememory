@@ -346,7 +346,7 @@ When your friends need to recover your files:
 
 2. **The locked files are usually already there**
    - When `MANIFEST.age` is 10 MB or less, it's embedded in `recover.html`
-   - Otherwise, the page asks for it: drag `MANIFEST.age`, or any friend's `recover.html`, onto it
+   - Otherwise, the page asks for it: drag `MANIFEST.age` from a friend's bundle onto it
 
 3. **Reach out to the other friends**
    - The contact list shows names, emails, and phone numbers
