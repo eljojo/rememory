@@ -29,8 +29,9 @@ type Server struct {
 	mux             *http.ServeMux
 	handler         http.Handler
 
-	// setupMu serializes admin setup: one scrypt derivation at a time.
-	setupMu sync.Mutex
+	// authMu serializes admin setup and password checks: each runs a 256 MiB
+	// scrypt, so concurrent requests queue instead of exhausting memory.
+	authMu sync.Mutex
 }
 
 // New creates a new Server from the given config.

@@ -571,3 +571,30 @@ func TestSetupIsBoundedAndAtomic(t *testing.T) {
 		t.Errorf("%d concurrent setups succeeded, want 1 (codes %v)", winners, codes)
 	}
 }
+
+// Each password check is a 256 MiB scrypt. Requests that can't succeed
+// shouldn't get one: an unknown bundle, or an oversized body.
+func TestDeleteAvoidsNeedlessPasswordChecks(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+
+	body := `{"id":"00000000-0000-4000-8000-000000000000","password":"guess"}`
+	req := httptest.NewRequest("DELETE", "/api/bundle", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	start := time.Now()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Errorf("unknown bundle: got %d, want 404", w.Code)
+	}
+	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
+		t.Errorf("unknown bundle took %v; the password was checked anyway", elapsed)
+	}
+
+	huge := `{"id":"00000000-0000-4000-8000-000000000000","password":"` + strings.Repeat("a", 1<<20) + `"}`
+	req = httptest.NewRequest("DELETE", "/api/bundle", strings.NewReader(huge))
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("1 MiB delete body: got %d, want 400", w.Code)
+	}
+}

@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
 )
 
 const (
-	maxSetupBody   = 4 << 10
+	maxAuthBody    = 4 << 10 // setup and delete bodies: an ID and a password
 	maxPasswordLen = 1 << 10
 )
 
@@ -114,8 +115,8 @@ func (s *Server) handleAPIStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
-	s.setupMu.Lock()
-	defer s.setupMu.Unlock()
+	s.authMu.Lock()
+	defer s.authMu.Unlock()
 
 	if IsSetup(s.store) {
 		http.Error(w, "Admin password is already set.", http.StatusConflict)
@@ -123,7 +124,7 @@ func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Anyone can reach this endpoint before setup, so keep the body small.
-	r.Body = http.MaxBytesReader(w, r.Body, maxSetupBody)
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBody)
 	var body struct {
 		Password string `json:"password"`
 	}
@@ -226,6 +227,7 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPIDeleteBundle(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBody)
 	var body struct {
 		ID       string `json:"id"`
 		Password string `json:"password"`
@@ -245,7 +247,22 @@ func (s *Server) handleAPIDeleteBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !CheckPassword(s.store, body.Password) {
+	// Cheap checks first: every password check is a 256 MiB scrypt.
+	if len(body.Password) > maxPasswordLen {
+		http.Error(w, "Password is too long.", http.StatusBadRequest)
+		return
+	}
+	// The bundle's folder, not its MANIFEST.age: an interrupted save can
+	// leave a listed bundle without one, and it must still be deletable.
+	if _, err := os.Stat(filepath.Dir(s.store.ManifestPath(body.ID))); err != nil {
+		http.Error(w, "Bundle not found.", http.StatusNotFound)
+		return
+	}
+
+	s.authMu.Lock()
+	ok := CheckPassword(s.store, body.Password)
+	s.authMu.Unlock()
+	if !ok {
 		http.Error(w, "Wrong password.", http.StatusUnauthorized)
 		return
 	}
