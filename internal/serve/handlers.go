@@ -17,6 +17,10 @@ import (
 const (
 	maxAuthBody    = 4 << 10 // setup and delete bodies: an ID and a password
 	maxPasswordLen = 1 << 10
+
+	maxUploadOverhead = 64 << 10 // multipart framing and the meta field
+	maxMetaSize       = 4 << 10
+	maxBundleName     = 256
 )
 
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -174,8 +178,12 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Cap the whole request: ParseMultipartForm's argument only sets how much
+	// is kept in memory, and spools the rest to disk without limit.
+	r.Body = http.MaxBytesReader(w, r.Body, int64(s.maxManifestSize)+maxUploadOverhead)
+
 	// Parse multipart form (manifest file + metadata JSON)
-	if err := r.ParseMultipartForm(int64(s.maxManifestSize) + 1<<20); err != nil {
+	if err := r.ParseMultipartForm(int64(s.maxManifestSize) + maxUploadOverhead); err != nil {
 		http.Error(w, "Could not parse form.", http.StatusBadRequest)
 		return
 	}
@@ -207,13 +215,23 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Uploads are anonymous and every page view reads every bundle's
+	// metadata, so it has to stay small.
 	metaStr := r.FormValue("meta")
+	if len(metaStr) > maxMetaSize {
+		http.Error(w, "Metadata too large.", http.StatusBadRequest)
+		return
+	}
 	var meta BundleMeta
 	if metaStr != "" {
 		if err := json.Unmarshal([]byte(metaStr), &meta); err != nil {
 			http.Error(w, "Invalid metadata.", http.StatusBadRequest)
 			return
 		}
+	}
+	if len(meta.Name) > maxBundleName || meta.Threshold < 0 || meta.Threshold > 255 || meta.Total < 0 || meta.Total > 255 {
+		http.Error(w, "Invalid metadata.", http.StatusBadRequest)
+		return
 	}
 
 	id, err := s.store.Save(manifest, meta)

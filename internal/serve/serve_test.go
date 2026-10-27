@@ -7,6 +7,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -596,5 +598,61 @@ func TestDeleteAvoidsNeedlessPasswordChecks(t *testing.T) {
 	srv.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("1 MiB delete body: got %d, want 400", w.Code)
+	}
+}
+
+// Uploads are anonymous, and every page view re-reads every bundle's
+// metadata: it must stay small, and an oversized meta.json already on disk
+// (stored by an older version) must not be loaded.
+func TestUploadMetadataIsBounded(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	manifest := []byte(agePrefix + "data")
+
+	w := uploadManifest(t, srv, manifest, map[string]any{"name": strings.Repeat("<", 64<<10), "threshold": 2, "total": 3})
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("64 KiB meta: got %d, want 400", w.Code)
+	}
+	w = uploadManifest(t, srv, manifest, map[string]any{"name": "Family", "threshold": 9000, "total": 3})
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("threshold 9000: got %d, want 400", w.Code)
+	}
+	w = uploadManifest(t, srv, manifest, map[string]any{"name": "Family", "threshold": 2, "total": 3})
+	if w.Code != http.StatusOK {
+		t.Fatalf("normal meta: got %d %s", w.Code, w.Body.String())
+	}
+
+	poisoned := filepath.Join(srv.Store().dir, "bundles", "00000000-0000-4000-8000-000000000000")
+	os.MkdirAll(poisoned, 0700)
+	big, _ := json.Marshal(BundleMeta{ID: "00000000-0000-4000-8000-000000000000", Name: strings.Repeat("x", 1<<20)})
+	os.WriteFile(filepath.Join(poisoned, "meta.json"), big, 0600)
+	list, err := srv.Store().List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Errorf("List loaded %d bundles, want 1 (the oversized meta.json skipped)", len(list))
+	}
+}
+
+func TestUploadBodyIsBounded(t *testing.T) {
+	srv := newTestServer(t) // MaxManifestSize: 10 MB
+	setupPassword(t, srv, "owner-password")
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	fw, _ := mw.CreateFormFile("manifest", "MANIFEST.age")
+	fw.Write([]byte(agePrefix))
+	ff, _ := mw.CreateFormField("padding")
+	ff.Write(bytes.Repeat([]byte("a"), 12<<20))
+	mw.Close()
+
+	req := httptest.NewRequest("POST", "/api/bundle", &buf)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.SetBasicAuth("admin", "owner-password")
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("an upload larger than the manifest limit: got %d %s, want 400", w.Code, w.Body.String())
 	}
 }

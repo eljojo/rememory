@@ -36,6 +36,10 @@ type Store struct {
 	mu  sync.RWMutex
 }
 
+// maxMetaFileSize bounds a stored meta.json: a 4 KiB meta field can grow
+// up to 6x when re-encoded (JSON escapes <, > and & as \u003c).
+const maxMetaFileSize = 32 << 10
+
 var uuidRegex = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 // NewStore creates a Store backed by the given directory.
@@ -127,6 +131,11 @@ func (s *Store) List() ([]BundleMeta, error) {
 			continue
 		}
 		metaPath := filepath.Join(bundlesDir, entry.Name(), "meta.json")
+		// Skip oversized metadata, which older versions accepted from
+		// anonymous uploads; this runs on every page view.
+		if info, err := os.Stat(metaPath); err != nil || info.Size() > maxMetaFileSize {
+			continue
+		}
 		data, err := os.ReadFile(metaPath)
 		if err != nil {
 			continue
