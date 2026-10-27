@@ -4,6 +4,8 @@ All notable changes to ReMemory are documented here.
 
 ## Unreleased
 
+## v0.0.22 — 2026-10-27
+
 Most of these changes come from a careful security review of ReMemory by @lyrixx. Thanks @lyrixx!
 
 - **Recovery can't be fooled by a forged piece** — A specially made piece could make recovery "succeed" and open files chosen by whoever made it, instead of failing. `rememory recover` and the recovery tool from this release refuse such pieces; bundles made earlier carry their own copy of the recovery tool, so the current one is the safer choice when a piece comes from someone you're unsure of. Real pieces are never affected, and existing bundles work as before.
