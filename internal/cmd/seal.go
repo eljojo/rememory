@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -200,10 +201,16 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 
 	manifestData := encryptedBuf.Bytes()
 
-	// Create output directories
+	// Create output directories. Shares are private; Chmod tightens a folder
+	// left by an older version, which MkdirAll would keep as it was.
 	sharesDir := p.SharesPath()
-	if err := os.MkdirAll(sharesDir, 0755); err != nil {
+	if err := os.MkdirAll(sharesDir, 0700); err != nil {
 		return fmt.Errorf("creating output directories: %w", err)
+	}
+	// A folder owned by another account (e.g. made by a root container) or
+	// on a filesystem without permissions can't be tightened; say so and go on.
+	if err := os.Chmod(sharesDir, 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: couldn't make %s private (%v); other accounts on this computer may be able to read it.\n", sharesDir, err)
 	}
 
 	// Write encrypted manifest
@@ -234,7 +241,11 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
 
-		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0600); err != nil {
+		encoded := share.Encode()
+		if err := bundle.WritePrivateFile(sharePath, func(w io.Writer) error {
+			_, err := io.WriteString(w, encoded)
+			return err
+		}); err != nil {
 			return fmt.Errorf("writing share for %s: %w", friend.Name, err)
 		}
 

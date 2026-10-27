@@ -364,6 +364,8 @@ It does **not** include other friends' shares. Each bundle is personalized with 
 | `output/bundles/bundle-*.zip` | 0644 | Complete bundles for each friend |
 | `project.yml` | 0644 | Friend names, SHA-256 of passphrase, share checksums |
 
+**Update (2026-10):** Each bundle carries its friend's share, so 0644 bundles undid the 0600 on `shares/` for other accounts on the machine. Bundles are now 0600, and `shares/` and `bundles/` are 0700; files and folders left by older versions are tightened when sealing again. Bundles and shares are written to a new private file and renamed into place, so a program that opened an old, readable file keeps seeing the old contents. Reported by [@lyrixx](https://github.com/lyrixx).
+
 **Note:** `project.yml` stores `sha256:<hash of passphrase>` as a verification hash. This is a one-way hash of a 256-bit random value — offline brute force is infeasible.
 
 **Confidence:** Code pointer.

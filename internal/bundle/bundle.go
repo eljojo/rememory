@@ -34,9 +34,15 @@ func GenerateAll(p *project.Project, cfg Config) error {
 		return fmt.Errorf("project must be sealed before generating bundles")
 	}
 
+	// Each bundle holds a share, so the folder is private like shares/.
 	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
-	if err := os.MkdirAll(bundlesDir, 0755); err != nil {
+	if err := os.MkdirAll(bundlesDir, 0700); err != nil {
 		return fmt.Errorf("creating bundles directory: %w", err)
+	}
+	// A folder owned by another account (e.g. made by a root container) or
+	// on a filesystem without permissions can't be tightened; say so and go on.
+	if err := os.Chmod(bundlesDir, 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: couldn't make %s private (%v); other accounts on this computer may be able to read it.\n", bundlesDir, err)
 	}
 
 	// Load all shares

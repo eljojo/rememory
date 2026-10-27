@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -95,5 +96,76 @@ func TestSealStampsEveryShareWithOneTime(t *testing.T) {
 	}
 	if !p.Sealed.At.Equal(start.Add(time.Minute)) {
 		t.Errorf("sealed at %v, want the injected clock's %v", p.Sealed.At, start.Add(time.Minute))
+	}
+}
+
+// Each bundle holds its friend's piece, so on a shared machine anyone who
+// could read the bundles folder could gather enough pieces to recover.
+func TestSealOutputIsPrivate(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows access is governed by ACLs; Chmod only sets the read-only attribute")
+	}
+	dir := t.TempDir()
+	p, err := project.New(dir, "test", 2, []project.Friend{{Name: "Ann"}, {Name: "Bo"}})
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(p.ManifestPath(), "secret.txt"), []byte("secret"), 0600); err != nil {
+		t.Fatalf("writing manifest file: %v", err)
+	}
+
+	// Output left by an older version, readable by everyone.
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	for _, d := range []string{p.SharesPath(), bundlesDir} {
+		if err := os.MkdirAll(d, 0755); err != nil {
+			t.Fatal(err)
+		}
+		os.Chmod(d, 0755)
+	}
+	// Another account could have opened those files and kept them open:
+	// permissions are only checked on open. The new pieces must go to new
+	// files, not into the ones it holds.
+	var held []*os.File
+	for _, f := range []string{filepath.Join(p.SharesPath(), "SHARE-ann.txt"), filepath.Join(bundlesDir, "bundle-ann.zip")} {
+		if err := os.WriteFile(f, []byte("old"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		os.Chmod(f, 0644)
+		h, err := os.Open(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer h.Close()
+		held = append(held, h)
+	}
+
+	if err := sealProject(p, "", false, ""); err != nil {
+		t.Fatalf("sealing: %v", err)
+	}
+
+	for _, h := range held {
+		buf := make([]byte, 64)
+		n, _ := h.ReadAt(buf, 0)
+		if string(buf[:n]) != "old" {
+			t.Errorf("%s: a handle opened before sealing reads the new contents", filepath.Base(h.Name()))
+		}
+	}
+
+	paths := []string{p.SharesPath(), bundlesDir}
+	for _, pattern := range []string{filepath.Join(p.SharesPath(), "*"), filepath.Join(bundlesDir, "*")} {
+		matches, _ := filepath.Glob(pattern)
+		paths = append(paths, matches...)
+	}
+	for _, path := range paths {
+		if filepath.Ext(path) == ".tmp" {
+			t.Errorf("temporary file left behind: %s", filepath.Base(path))
+		}
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if perm := info.Mode().Perm(); perm&0077 != 0 {
+			t.Errorf("%s is %v, readable by other accounts", filepath.Base(path), perm)
+		}
 	}
 }
