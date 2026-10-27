@@ -35,7 +35,7 @@
 //    sha256.create().update() receives TextEncoder output instead of raw strings
 //    (our version of @noble/hashes types update() as Uint8Array-only).
 //
-// 2. BLS signature verification uses bls12_381.verifyShortSignature() from
+// 2. BLS signature verification uses bls12_381.shortSignatures.verify() from
 //    @noble/curves instead of drand-client's manual pairing in verifySigOnG1().
 //    The library function is audited; the manual pairing existed because
 //    @noble/curves lacked G1 signature verification when drand-client was written.
@@ -48,8 +48,8 @@
 
 import { Decrypter } from 'age-encryption';
 import type { Identity, Stanza } from 'age-encryption';
-import { bls12_381 } from '@noble/curves/bls12-381';
-import { sha256 } from '@noble/hashes/sha256';
+import { bls12_381 } from '@noble/curves/bls12-381.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const G1 = bls12_381.G1;
 const G2 = bls12_381.G2;
@@ -263,7 +263,7 @@ function create16BitUintBuffer(input: number): Uint8Array {
 function decryptOnG2(signatureBytes: Uint8Array, ciphertextBody: Uint8Array): Uint8Array {
   // --- parseCiphertext (inlined from timelock-decrypter.ts) ---
   // Original: const pointLength = base.toRawBytes(true).byteLength
-  const pointLength = G2.ProjectivePoint.BASE.toRawBytes(true).byteLength;
+  const pointLength = G2.Point.BASE.toBytes(true).byteLength;
   const U = ciphertextBody.subarray(0, pointLength);
   const rest = ciphertextBody.subarray(pointLength);
   const halfLen = rest.length / 2;
@@ -272,8 +272,8 @@ function decryptOnG2(signatureBytes: Uint8Array, ciphertextBody: Uint8Array): Ui
 
   // --- decryptOnG2 (from ibe.ts) ---
   // 1. Compute sigma = V XOR H2(e(rP, private))
-  const Qid = G1.ProjectivePoint.fromHex(signatureBytes);
-  const m = G2.ProjectivePoint.fromHex(U);
+  const Qid = G1.Point.fromBytes(signatureBytes);
+  const m = G2.Point.fromBytes(U);
   const gidt = bls12_381.pairing(Qid, m);
   const hgidt = gtToHash(gidt as unknown as Fp12Like, W.length);
   if (hgidt.length != V.length) {
@@ -287,7 +287,7 @@ function decryptOnG2(signatureBytes: Uint8Array, ciphertextBody: Uint8Array): Ui
 
   // 3. Check U = rP
   const r = h3(sigma, msg);
-  const rP = G2.ProjectivePoint.BASE.multiply(r);
+  const rP = G2.Point.BASE.multiply(r);
   if (!rP.equals(m)) {
     throw new Error("invalid proof: rP check failed");
   }
@@ -348,7 +348,7 @@ async function fetchBeacon(config: DrandConfig, round: number): Promise<DrandBea
 ////// roundBuffer (line 86): round as 8-byte big-endian
 ////// unchainedBeaconMessage: sha256(roundBuffer(round))
 //////
-////// CHANGED: BLS verification uses bls12_381.verifyShortSignature() from
+////// CHANGED: BLS verification uses bls12_381.shortSignatures.verify() from
 ////// @noble/curves instead of drand-client's manual pairing in verifySigOnG1().
 ////// The library function is audited; the manual implementation existed because
 ////// @noble/curves lacked G1 signature verification when drand-client was written.
@@ -356,7 +356,8 @@ async function fetchBeacon(config: DrandConfig, round: number): Promise<DrandBea
 ////// CHANGED: throws on failure instead of returning boolean.
 ////// Only handles bls-unchained-g1-rfc9380 (quicknet), not all 5 schemes.
 
-function verifyBeacon(config: DrandConfig, beacon: DrandBeacon): void {
+// Exported for e2e/beacon-verify.spec.ts.
+export function verifyBeacon(config: Pick<DrandConfig, 'publicKey'>, beacon: DrandBeacon): void {
   const sigBytes = hexToBytes(beacon.signature);
   const randBytes = hexToBytes(beacon.randomness);
 
@@ -375,11 +376,10 @@ function verifyBeacon(config: DrandConfig, beacon: DrandBeacon): void {
   // BLS signature verification.
   // Original drand-client verifySigOnG1 (line 51) implemented manual pairing:
   //   e(H(m), P) * e(S, G)^-1 = 1
-  // We use the @noble/curves library function instead.
-  const valid = bls12_381.verifyShortSignature(
-    sigBytes, message, config.publicKey,
-    { DST: BLS_VERIFY_DST },
-  );
+  // We use the @noble/curves library function instead; it takes the message
+  // already hashed to G1 with drand's DST.
+  const bls = bls12_381.shortSignatures;
+  const valid = bls.verify(sigBytes, bls.hash(message, BLS_VERIFY_DST), hexToBytes(config.publicKey));
   if (!valid) {
     throw new Error('beacon: BLS signature verification failed');
   }
