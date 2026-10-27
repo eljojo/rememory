@@ -71,7 +71,8 @@ func GenerateAll(p *project.Project, cfg Config) error {
 
 		// Get other friends (excluding this one) - empty for anonymous mode
 		var otherFriends []project.Friend
-		var otherFriendsInfo []html.FriendInfo
+		// Empty, not nil, for anonymous bundles: recover.html reads it as an array.
+		otherFriendsInfo := []html.FriendInfo{}
 		if !p.Anonymous {
 			otherFriends = make([]project.Friend, 0, len(p.Friends)-1)
 			otherFriendsInfo = make([]html.FriendInfo, 0, len(p.Friends)-1)

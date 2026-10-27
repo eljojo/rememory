@@ -377,6 +377,33 @@ test.describe('Anonymous Bundle Recovery', () => {
     await recovery.expectDownloadVisible();
   });
 
+  // Anonymous bundles used to embed "otherFriends":null; pieces without a
+  // holder name (words, QR, compact text) hit it and vanished. Generators
+  // now emit [], and the page must also cope with null.
+  test('anonymous recovery accepts a piece typed as words', async ({ page }) => {
+    const [, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
+    // Read from the ZIP: other workers may be extracting this bundle right now.
+    const html = new AdmZip(path.join(anonBundlesDir, 'bundle-share-1.zip')).readAsText('recover.html');
+    const oldStyle = html.replace('"otherFriends":[]', '"otherFriends":null');
+    expect(oldStyle).not.toBe(html);
+    const share1Dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-anon-'));
+    fs.writeFileSync(path.join(share1Dir, 'recover.html'), oldStyle);
+    const recovery = new RecoveryPage(page, share1Dir);
+
+    await recovery.open();
+    await recovery.expectShareCount(1);
+
+    const words = extractWordsFromReadme(findReadmeFile(share2Dir));
+    await recovery.clickPasteButton();
+    await recovery.pasteShare(words);
+    await recovery.submitPaste();
+
+    await recovery.expectShareCount(2);
+    await recovery.expectRecoveryComplete();
+
+    fs.rmSync(share1Dir, { recursive: true, force: true });
+  });
+
   test('anonymous recovery shows generic share labels', async ({ page }) => {
     const [share1Dir, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
     const recovery = new RecoveryPage(page, share1Dir);

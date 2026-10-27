@@ -957,6 +957,18 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 	if err := share.Verify(); err != nil {
 		t.Errorf("share verification failed: %v", err)
 	}
+
+	// recover.html looks pieces up in otherFriends; it must be an array.
+	for _, f := range r.File {
+		if f.Name == "recover.html" {
+			rc, _ := f.Open()
+			data, _ := io.ReadAll(rc)
+			rc.Close()
+			if !strings.Contains(string(data), `"otherFriends":[]`) {
+				t.Error(`anonymous recover.html should embed "otherFriends":[]`)
+			}
+		}
+	}
 }
 
 // TestAnonymousBundleRecovery tests recovery from anonymous bundles

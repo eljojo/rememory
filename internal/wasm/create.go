@@ -203,7 +203,8 @@ func bundleFromManifest(manifestData, raw []byte, config bundleGenConfig) ([]Bun
 		}
 
 		var otherFriends []project.Friend
-		var otherFriendsInfo []html.FriendInfo
+		// Empty, not nil, for anonymous bundles: recover.html reads it as an array.
+		otherFriendsInfo := []html.FriendInfo{}
 		if !config.Anonymous {
 			otherFriends = make([]project.Friend, 0, n-1)
 			otherFriendsInfo = make([]html.FriendInfo, 0, n-1)

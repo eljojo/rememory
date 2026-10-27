@@ -73,7 +73,7 @@ export interface ProjectParseResult {
 export interface PersonalizationData {
   holder: string;
   holderShare: string;
-  otherFriends: FriendInfo[];
+  otherFriends: FriendInfo[] | null; // older generators emitted null for anonymous bundles
   threshold: number;
   total: number;
   language?: string;

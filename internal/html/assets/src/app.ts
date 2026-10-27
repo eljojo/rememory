@@ -1043,7 +1043,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
           return personalization.holder;
         }
       }
-      const friend = personalization.otherFriends.find(f => f.shareIndex === share.index);
+      const friend = personalization.otherFriends?.find(f => f.shareIndex === share.index);
       if (friend) return friend.name;
     }
     return 'Share ' + share.index;
