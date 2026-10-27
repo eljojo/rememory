@@ -10,16 +10,54 @@ export interface ExtractedFile {
 
 /**
  * Extract files from a tar.gz archive.
+ *
+ * Go's tar writer (bundles before v0.0.15) keeps non-ASCII and long names in
+ * a PAX extended header placed before the file, and puts an ASCII-only
+ * stand-in in the basic name field ("contraseña.txt" → "contrasea.txt").
+ * tarparser doesn't read PAX headers, so their path is applied here to the
+ * entry that follows.
  */
 export async function extractTarGz(data: Uint8Array): Promise<ExtractedFile[]> {
   const entries = await parseTar(data);
 
-  return entries
-    .filter(entry => entry.type === 'file')
-    .map(entry => ({
-      name: entry.name,
-      data: entry.data,
-    }));
+  const files: ExtractedFile[] = [];
+  let paxName: string | null = null;
+  for (const entry of entries) {
+    if (entry.type === 'file' || entry.type === 'directory') {
+      if (entry.type === 'file') {
+        files.push({ name: paxName ?? entry.name, data: entry.data });
+      }
+      paxName = null;
+    } else {
+      paxName = paxPath(entry.data) ?? paxName;
+    }
+  }
+  return files;
+}
+
+/**
+ * Read the "path" record of a PAX extended header: records are
+ * "<length> <key>=<value>\n", the length counting the whole record in bytes.
+ * Returns null if there is no path or the data isn't PAX records.
+ */
+function paxPath(data: Uint8Array): string | null {
+  const decoder = new TextDecoder();
+  let path: string | null = null;
+  let pos = 0;
+  while (pos < data.length) {
+    const space = data.indexOf(0x20, pos);
+    if (space < 0) return null;
+    const length = Number(decoder.decode(data.subarray(pos, space)));
+    if (!Number.isInteger(length) || length <= space - pos || pos + length > data.length || data[pos + length - 1] !== 0x0a) {
+      return null;
+    }
+    const record = decoder.decode(data.subarray(space + 1, pos + length - 1));
+    const eq = record.indexOf('=');
+    if (eq < 0) return null;
+    if (record.slice(0, eq) === 'path') path = record.slice(eq + 1);
+    pos += length;
+  }
+  return path;
 }
 
 /**

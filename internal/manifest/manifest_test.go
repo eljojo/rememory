@@ -5,6 +5,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"flag"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -573,5 +575,47 @@ func TestOversizedFileRefusedBeforeWriting(t *testing.T) {
 	}
 	if _, err := os.Stat(dest); !os.IsNotExist(err) {
 		t.Errorf("ExtractZip created %s before refusing", filepath.Base(dest))
+	}
+}
+
+var generate = flag.Bool("generate", false, "regenerate test fixtures (writes to testdata/)")
+
+// nonASCIINames are file names Go's tar writer can only store in a PAX
+// header: non-ASCII, or longer than the 100-byte ustar name field.
+var nonASCIINames = []string{
+	"contraseña.txt",
+	"密碼.txt",
+	strings.Repeat("a-very-long-file-name-", 5) + "end.txt",
+}
+
+// TestGenerateNonASCIINameFixtures writes the archives the browser tests use
+// to check that recover.html lists these names as they are. The tar.gz is
+// what bundles before v0.0.15 carried; the ZIP is what they carry now.
+//
+// Run with: go test -run TestGenerateNonASCIINameFixtures ./internal/manifest/ -generate
+func TestGenerateNonASCIINameFixtures(t *testing.T) {
+	if !*generate {
+		t.Skip("pass -generate to regenerate fixtures")
+	}
+	src := filepath.Join(t.TempDir(), "manifest")
+	if err := os.MkdirAll(src, 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range nonASCIINames {
+		if err := os.WriteFile(filepath.Join(src, name), []byte(name), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for file, archive := range map[string]func(io.Writer, string) (*ArchiveResult, error){
+		"non-ascii-names.tar.gz": ArchiveTarGz,
+		"non-ascii-names.zip":    ArchiveZip,
+	} {
+		var buf bytes.Buffer
+		if _, err := archive(&buf, src); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join("testdata", file), buf.Bytes(), 0644); err != nil {
+			t.Fatal(err)
+		}
 	}
 }

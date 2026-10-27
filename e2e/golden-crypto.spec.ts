@@ -177,6 +177,28 @@ test.describe('Golden Crypto Compatibility @cross-browser', () => {
     });
   }
 
+  // Go's tar writer keeps non-ASCII and long names in PAX headers, with an
+  // ASCII-only stand-in in the basic name field. The file list must show
+  // the real names. Fixtures: TestGenerateNonASCIINameFixtures.
+  for (const fixture of ['non-ascii-names.tar.gz', 'non-ascii-names.zip']) {
+    test(`file list shows non-ASCII and long names from ${fixture}`, async ({ page }) => {
+      await page.goto('file://' + testHtmlPath);
+      await page.waitForFunction(() => (window as any).testReady);
+
+      const archive = Array.from(fs.readFileSync(path.join('internal/manifest/testdata', fixture)));
+      const names = await page.evaluate(async (archive: number[]) => {
+        const files = await (window as any).rememoryCrypto.extractArchive(new Uint8Array(archive));
+        return files.map((f: { name: string }) => f.name).sort();
+      }, archive);
+
+      expect(names).toEqual([
+        'manifest/' + 'a-very-long-file-name-'.repeat(5) + 'end.txt',
+        'manifest/contraseña.txt',
+        'manifest/密碼.txt',
+      ].sort());
+    });
+  }
+
   // v2-specific: compact share parsing
   test('v2: parse compact share correctly', async ({ page }) => {
     await page.goto('file://' + testHtmlPath);
