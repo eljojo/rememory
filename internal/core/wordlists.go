@@ -59,6 +59,10 @@ type wordListSpec struct {
 // Catalan source: https://github.com/1ma/diceware-cat/blob/master/cat-wordlist-ascii.txt
 // Used as source to generate a BIP39-compatible Catalan list.
 // Turkish source: https://github.com/FrustT/BIP39_TR (unofficial)
+//
+// Changing a list that has shipped changes what the words already printed in
+// READMEs mean. If a list must change, copy the released file into
+// wordlists/legacy/ and add it to DECODE_LISTS in crypto/wordlist.ts.
 
 var wordListSpecs = []wordListSpec{
 	{LangEN, "wordlists/english.txt", "https://github.com/bitcoin/bips/blob/ed7af6ae7e80c90bcfc69b3936073505e2fc2503/bip-0039/english.txt", "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda"},

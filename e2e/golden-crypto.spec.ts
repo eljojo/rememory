@@ -135,6 +135,48 @@ test.describe('Golden Crypto Compatibility @cross-browser', () => {
     }
   });
 
+  // README.txt and README.pdf print the words in every list wordlists.go
+  // knows, so each of them must decode here. Read the list of files from
+  // the Go source so a language can't be added on one side only. Legacy
+  // lists were printed by a release and later changed in place.
+  const goWordlists = [...fs.readFileSync('internal/core/wordlists.go', 'utf8')
+    .matchAll(/"wordlists\/([a-z_]+\.txt)"/g)].map(m => m[1]);
+  const legacyWordlists = ['legacy/turkish-v0.0.19.txt'];
+  const readList = (file: string) => fs.readFileSync(path.join('internal/core/wordlists', file), 'utf8')
+    .trim().split('\n').map(w => w.trim());
+
+  for (const file of [...goWordlists, ...legacyWordlists]) {
+    test(`v2: decode 25 words from ${file}`, async ({ page }) => {
+      expect(goWordlists.length).toBeGreaterThan(8);
+      await page.goto('file://' + testHtmlPath);
+      await page.waitForFunction(() => (window as any).testReady);
+
+      const english = readList('english.txt');
+      const target = readList(file);
+
+      for (const share of v2Golden.shares) {
+        const words = share.words.split(' ').map((w: string) => target[english.indexOf(w)]);
+
+        const result = await page.evaluate(async (words: string[]) => {
+          const crypto = (window as any).rememoryCrypto;
+          try {
+            const decoded = await crypto.decodeShareWords(words);
+            const hex = Array.from(decoded.data as Uint8Array)
+              .map((b: number) => b.toString(16).padStart(2, '0'))
+              .join('');
+            return { index: decoded.index, dataHex: hex };
+          } catch (err) {
+            return { error: (err as Error).message };
+          }
+        }, words);
+
+        expect(result.error).toBeUndefined();
+        expect(result.index).toBe(share.index);
+        expect(result.dataHex).toBe(share.data_hex);
+      }
+    });
+  }
+
   // v2-specific: compact share parsing
   test('v2: parse compact share correctly', async ({ page }) => {
     await page.goto('file://' + testHtmlPath);

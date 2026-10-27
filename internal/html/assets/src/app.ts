@@ -21,11 +21,9 @@ import {
   parseShare,
   parseCompactShare,
   encodeCompact,
-  combine,
-  recoverPassphrase,
   base64ToBytes,
   bytesToBase64,
-  decrypt,
+  unlockWithCandidates,
   extractArchive,
   isTlockContainer,
   openTlockContainer,
@@ -33,6 +31,7 @@ import {
   extractPersonalizationFromHTML,
   decodeShareWords,
   type ParsedShare,
+  type ShareWordsReading,
 } from './crypto';
 
 // Compile-time flag: esbuild replaces this with true or false.
@@ -44,7 +43,9 @@ declare const __TLOCK__: boolean;
 declare const t: TranslationFunction;
 
 // Extended share type with UI-specific fields
-type UIShare = ParsedShare & { isHolder?: boolean };
+// alternatives: other readings of a piece entered as recovery words, base64
+// like dataB64; unlocking tries them if the first reading doesn't open.
+type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
 
 (function() {
   'use strict';
@@ -891,7 +892,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   // Build Share from Decoded Words
   // ============================================
 
-  function buildShareFromWords(wordResult: { data: Uint8Array; index: number }): UIShare {
+  function buildShareFromWords(wordResult: ShareWordsReading & { alternatives: ShareWordsReading[] }): UIShare {
     // Get version/total/threshold from first loaded share or personalization
     let version = 2;
     let total = 0;
@@ -913,6 +914,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       total,
       data: wordResult.data,
       dataB64: bytesToBase64(wordResult.data),
+      alternatives: wordResult.alternatives.map(r => bytesToBase64(r.data)),
     };
   }
 
@@ -1270,17 +1272,17 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       setProgress(10);
       setStatus(t('combining'));
 
-      // Convert shares to raw bytes and combine
-      const shareBytes = state.shares.map(s => base64ToBytes(s.dataB64));
-      const recovered = await combine(shareBytes);
+      // Each piece's readings, most likely first; unlocking tries the
+      // others only if the first combination doesn't open the archive.
+      const candidates = state.shares.map(s =>
+        [s.dataB64, ...((s as UIShare).alternatives ?? [])].map(base64ToBytes));
       const version = state.shares[0].version;
-      const passphrase = recoverPassphrase(recovered, version);
 
       setProgress(30);
 
       // age-decrypt (always a plain age file now)
       setStatus(t('decrypting'));
-      let archive = await decrypt(state.manifest!, passphrase);
+      let archive = await unlockWithCandidates(state.manifest!, version, candidates);
 
       setProgress(50);
 

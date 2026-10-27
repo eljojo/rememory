@@ -1,6 +1,7 @@
 // BIP39 wordlist handling - imports existing wordlist files at build time
 // esbuild bundles these as strings using the text loader
-// Supports 7 languages with auto-detection and normalization
+// Supports every language in internal/core/wordlists.go, with auto-detection
+// and normalization
 
 // Import wordlists from the existing Go codebase
 import englishWords from '../../../../core/wordlists/english.txt';
@@ -10,16 +11,26 @@ import germanWords from '../../../../core/wordlists/german.txt';
 import slovenianWords from '../../../../core/wordlists/slovenian.txt';
 import portugueseWords from '../../../../core/wordlists/portuguese.txt';
 import chineseTraditionalWords from '../../../../core/wordlists/chinese_traditional.txt';
+import catalanWords from '../../../../core/wordlists/catalan.txt';
+import turkishWords from '../../../../core/wordlists/turkish.txt';
+import turkishV0019Words from '../../../../core/wordlists/legacy/turkish-v0.0.19.txt';
 
 import { sha256 } from './hash';
 
-// Supported languages
-export type Lang = 'en' | 'es' | 'fr' | 'de' | 'sl' | 'pt' | 'zh-TW';
+// Supported languages, in the same order as AllLangs in wordlists.go
+export type Lang = 'en' | 'es' | 'fr' | 'de' | 'sl' | 'pt' | 'zh-TW' | 'ca' | 'tr';
 
-export const ALL_LANGS: Lang[] = ['en', 'es', 'fr', 'de', 'sl', 'pt', 'zh-TW'];
+export const ALL_LANGS: Lang[] = ['en', 'es', 'fr', 'de', 'sl', 'pt', 'zh-TW', 'ca', 'tr'];
 
-// Raw wordlist text by language
-const WORDLIST_TEXT: Record<Lang, string> = {
+// Lists a release printed in READMEs and that later changed in place. They
+// are only used to decode: words printed back then still mean their old
+// indices. v0.0.19 shipped the first Turkish list; v0.0.20 corrected it.
+type LegacyList = 'tr-v0.0.19';
+type WordList = Lang | LegacyList;
+const DECODE_LISTS: WordList[] = [...ALL_LANGS, 'tr-v0.0.19'];
+
+// Raw wordlist text by list
+const WORDLIST_TEXT: Record<WordList, string> = {
   en: englishWords,
   es: spanishWords,
   fr: frenchWords,
@@ -27,6 +38,9 @@ const WORDLIST_TEXT: Record<Lang, string> = {
   sl: slovenianWords,
   pt: portugueseWords,
   'zh-TW': chineseTraditionalWords,
+  ca: catalanWords,
+  tr: turkishWords,
+  'tr-v0.0.19': turkishV0019Words,
 };
 
 // Parse wordlist text into array
@@ -71,9 +85,9 @@ interface LangWordIndex {
 }
 
 // Lazy-loaded indices
-const langIndices = new Map<Lang, LangWordIndex>();
+const langIndices = new Map<WordList, LangWordIndex>();
 
-function getLangIndex(lang: Lang): LangWordIndex {
+function getLangIndex(lang: WordList): LangWordIndex {
   let idx = langIndices.get(lang);
   if (idx) return idx;
 
@@ -123,7 +137,7 @@ function getLangIndex(lang: Lang): LangWordIndex {
  * Tries exact match first, then NFD-stripped, then German digraph expansion.
  * Returns -1 if not found.
  */
-export function lookupWordInLang(lang: Lang, word: string): number {
+export function lookupWordInLang(lang: WordList, word: string): number {
   const idx = getLangIndex(lang);
 
   const lower = word.toLowerCase().trim();
@@ -324,6 +338,12 @@ function indicesToBytes(indices: number[], numWords: number): Uint8Array {
   return result;
 }
 
+/** One way of reading 25 recovery words: share data and share index. */
+export interface ShareWordsReading {
+  data: Uint8Array;
+  index: number;
+}
+
 // Word 25 layout (11 bits total):
 // - Upper 4 bits (bits 10-7): share index (1-15, 0 = unknown/16+)
 // - Lower 7 bits (bits 6-0): checksum (lower 7 bits of SHA-256(data)[0])
@@ -372,43 +392,50 @@ export function word25Decode(val: number): { index: number; checksum: number } {
  * Returns index=0 if the share index was > 15 (the sentinel value).
  * Throws if the checksum doesn't match.
  * Auto-detects language from the words.
+ *
+ * Words can fit more than one list with a valid checksum (the v0.0.19
+ * Turkish list overlaps today's). The 7-bit checksum can't tell which is
+ * right, so the most likely reading is returned and the others are kept in
+ * alternatives; unlocking decides (see unlockWithCandidates).
  */
-export async function decodeShareWords(words: string[]): Promise<{
-  data: Uint8Array;
-  index: number;
+export async function decodeShareWords(words: string[]): Promise<ShareWordsReading & {
+  alternatives: ShareWordsReading[];
 }> {
   if (words.length !== 25) {
     throw new Error(`expected 25 words, got ${words.length}`);
   }
 
-  // Detect language
-  const lang = detectLanguage(words) || 'en';
+  // More than one list can hold all 25 words: lists share some words, and
+  // the v0.0.19 Turkish list overlaps today's. Keep every reading whose
+  // checksum agrees, the list matching the most words first.
+  const matches = (list: WordList) => words.filter(w => lookupWordInLang(list, w) >= 0).length;
+  const ranked = DECODE_LISTS
+    .map(list => ({ list, count: matches(list) }))
+    .sort((a, b) => b.count - a.count);
 
-  // Look up the 25th word
-  const lastIdx = lookupWordInLang(lang, words[24]);
-  if (lastIdx < 0) {
-    throw new Error(`word 25 "${words[24]}" not recognized`);
-  }
-
-  // Decode the data words (first 24) in the detected language
-  const indices: number[] = [];
-  for (let i = 0; i < 24; i++) {
-    const idx = lookupWordInLang(lang, words[i]);
-    if (idx < 0) {
-      throw new Error(`word ${i + 1} "${words[i]}" not recognized`);
+  const readings: ShareWordsReading[] = [];
+  let checksumFailed = false;
+  for (const { list, count } of ranked) {
+    if (count < 25) break;
+    const indices = words.map(w => lookupWordInLang(list, w));
+    const data = indicesToBytes(indices.slice(0, 24), 24);
+    const { index, checksum: expectedCheck } = word25Decode(indices[24]);
+    if (await word25Checksum(data) !== expectedCheck) {
+      checksumFailed = true;
+      continue;
     }
-    indices.push(idx);
+    const seen = readings.some(r => r.data.length === data.length && r.data.every((b, i) => b === data[i]));
+    if (!seen) readings.push({ data, index });
   }
-  const data = indicesToBytes(indices, 24);
 
-  // Unpack index and checksum from the 25th word
-  const { index, checksum: expectedCheck } = word25Decode(lastIdx);
-
-  // Verify checksum
-  const actualCheck = await word25Checksum(data);
-  if (actualCheck !== expectedCheck) {
+  if (readings.length > 0) {
+    return { ...readings[0], alternatives: readings.slice(1) };
+  }
+  if (checksumFailed) {
     throw new Error('word checksum failed — check word order and spelling');
   }
-
-  return { data, index };
+  // Name the first word the most likely list doesn't know.
+  const best = ranked[0].list;
+  const missing = words.findIndex(w => lookupWordInLang(best, w) < 0);
+  throw new Error(`word ${missing + 1} "${words[missing]}" not recognized`);
 }

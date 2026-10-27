@@ -2,6 +2,9 @@ package core
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
 	"strings"
 	"testing"
 )
@@ -32,6 +35,25 @@ func TestAllWordListIntegrity(t *testing.T) {
 				t.Errorf("hash mismatch:\n  got:  %s\n  want: %s\n  source: %s", hash, wl.ExpectedHash, wl.SourceURL)
 			}
 		})
+	}
+}
+
+// Lists in wordlists/legacy/ were printed in READMEs by a release before the
+// live list changed in place. recover.html decodes them so those words keep
+// working; they must never change.
+func TestLegacyWordListsUnchanged(t *testing.T) {
+	legacy := map[string]string{
+		"wordlists/legacy/turkish-v0.0.19.txt": "627be6b5f48248123db6a989ed46d62b9d74c74ac70acb5916bfce2410628fc8",
+	}
+	for file, want := range legacy {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("reading %s: %v", file, err)
+		}
+		sum := sha256.Sum256(data)
+		if got := hex.EncodeToString(sum[:]); got != want {
+			t.Errorf("%s changed:\n  got:  %s\n  want: %s", file, got, want)
+		}
 	}
 }
 
