@@ -72,14 +72,15 @@ func (s *Server) handleRecover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve the bundle ID: use the query param if provided, otherwise
-	// fall back to the latest bundle. The API endpoint requires an explicit ID,
-	// but the controller resolves it here so /recover always works.
+	// Resolve the bundle ID: use the query param if provided, otherwise fall
+	// back to the only bundle, so a bare /recover works for a household with
+	// one. With several, the newest could be anyone's upload; the friend picks
+	// from the home page or adds MANIFEST.age themselves.
 	var manifestURL string
 	if id := r.URL.Query().Get("id"); id != "" {
 		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(id)
-	} else if latest, err := s.store.Latest(); err == nil && latest != nil {
-		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(latest.ID)
+	} else if bundles, err := s.store.List(); err == nil && len(bundles) == 1 {
+		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(bundles[0].ID)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

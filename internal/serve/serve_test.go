@@ -665,3 +665,26 @@ func TestHTTPServerHasTimeouts(t *testing.T) {
 		t.Errorf("ReadHeaderTimeout=%v IdleTimeout=%v, want both set", hs.ReadHeaderTimeout, hs.IdleTimeout)
 	}
 }
+
+// Uploads are open by default, so with several bundles on the server,
+// "the latest" may be anyone's. A bare /recover.html only loads a bundle
+// when there's no doubt which one is meant.
+func TestRecoverWithoutIDOnlyFallsBackToASoleBundle(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	get := func() string {
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, httptest.NewRequest("GET", "/recover.html", nil))
+		return w.Body.String()
+	}
+
+	uploadManifest(t, srv, []byte(agePrefix+"one"), map[string]any{"name": "Family"})
+	if !strings.Contains(get(), `"manifestURL":"/api/bundle/manifest?id=`) {
+		t.Error("with one bundle, /recover.html should load it")
+	}
+
+	uploadManifest(t, srv, []byte(agePrefix+"two"), map[string]any{"name": "Someone else"})
+	if strings.Contains(get(), `"manifestURL"`) {
+		t.Error("with two bundles, /recover.html loaded one without being asked")
+	}
+}
