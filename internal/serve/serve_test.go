@@ -656,3 +656,12 @@ func TestUploadBodyIsBounded(t *testing.T) {
 		t.Errorf("an upload larger than the manifest limit: got %d %s, want 400", w.Code, w.Body.String())
 	}
 }
+
+// Without timeouts a client can hold a connection open forever by sending
+// headers slowly.
+func TestHTTPServerHasTimeouts(t *testing.T) {
+	hs := newTestServer(t).httpServer("127.0.0.1:0")
+	if hs.ReadHeaderTimeout <= 0 || hs.IdleTimeout <= 0 {
+		t.Errorf("ReadHeaderTimeout=%v IdleTimeout=%v, want both set", hs.ReadHeaderTimeout, hs.IdleTimeout)
+	}
+}

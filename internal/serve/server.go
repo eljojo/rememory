@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/eljojo/rememory/docs"
 	"github.com/eljojo/rememory/internal/html"
@@ -127,7 +128,19 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ListenAndServe starts the HTTP server.
 func (s *Server) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, s)
+	return s.httpServer(addr).ListenAndServe()
+}
+
+// httpServer bounds how long a client may take to send its headers or keep
+// an idle connection. Whole-request read/write timeouts are left unset so
+// large manifests can still be uploaded and downloaded over slow links.
+func (s *Server) httpServer(addr string) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           s,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       2 * time.Minute,
+	}
 }
 
 // Store returns the server's store (for testing).
