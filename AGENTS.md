@@ -182,7 +182,7 @@ The `crypto/` subdirectory contains the native JavaScript crypto implementations
 
 Three workflows in `.github/workflows/`:
 
-- **`ci.yml`** — Runs on push/PR to `main`. Builds WASM, runs Go tests, lints, builds the binary, then runs Playwright E2E tests. Requires both Go and Node 22.
+- **`ci.yml`** — Runs on push/PR to `main`. Builds WASM, runs Go tests, lints, builds the binary, then runs Playwright E2E tests. Requires both Go and Node 24.
 - **`pages.yml`** — Runs on push to `main`. Builds the CLI, generates static HTML files (`index.html`, `maker.html`, `docs.html`) and deploys to GitHub Pages. Does not include `recover.html` (that's only distributed in bundles and releases).
 - **`release.yml`** — Triggered by `v*` tags. Runs tests, cross-compiles for 5 platforms (`make build-all`), generates standalone `maker.html` + `recover.html`, creates demo bundles (3 friends, threshold 2), computes checksums, and publishes a GitHub release. Use `make release` to stamp the changelog and update the version, then `make bump` to tag and push.
 
