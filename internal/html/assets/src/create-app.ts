@@ -63,10 +63,14 @@ declare const __SELFHOSTED__: boolean;
   }
 
   // State
-  const state: CreationState & { anonymous: boolean; numShares: number } = {
+  const state: CreationState & { anonymous: boolean; numShares: number; chosenThreshold: number } = {
     projectName: generateProjectName(),
     friends: [],
     threshold: 2,
+    // What the person picked. The friends list is rebuilt one friend at a time
+    // on several actions, so state.threshold is derived from this by clamping
+    // to the current count and never written back into it.
+    chosenThreshold: 2,
     files: [],
     bundles: [],
     wasmReady: false,
@@ -359,8 +363,8 @@ declare const __SELFHOSTED__: boolean;
         });
       }
 
-      if (project.threshold && project.threshold >= 2) {
-        state.threshold = project.threshold;
+      if (project.threshold) {
+        state.chosenThreshold = project.threshold;
       }
 
       updateThresholdOptions();
@@ -378,7 +382,8 @@ declare const __SELFHOSTED__: boolean;
     elements.addFriendBtn?.addEventListener('click', () => addFriend());
 
     elements.thresholdSelect?.addEventListener('change', () => {
-      state.threshold = parseInt(elements.thresholdSelect?.value || '2', 10);
+      state.chosenThreshold = parseInt(elements.thresholdSelect?.value || '2', 10);
+      state.threshold = state.chosenThreshold;
     });
   }
 
@@ -491,7 +496,6 @@ declare const __SELFHOSTED__: boolean;
 
   function updateThresholdOptions(): void {
     const n = state.anonymous ? state.numShares : state.friends.length;
-    const current = state.threshold;
 
     if (elements.thresholdSelect) {
       elements.thresholdSelect.innerHTML = '';
@@ -502,13 +506,9 @@ declare const __SELFHOSTED__: boolean;
         elements.thresholdSelect.appendChild(option);
       }
 
-      if (current >= 2 && current <= n) {
-        elements.thresholdSelect.value = String(current);
-        state.threshold = current;
-      } else {
-        elements.thresholdSelect.value = String(Math.min(2, n));
-        state.threshold = Math.min(2, n);
-      }
+      const threshold = Math.max(2, Math.min(state.chosenThreshold, n));
+      elements.thresholdSelect.value = String(threshold);
+      state.threshold = threshold;
     }
 
     updateThresholdVisibility();

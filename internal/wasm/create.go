@@ -439,6 +439,12 @@ func parseProjectYAML(yamlText string) (*ProjectYAML, error) {
 	if err := yaml.Unmarshal([]byte(yamlText), &proj); err != nil {
 		return nil, fmt.Errorf("parsing YAML: %w", err)
 	}
+	// A threshold the friends can't meet would otherwise be lowered silently.
+	if proj.Threshold != 0 {
+		if err := core.ValidateShamirParams(len(proj.Friends), proj.Threshold); err != nil {
+			return nil, err
+		}
+	}
 	return &proj, nil
 }
 

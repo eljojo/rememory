@@ -166,6 +166,90 @@ test.describe('Browser Bundle Creation Tool', () => {
     await expect(page.locator('#files-drop-zone.has-error')).toBeVisible(); // Files drop zone should be highlighted
   });
 
+  // The friends list is rebuilt one friend at a time on several actions; the
+  // threshold used to fall back to 2 on the way, silently weakening bundles.
+  test('chosen threshold survives removing a friend', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    for (const [i, name] of ['Alice', 'Bob', 'Carol', 'Dave', 'Erin'].entries()) {
+      if (i >= 2) await creation.addFriend();
+      await creation.setFriend(i, name);
+    }
+    await creation.setThreshold(3);
+
+    await creation.removeFriend(4);
+
+    await creation.expectFriendCount(4);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+  });
+
+  test('chosen threshold survives a language change', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    for (const [i, name] of ['Alice', 'Bob', 'Carol', 'Dave', 'Erin'].entries()) {
+      if (i >= 2) await creation.addFriend();
+      await creation.setFriend(i, name);
+    }
+    await creation.setThreshold(4);
+
+    await creation.setLanguage('es');
+
+    await expect(page.locator('#threshold-select')).toHaveValue('4');
+  });
+
+  test('chosen threshold comes back when the piece count goes back up', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.toggleAnonymousMode();
+    await creation.setNumShares(5);
+    await creation.setThreshold(4);
+
+    await creation.setNumShares(3);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+
+    await creation.setNumShares(5);
+    await expect(page.locator('#threshold-select')).toHaveValue('4');
+  });
+
+  test('YAML import refuses a threshold above the number of friends', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+
+    await creation.importYAML(`
+name: too-strict
+threshold: 4
+friends:
+  - name: Charlie
+  - name: Diana
+  - name: Eve
+`);
+
+    await expect(page.locator('.toast-error')).toBeVisible();
+    await creation.expectFriendCount(2);
+    await creation.expectFriendData(0, 'Alice');
+    await creation.expectFriendData(1, 'Bob');
+  });
+
+  test('YAML import keeps a valid threshold from the file', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    await creation.importYAML(`
+name: imported
+threshold: 3
+friends:
+  - name: Charlie
+  - name: Diana
+  - name: Eve
+  - name: Frank
+`);
+
+    await creation.expectFriendCount(4);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+  });
+
   test('can import contacts from YAML', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 
