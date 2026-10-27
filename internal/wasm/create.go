@@ -88,10 +88,15 @@ func createBundlesFromArchive(config CreateBundlesFromArchiveConfig) ([]BundleOu
 	if len(config.ArchiveData) == 0 {
 		return nil, nil, fmt.Errorf("no archive data provided")
 	}
+	names := make([]string, len(config.Friends))
 	for i, f := range config.Friends {
 		if f.Name == "" {
 			return nil, nil, fmt.Errorf("friend %d: name is required", i+1)
 		}
+		names[i] = f.Name
+	}
+	if _, err := core.FriendFileStems(names); err != nil {
+		return nil, nil, err
 	}
 
 	// Generate random passphrase
@@ -198,7 +203,8 @@ func bundleFromManifest(manifestData, raw []byte, config bundleGenConfig) ([]Bun
 		}
 
 		var otherFriends []project.Friend
-		var otherFriendsInfo []html.FriendInfo
+		// Empty, not nil, for anonymous bundles: recover.html reads it as an array.
+		otherFriendsInfo := []html.FriendInfo{}
 		if !config.Anonymous {
 			otherFriends = make([]project.Friend, 0, n-1)
 			otherFriendsInfo = make([]html.FriendInfo, 0, n-1)
@@ -289,7 +295,7 @@ func bundleFromManifest(manifestData, raw []byte, config bundleGenConfig) ([]Bun
 
 		bundles[i] = BundleOutput{
 			FriendName: friend.Name,
-			FileName:   fmt.Sprintf("bundle-%s.zip", core.SanitizeFilename(friend.Name)),
+			FileName:   fmt.Sprintf("bundle-%s.zip", core.FriendFileStem(friend.Name, i+1)),
 			Data:       zipData,
 		}
 	}
@@ -304,6 +310,15 @@ func createZip(files []FileEntry) ([]byte, error) {
 
 	// Use "manifest" as the root directory name
 	rootDir := "manifest"
+
+	// Same limits `rememory recover` applies when extracting.
+	var total int64
+	for _, f := range files {
+		total += int64(len(f.Data))
+		if err := core.CheckArchiveLimits(f.Name, int64(len(f.Data)), total); err != nil {
+			return nil, err
+		}
+	}
 
 	for _, f := range files {
 		// Normalize the file path - ensure it's under manifest/
@@ -433,6 +448,17 @@ func parseProjectYAML(yamlText string) (*ProjectYAML, error) {
 	var proj ProjectYAML
 	if err := yaml.Unmarshal([]byte(yamlText), &proj); err != nil {
 		return nil, fmt.Errorf("parsing YAML: %w", err)
+	}
+	// A threshold the friends can't meet would otherwise be lowered silently.
+	if proj.Threshold != 0 {
+		if err := core.ValidateShamirParams(len(proj.Friends), proj.Threshold); err != nil {
+			return nil, err
+		}
+	}
+	for _, f := range proj.Friends {
+		if f.Language != "" && !translations.IsSupported(f.Language) {
+			return nil, fmt.Errorf("friend %q: unsupported language %q (supported: %s)", f.Name, f.Language, strings.Join(translations.Languages, ", "))
+		}
 	}
 	return &proj, nil
 }

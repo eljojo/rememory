@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -15,6 +16,9 @@ import (
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/spf13/cobra"
 )
+
+// sealClock is the time source for seal; tests replace it.
+var sealClock = time.Now
 
 var sealCmd = &cobra.Command{
 	Use:   "seal",
@@ -120,6 +124,11 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 		}
 	}
 
+	// Refuse what `rememory recover` couldn't extract, before writing anything.
+	if err := manifest.CheckSizes(manifestDir); err != nil {
+		return fmt.Errorf("cannot seal %s: %w", manifestDir, err)
+	}
+
 	dirSize, err := manifest.DirSize(manifestDir)
 	if err != nil {
 		return fmt.Errorf("calculating manifest size: %w", err)
@@ -197,10 +206,16 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 
 	manifestData := encryptedBuf.Bytes()
 
-	// Create output directories
+	// Create output directories. Shares are private; Chmod tightens a folder
+	// left by an older version, which MkdirAll would keep as it was.
 	sharesDir := p.SharesPath()
-	if err := os.MkdirAll(sharesDir, 0755); err != nil {
+	if err := os.MkdirAll(sharesDir, 0700); err != nil {
 		return fmt.Errorf("creating output directories: %w", err)
+	}
+	// A folder owned by another account (e.g. made by a root container) or
+	// on a filesystem without permissions can't be tightened; say so and go on.
+	if err := os.Chmod(sharesDir, 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: couldn't make %s private (%v); other accounts on this computer may be able to read it.\n", sharesDir, err)
 	}
 
 	// Write encrypted manifest
@@ -217,16 +232,25 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 		return fmt.Errorf("splitting passphrase: %w", err)
 	}
 
+	// One time for the whole seal: recovery refuses pieces whose creation
+	// times differ, and a per-share clock could cross a minute boundary.
+	sealedAt := sealClock().UTC()
+
 	// Create share files
 	shareInfos := make([]project.ShareInfo, len(shares))
 	for i, shareData := range shares {
 		friend := p.Friends[i]
 		share := core.NewShare(2, i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
+		share.Created = sealedAt
 
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
 
-		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0600); err != nil {
+		encoded := share.Encode()
+		if err := bundle.WritePrivateFile(sharePath, func(w io.Writer) error {
+			_, err := io.WriteString(w, encoded)
+			return err
+		}); err != nil {
 			return fmt.Errorf("writing share for %s: %w", friend.Name, err)
 		}
 
@@ -267,7 +291,7 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 	}
 
 	sealed := &project.Sealed{
-		At:               time.Now().UTC(),
+		At:               sealedAt,
 		ManifestChecksum: manifestChecksum,
 		VerificationHash: core.HashString(passphrase),
 		Shares:           shareInfos,

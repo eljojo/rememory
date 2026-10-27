@@ -18,7 +18,8 @@ This command verifies:
   - The embedded share is valid and parseable
 
 Use this to verify bundles before distributing them, or to check bundles
-you've received from others.`,
+you've received from others for damage. The checksums travel inside the
+same ZIP, so they catch accidental corruption, not deliberate changes.`,
 	Args: cobra.ExactArgs(1),
 	RunE: runVerifyBundle,
 }

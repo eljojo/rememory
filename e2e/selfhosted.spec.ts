@@ -42,14 +42,17 @@ async function startServer(bin: string, port: number, dataDir: string): Promise<
   throw new Error('Server did not start within 15 seconds');
 }
 
+const adminPassword = 'test-password-e2e';
+
 test.describe('Selfhosted Server', () => {
-  test.use({ allowedHosts: ['127.0.0.1'] });
+  // The maker page and uploads need the admin password; the browser answers
+  // the server's prompt with these, as the owner would.
+  test.use({ allowedHosts: ['127.0.0.1'], httpCredentials: { username: 'admin', password: adminPassword } });
   let proc: ChildProcess;
   let port: number;
   let baseURL: string;
   let dataDir: string;
   let tmpDir: string;
-  const adminPassword = 'test-password-e2e';
 
   test.beforeAll(async () => {
     const bin = getRememoryBin();
@@ -140,13 +143,13 @@ test.describe('Selfhosted Server', () => {
     // Bundles should appear for both friends
     await expect(page.locator('.bundle-item')).toHaveCount(2);
 
+    // The upload runs after the bundles are shown; wait for its toast
+    await expect(page.locator('.toast-success')).toBeVisible({ timeout: 10000 });
+
     // Verify manifest was saved to server (check API status)
     const statusResp = await fetch(`${baseURL}/api/status`);
     const status = await statusResp.json();
     expect(status.hasManifest).toBe(true);
-
-    // Also check for the "Saved to server" toast
-    await expect(page.locator('.toast-success')).toBeVisible({ timeout: 5000 });
 
     // Verify "Go to home page" link is present and points to /
     const homeLink = page.locator('.next-steps-hint a[href="/"]');

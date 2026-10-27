@@ -5,10 +5,14 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"flag"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/eljojo/rememory/internal/core"
 )
 
 func TestArchiveExtract(t *testing.T) {
@@ -531,5 +535,87 @@ func TestExtractAutoUnknownFormat(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unrecognized archive format") {
 		t.Errorf("expected 'unrecognized archive format' error, got: %v", err)
+	}
+}
+
+// Archives ReMemory makes must be extractable by `rememory recover`, which
+// caps files at core.MaxFileSize. A file over it used to be archived, then
+// refused halfway through extraction, leaving a partial folder.
+func TestOversizedFileRefusedBeforeWriting(t *testing.T) {
+	src := t.TempDir()
+	if err := os.WriteFile(filepath.Join(src, "a.txt"), []byte("small"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	big, err := os.Create(filepath.Join(src, "z-video.mp4"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	big.Truncate(core.MaxFileSize + 1) // sparse: cheap to create
+	big.Close()
+
+	err = CheckSizes(src)
+	if err == nil || !strings.Contains(err.Error(), "z-video.mp4") {
+		t.Errorf("CheckSizes: got %v, want an error naming z-video.mp4", err)
+	}
+
+	// An archive that holds such a file (made by an older version) is refused
+	// before anything is written.
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	w, _ := zw.Create("manifest/a.txt")
+	w.Write([]byte("small"))
+	w, _ = zw.Create("manifest/z-video.mp4")
+	w.Write(make([]byte, core.MaxFileSize+1))
+	zw.Close()
+
+	dest := filepath.Join(t.TempDir(), "recovered") // as `rememory recover` would name it
+	_, err = ExtractZip(bytes.NewReader(buf.Bytes()), int64(buf.Len()), dest)
+	if err == nil || !strings.Contains(err.Error(), "z-video.mp4") {
+		t.Errorf("ExtractZip: got %v, want an error naming z-video.mp4", err)
+	}
+	if _, err := os.Stat(dest); !os.IsNotExist(err) {
+		t.Errorf("ExtractZip created %s before refusing", filepath.Base(dest))
+	}
+}
+
+var generate = flag.Bool("generate", false, "regenerate test fixtures (writes to testdata/)")
+
+// nonASCIINames are file names Go's tar writer can only store in a PAX
+// header: non-ASCII, or longer than the 100-byte ustar name field.
+var nonASCIINames = []string{
+	"contraseña.txt",
+	"密碼.txt",
+	strings.Repeat("a-very-long-file-name-", 5) + "end.txt",
+}
+
+// TestGenerateNonASCIINameFixtures writes the archives the browser tests use
+// to check that recover.html lists these names as they are. The tar.gz is
+// what bundles before v0.0.15 carried; the ZIP is what they carry now.
+//
+// Run with: go test -run TestGenerateNonASCIINameFixtures ./internal/manifest/ -generate
+func TestGenerateNonASCIINameFixtures(t *testing.T) {
+	if !*generate {
+		t.Skip("pass -generate to regenerate fixtures")
+	}
+	src := filepath.Join(t.TempDir(), "manifest")
+	if err := os.MkdirAll(src, 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range nonASCIINames {
+		if err := os.WriteFile(filepath.Join(src, name), []byte(name), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for file, archive := range map[string]func(io.Writer, string) (*ArchiveResult, error){
+		"non-ascii-names.tar.gz": ArchiveTarGz,
+		"non-ascii-names.zip":    ArchiveZip,
+	} {
+		var buf bytes.Buffer
+		if _, err := archive(&buf, src); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join("testdata", file), buf.Bytes(), 0644); err != nil {
+			t.Fatal(err)
+		}
 	}
 }

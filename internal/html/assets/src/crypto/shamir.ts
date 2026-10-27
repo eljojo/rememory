@@ -27,6 +27,16 @@ export async function combine(shares: Uint8Array[]): Promise<Uint8Array> {
     }
   }
 
+  // Split never issues x=0 (that point is the secret itself). The library
+  // doesn't reject it in combine, and interpolating at 0 returns such a
+  // share's y-values verbatim — so a crafted x=0 share would let its supplier
+  // choose the recovered secret. Mirrors core.Combine.
+  shares.forEach((share, i) => {
+    if (share.length > 0 && share[share.length - 1] === 0) {
+      throw new Error(`share ${i + 1} is invalid (x-coordinate 0)`);
+    }
+  });
+
   return privyCombine(shares);
 }
 

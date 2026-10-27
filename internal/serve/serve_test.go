@@ -2,11 +2,14 @@ package serve
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -21,6 +24,7 @@ func newTestServer(t *testing.T) *Server {
 	t.Helper()
 	dir := t.TempDir()
 	srv, err := New(Config{
+		Host:            "127.0.0.1",
 		DataDir:         dir,
 		MaxManifestSize: 10 << 20, // 10 MB
 		Version:         "test",
@@ -31,8 +35,13 @@ func newTestServer(t *testing.T) *Server {
 	return srv
 }
 
+// adminPasswords remembers each test server's password, so helpers can
+// authenticate the requests that need it.
+var adminPasswords sync.Map
+
 func setupPassword(t *testing.T, srv *Server, password string) {
 	t.Helper()
+	adminPasswords.Store(srv, password)
 	body := `{"password":"` + password + `"}`
 	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -62,6 +71,9 @@ func uploadManifest(t *testing.T, srv *Server, manifest []byte, meta map[string]
 
 	req := httptest.NewRequest("POST", "/api/bundle", &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
+	if pw, ok := adminPasswords.Load(srv); ok {
+		req.SetBasicAuth("admin", pw.(string))
+	}
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	return w
@@ -205,6 +217,7 @@ func TestSetupRequired(t *testing.T) {
 func TestLargeManifest(t *testing.T) {
 	dir := t.TempDir()
 	srv, err := New(Config{
+		Host:            "127.0.0.1",
 		DataDir:         dir,
 		MaxManifestSize: 1 << 10, // 1 KB for testing
 		Version:         "test",
@@ -299,8 +312,14 @@ func TestManifestPathTraversal(t *testing.T) {
 }
 
 func TestConcurrentAccess(t *testing.T) {
-	srv := newTestServer(t)
+	// Concurrent writes to the store; open uploads keep password checks
+	// (one at a time, at most maxAuthWaiting queued) out of the picture.
+	srv, err := New(Config{Host: "127.0.0.1", DataDir: t.TempDir(), MaxManifestSize: 10 << 20, Version: "test", OpenUploads: true})
+	if err != nil {
+		t.Fatal(err)
+	}
 	setupPassword(t, srv, "concurrentpass")
+	adminPasswords.Delete(srv)
 
 	var wg sync.WaitGroup
 	errors := make(chan error, 10)
@@ -498,5 +517,308 @@ func TestEmptyPasswordRejected(t *testing.T) {
 	srv.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("expected 400 for empty password, got %d", w.Code)
+	}
+}
+
+// Any page the owner visits could otherwise post to a server on their
+// network, e.g. claim the admin password of a fresh instance on localhost.
+func TestCrossSiteRequestsRefused(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"attacker-pw"}`))
+	req.Header.Set("Content-Type", "text/plain")
+	req.Header.Set("Origin", "https://evil.example")
+	req.Header.Set("Sec-Fetch-Site", "cross-site")
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Errorf("cross-site setup: got %d, want 403", w.Code)
+	}
+	if IsSetup(srv.Store()) {
+		t.Fatal("cross-site request set the admin password")
+	}
+
+	// Same-origin browser requests and scripts without browser headers work.
+	req = httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"owner-password"}`))
+	req.Host = "localhost:8080"
+	req.Header.Set("Origin", "http://localhost:8080")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("same-origin setup: got %d %s", w.Code, w.Body.String())
+	}
+}
+
+// Before setup, the endpoint is open: its body must be small, and two
+// setups racing must not both be told "ok" while only one password is kept.
+func TestSetupIsBoundedAndAtomic(t *testing.T) {
+	srv := newTestServer(t)
+	huge := `{"password":"` + strings.Repeat("a", 1<<20) + `"}`
+	req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(huge))
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code == http.StatusOK || IsSetup(srv.Store()) {
+		t.Fatalf("1 MiB setup body was accepted (%d)", w.Code)
+	}
+
+	srv = newTestServer(t)
+	passwords := []string{"first-password", "second-password", "third-password"}
+	codes := make([]int, len(passwords))
+	var wg sync.WaitGroup
+	for i, pw := range passwords {
+		wg.Add(1)
+		go func(i int, pw string) {
+			defer wg.Done()
+			req := httptest.NewRequest("POST", "/api/setup", strings.NewReader(`{"password":"`+pw+`"}`))
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+			codes[i] = w.Code
+		}(i, pw)
+	}
+	wg.Wait()
+
+	winners := 0
+	for i, code := range codes {
+		if code == http.StatusOK {
+			winners++
+			if !CheckPassword(srv.Store(), passwords[i]) {
+				t.Errorf("setup with %q was told ok but another password is stored", passwords[i])
+			}
+		}
+	}
+	if winners != 1 {
+		t.Errorf("%d concurrent setups succeeded, want 1 (codes %v)", winners, codes)
+	}
+}
+
+// Each password check is a 256 MiB scrypt. Requests that can't succeed
+// shouldn't get one: an unknown bundle, or an oversized body.
+func TestDeleteAvoidsNeedlessPasswordChecks(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+
+	body := `{"id":"00000000-0000-4000-8000-000000000000","password":"guess"}`
+	req := httptest.NewRequest("DELETE", "/api/bundle", strings.NewReader(body))
+	w := httptest.NewRecorder()
+	start := time.Now()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Errorf("unknown bundle: got %d, want 404", w.Code)
+	}
+	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
+		t.Errorf("unknown bundle took %v; the password was checked anyway", elapsed)
+	}
+
+	huge := `{"id":"00000000-0000-4000-8000-000000000000","password":"` + strings.Repeat("a", 1<<20) + `"}`
+	req = httptest.NewRequest("DELETE", "/api/bundle", strings.NewReader(huge))
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("1 MiB delete body: got %d, want 400", w.Code)
+	}
+}
+
+// Uploads are anonymous, and every page view re-reads every bundle's
+// metadata: it must stay small, and an oversized meta.json already on disk
+// (stored by an older version) must not be loaded.
+func TestUploadMetadataIsBounded(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	manifest := []byte(agePrefix + "data")
+
+	w := uploadManifest(t, srv, manifest, map[string]any{"name": strings.Repeat("<", 64<<10), "threshold": 2, "total": 3})
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("64 KiB meta: got %d, want 400", w.Code)
+	}
+	w = uploadManifest(t, srv, manifest, map[string]any{"name": "Family", "threshold": 9000, "total": 3})
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("threshold 9000: got %d, want 400", w.Code)
+	}
+	w = uploadManifest(t, srv, manifest, map[string]any{"name": "Family", "threshold": 2, "total": 3})
+	if w.Code != http.StatusOK {
+		t.Fatalf("normal meta: got %d %s", w.Code, w.Body.String())
+	}
+
+	poisoned := filepath.Join(srv.Store().dir, "bundles", "00000000-0000-4000-8000-000000000000")
+	os.MkdirAll(poisoned, 0700)
+	big, _ := json.Marshal(BundleMeta{ID: "00000000-0000-4000-8000-000000000000", Name: strings.Repeat("x", 1<<20)})
+	os.WriteFile(filepath.Join(poisoned, "meta.json"), big, 0600)
+	list, err := srv.Store().List()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Errorf("List loaded %d bundles, want 1 (the oversized meta.json skipped)", len(list))
+	}
+}
+
+func TestUploadBodyIsBounded(t *testing.T) {
+	srv := newTestServer(t) // MaxManifestSize: 10 MB
+	setupPassword(t, srv, "owner-password")
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	fw, _ := mw.CreateFormFile("manifest", "MANIFEST.age")
+	fw.Write([]byte(agePrefix))
+	ff, _ := mw.CreateFormField("padding")
+	ff.Write(bytes.Repeat([]byte("a"), 12<<20))
+	mw.Close()
+
+	req := httptest.NewRequest("POST", "/api/bundle", &buf)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.SetBasicAuth("admin", "owner-password")
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("an upload larger than the manifest limit: got %d %s, want 400", w.Code, w.Body.String())
+	}
+}
+
+// Without timeouts a client can hold a connection open forever by sending
+// headers slowly.
+func TestHTTPServerHasTimeouts(t *testing.T) {
+	hs := newTestServer(t).httpServer("127.0.0.1:0")
+	if hs.ReadHeaderTimeout <= 0 || hs.IdleTimeout <= 0 {
+		t.Errorf("ReadHeaderTimeout=%v IdleTimeout=%v, want both set", hs.ReadHeaderTimeout, hs.IdleTimeout)
+	}
+}
+
+// Uploads are open by default, so with several bundles on the server,
+// "the latest" may be anyone's. A bare /recover.html only loads a bundle
+// when there's no doubt which one is meant.
+func TestRecoverWithoutIDOnlyFallsBackToASoleBundle(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	get := func() string {
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, httptest.NewRequest("GET", "/recover.html", nil))
+		return w.Body.String()
+	}
+
+	uploadManifest(t, srv, []byte(agePrefix+"one"), map[string]any{"name": "Family"})
+	if !strings.Contains(get(), `"manifestURL":"/api/bundle/manifest?id=`) {
+		t.Error("with one bundle, /recover.html should load it")
+	}
+
+	uploadManifest(t, srv, []byte(agePrefix+"two"), map[string]any{"name": "Someone else"})
+	if strings.Contains(get(), `"manifestURL"`) {
+		t.Error("with two bundles, /recover.html loaded one without being asked")
+	}
+}
+
+// A server reachable from other machines must not wait for the first
+// visitor to choose its admin password.
+func TestEnsureAdminPassword(t *testing.T) {
+	newStore := func() *Store {
+		s, err := NewStore(t.TempDir())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+
+	for _, host := range []string{"127.0.0.1", "localhost", "::1"} {
+		store := newStore()
+		generated, err := EnsureAdminPassword(store, host, "")
+		if err != nil || generated != "" || IsSetup(store) {
+			t.Errorf("%s: generated %q (err %v); local servers keep the setup page", host, generated, err)
+		}
+	}
+
+	for _, host := range []string{"0.0.0.0", "", "192.168.1.10", "::"} {
+		store := newStore()
+		generated, err := EnsureAdminPassword(store, host, "")
+		if err != nil || generated == "" || !CheckPassword(store, generated) {
+			t.Errorf("%q: generated %q (err %v), want a stored password", host, generated, err)
+		}
+		again, _ := EnsureAdminPassword(store, host, "")
+		if again != "" {
+			t.Errorf("%q: generated a second password on restart", host)
+		}
+	}
+
+	store := newStore()
+	if generated, err := EnsureAdminPassword(store, "0.0.0.0", "from-the-env"); err != nil || generated != "" {
+		t.Fatalf("env password: generated %q, err %v", generated, err)
+	}
+	if !CheckPassword(store, "from-the-env") {
+		t.Error("REMEMORY_ADMIN_PASSWORD was not stored")
+	}
+	if _, err := EnsureAdminPassword(store, "127.0.0.1", "changed-in-the-env"); err != nil {
+		t.Fatal(err)
+	}
+	if !CheckPassword(store, "changed-in-the-env") || CheckPassword(store, "from-the-env") {
+		t.Error("a changed REMEMORY_ADMIN_PASSWORD should replace the stored one")
+	}
+}
+
+// Uploads, and the maker page that makes them, need the admin password
+// unless the owner opens them up.
+func TestUploadsNeedTheAdminPassword(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	adminPasswords.Delete(srv)
+	manifest := []byte(agePrefix + "data")
+
+	for _, path := range []string{"/maker.html"} {
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
+		if w.Code != http.StatusUnauthorized || !strings.HasPrefix(w.Header().Get("WWW-Authenticate"), "Basic") {
+			t.Errorf("GET %s without password: got %d %q, want 401 with a Basic challenge", path, w.Code, w.Header().Get("WWW-Authenticate"))
+		}
+	}
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusUnauthorized {
+		t.Errorf("upload without password: got %d, want 401", w.Code)
+	}
+	adminPasswords.Store(srv, "wrong-password")
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusUnauthorized {
+		t.Errorf("upload with wrong password: got %d, want 401", w.Code)
+	}
+	adminPasswords.Store(srv, "owner-password")
+	if w := uploadManifest(t, srv, manifest, nil); w.Code != http.StatusOK {
+		t.Errorf("upload with password: got %d %s", w.Code, w.Body.String())
+	}
+
+	open, err := New(Config{Host: "127.0.0.1", DataDir: t.TempDir(), MaxManifestSize: 10 << 20, Version: "test", OpenUploads: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	setupPassword(t, open, "owner-password")
+	adminPasswords.Delete(open)
+	if w := uploadManifest(t, open, manifest, nil); w.Code != http.StatusOK {
+		t.Errorf("open uploads without password: got %d %s", w.Code, w.Body.String())
+	}
+}
+
+// A password over the length limit must be refused, not waved through.
+func TestOversizedPasswordIsRefused(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	for _, n := range []int{maxPasswordLen, maxPasswordLen + 1, 1 << 16} {
+		adminPasswords.Store(srv, strings.Repeat("a", n))
+		if w := uploadManifest(t, srv, []byte(agePrefix+"data"), nil); w.Code != http.StatusUnauthorized {
+			t.Errorf("%d-byte password: got %d, want 401", n, w.Code)
+		}
+	}
+}
+
+// Password checks run one at a time; a request whose client has gone away
+// by its turn must not cost a scrypt derivation.
+func TestPasswordCheckSkippedForCancelledRequest(t *testing.T) {
+	srv := newTestServer(t)
+	setupPassword(t, srv, "owner-password")
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	req := httptest.NewRequest("GET", "/maker.html", nil).WithContext(ctx)
+	req.SetBasicAuth("admin", "owner-password")
+	w := httptest.NewRecorder()
+	start := time.Now()
+	srv.ServeHTTP(w, req)
+	if elapsed := time.Since(start); elapsed > 200*time.Millisecond {
+		t.Errorf("cancelled request took %v; the password was checked anyway", elapsed)
+	}
+	if w.Code == http.StatusOK {
+		t.Error("cancelled request was served")
 	}
 }

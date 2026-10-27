@@ -432,7 +432,7 @@ Incluso si alguien intentara todas las contraseñas posibles, scrypt hace cada i
 
 La clave se divide usando Shamir's Secret Sharing. **Cualquier cantidad menor al umbral de partes contiene cero información sobre la clave.** No "muy poca." Matemáticamente cero.
 
-Cada kit incluye sumas de verificación para que la herramienta de recuperación pueda confirmar que nada fue corrompido ni alterado.
+Cada kit también lista sumas de verificación de sus archivos, para que `rememory verify-bundle` pueda decirte si alguno se dañó por el camino. Las sumas detectan accidentes, no cambios deliberados: quien modifique un archivo puede actualizar también su suma. El archivo cifrado está protegido por sí mismo — si se altera, no se abrirá.
 
 ### Qué podría salir mal {#what-could-go-wrong}
 

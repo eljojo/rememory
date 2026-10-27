@@ -166,6 +166,109 @@ test.describe('Browser Bundle Creation Tool', () => {
     await expect(page.locator('#files-drop-zone.has-error')).toBeVisible(); // Files drop zone should be highlighted
   });
 
+  // The friends list is rebuilt one friend at a time on several actions; the
+  // threshold used to fall back to 2 on the way, silently weakening bundles.
+  test('chosen threshold survives removing a friend', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    for (const [i, name] of ['Alice', 'Bob', 'Carol', 'Dave', 'Erin'].entries()) {
+      if (i >= 2) await creation.addFriend();
+      await creation.setFriend(i, name);
+    }
+    await creation.setThreshold(3);
+
+    await creation.removeFriend(4);
+
+    await creation.expectFriendCount(4);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+  });
+
+  test('chosen threshold survives a language change', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    for (const [i, name] of ['Alice', 'Bob', 'Carol', 'Dave', 'Erin'].entries()) {
+      if (i >= 2) await creation.addFriend();
+      await creation.setFriend(i, name);
+    }
+    await creation.setThreshold(4);
+
+    await creation.setLanguage('es');
+
+    await expect(page.locator('#threshold-select')).toHaveValue('4');
+  });
+
+  test('chosen threshold comes back when the piece count goes back up', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.toggleAnonymousMode();
+    await creation.setNumShares(5);
+    await creation.setThreshold(4);
+
+    await creation.setNumShares(3);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+
+    await creation.setNumShares(5);
+    await expect(page.locator('#threshold-select')).toHaveValue('4');
+  });
+
+  test('YAML import refuses a threshold above the number of friends', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+
+    await creation.importYAML(`
+name: too-strict
+threshold: 4
+friends:
+  - name: Charlie
+  - name: Diana
+  - name: Eve
+`);
+
+    await expect(page.locator('.toast-error')).toBeVisible();
+    await creation.expectFriendCount(2);
+    await creation.expectFriendData(0, 'Alice');
+    await creation.expectFriendData(1, 'Bob');
+  });
+
+  test('YAML import refuses a language the bundles cannot use', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+
+    await creation.importYAML(`
+name: regional
+friends:
+  - name: Charlie
+    language: pt-BR
+  - name: Diana
+`);
+
+    await expect(page.locator('.toast-error')).toBeVisible();
+    await creation.expectFriendCount(2);
+    await creation.expectFriendData(0, 'Alice');
+  });
+
+  test('YAML import keeps a valid threshold from the file', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    await creation.importYAML(`
+name: imported
+threshold: 3
+friends:
+  - name: Charlie
+  - name: Diana
+  - name: Eve
+  - name: Frank
+`);
+
+    await creation.expectFriendCount(4);
+    await expect(page.locator('#threshold-select')).toHaveValue('3');
+  });
+
   test('can import contacts from YAML', async ({ page }) => {
     const creation = new CreationPage(page, htmlPath);
 
@@ -206,6 +309,77 @@ friends:
     // Should show file preview
     await creation.expectFilesPreviewVisible();
     await creation.expectFileCount(2);
+  });
+
+  // Hidden files are often the secrets themselves (.env, .ssh, .password-store);
+  // they used to be dropped without a word. The CLI archives them too.
+  test('hidden files are kept', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    const dir = path.join(tmpDir, 'hidden-files');
+    fs.mkdirSync(dir, { recursive: true });
+    const dotenv = path.join(dir, '.env');
+    fs.writeFileSync(dotenv, 'API_KEY=secret');
+    await creation.addFiles([...creation.createTestFiles(tmpDir, 'hidden'), dotenv]);
+
+    await creation.expectFileCount(3);
+    await expect(page.locator('#files-preview')).toContainText('.env');
+  });
+
+  // Chrome's directory reader returns at most 100 entries per call; a dropped
+  // folder must be read until the reader says it's done.
+  test('dropping a folder with more than 100 files keeps them all', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    await page.evaluate(() => {
+      const fileEntry = (name: string) => ({
+        isFile: true, isDirectory: false, name,
+        file: (cb: (f: File) => void) => cb(new File([name], name)),
+      });
+      const all = Array.from({ length: 250 }, (_, i) => fileEntry(`f${i}.txt`));
+      const folder = {
+        isFile: false, isDirectory: true, name: 'big',
+        createReader: () => {
+          let offset = 0;
+          return {
+            readEntries: (cb: (entries: unknown[]) => void) => {
+              const batch = all.slice(offset, offset + 100);
+              offset += batch.length;
+              setTimeout(() => cb(batch));
+            },
+          };
+        },
+      };
+      const drop = new Event('drop', { bubbles: true, cancelable: true });
+      Object.defineProperty(drop, 'dataTransfer', {
+        value: { items: [{ kind: 'file', webkitGetAsEntry: () => folder }] },
+      });
+      document.getElementById('files-drop-zone')!.dispatchEvent(drop);
+    });
+
+    await creation.expectFileCount(250);
+  });
+
+  // `rememory recover` extracts files of up to 100 MiB; the maker must not
+  // put a larger one in an archive.
+  test('a file over 100 MiB is marked and blocks creation', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+    await creation.open();
+
+    const dir = path.join(tmpDir, 'oversized');
+    fs.mkdirSync(dir, { recursive: true });
+    const big = path.join(dir, 'video.mp4');
+    fs.writeFileSync(big, '');
+    fs.truncateSync(big, 100 * 1024 * 1024 + 1);
+    await creation.setFriend(0, 'Alice');
+    await creation.setFriend(1, 'Bob');
+    await creation.addFiles([big]);
+
+    await expect(page.locator('#files-preview')).toContainText('Too large');
+    await creation.expectGenerateDisabled();
   });
 
   test('adding more files appends to existing files', async ({ page }) => {
@@ -380,6 +554,36 @@ friends:
     await creation.expectBundleFor('Share 2');
     await creation.expectBundleFor('Share 3');
     await creation.expectBundleFor('Share 4');
+  });
+
+  test('friends without latin letters in their names get distinct bundle files', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, '小明');
+    await creation.setFriend(1, '小華');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'nonlatin'));
+
+    await creation.generate();
+    await creation.expectGenerationComplete();
+    await creation.expectBundleCount(2);
+    await expect(page.locator('.bundle-item .meta').nth(0)).toContainText('bundle-1.zip');
+    await expect(page.locator('.bundle-item .meta').nth(1)).toContainText('bundle-2.zip');
+  });
+
+  test('friends whose names give the same file name are refused', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, 'José');
+    await creation.setFriend(1, 'Jose');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'collide'));
+
+    await creation.generate();
+    await expect(page.locator('#status-message')).toContainText('SHARE-jose.txt', { timeout: 120000 });
+    await creation.expectBundleCount(0);
   });
 
   test('anonymous mode validates files required', async ({ page }) => {

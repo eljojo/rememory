@@ -17,6 +17,28 @@ const (
 	MaxTotalSize = 1024 * 1024 * 1024
 )
 
+// CheckArchiveLimits reports a file larger than MaxFileSize, or a running
+// total (including this file) larger than MaxTotalSize. Producers (seal,
+// the maker) check before archiving and extractors before writing, so
+// anything ReMemory archives can be extracted again.
+func CheckArchiveLimits(name string, size, total int64) error {
+	if size > MaxFileSize {
+		return fmt.Errorf("%s is %s; each file can be at most %s", name, formatLimitSize(size), formatLimitSize(MaxFileSize))
+	}
+	if total > MaxTotalSize {
+		return fmt.Errorf("the files add up to more than %s, the most that can be recovered (reached at %s)", formatLimitSize(MaxTotalSize), name)
+	}
+	return nil
+}
+
+func formatLimitSize(n int64) string {
+	unit, div := "MB", float64(1<<20)
+	if n >= 1<<30 {
+		unit, div = "GB", float64(1<<30)
+	}
+	return fmt.Sprintf("%.1f %s", float64(n)/div, unit)
+}
+
 // ExtractedFile represents a file extracted from an archive.
 type ExtractedFile struct {
 	Name string

@@ -2,6 +2,7 @@ import { test, expect } from './fixtures';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import AdmZip from 'adm-zip';
 import {
   getRememoryBin,
   createTestProject,
@@ -67,6 +68,42 @@ test.describe('Browser Recovery Tool', () => {
 
     // Still need 1 more share (threshold is 2)
     await recovery.expectNeedMoreShares(1);
+  });
+
+  // A bundle can carry a language code this page has no table for (a
+  // project.yml edited by hand before languages were validated, or a code
+  // saved by a newer version). The page must still work, in the closest
+  // language it has.
+  test('personalized recover.html with an unsupported language still works', async ({ page }) => {
+    // Read from the ZIP: other workers may be extracting Alice's bundle right now.
+    const html = new AdmZip(path.join(bundlesDir, 'bundle-alice.zip')).readAsText('recover.html');
+    const patched = html.replace(/("holder":"Alice"[^]*?"language":")[^"]*(")/, '$1pt-BR$2');
+    expect(patched).not.toBe(html);
+    const patchedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-lang-'));
+    fs.writeFileSync(path.join(patchedDir, 'recover.html'), patched);
+
+    const recovery = new RecoveryPage(page, patchedDir);
+    await recovery.open();
+
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
+    await expect(page.locator('#lang-select')).toHaveValue('pt');
+
+    await page.locator('#lang-select').selectOption('es');
+    await expect(page.locator('#lang-select')).toHaveValue('es');
+    await expect(page.locator('html')).toContainText('Alice');
+
+    fs.rmSync(patchedDir, { recursive: true, force: true });
+  });
+
+  test('an unsupported saved language falls back instead of breaking the page', async ({ page }) => {
+    const bundleDir = extractBundle(bundlesDir, 'Alice');
+    await page.addInitScript(() => localStorage.setItem('rememory-lang', 'xx'));
+    const recovery = new RecoveryPage(page, bundleDir);
+    await recovery.open();
+
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Alice');
   });
 
   test('shows contact list for other friends', async ({ page }) => {
@@ -167,6 +204,66 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectDownloadVisible();
   });
 
+  // A cancelled "Save as" dialog or a failed download must not mean redoing
+  // the whole recovery: the unlocked archive stays available.
+  test('the recovered archive can be downloaded more than once', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await recovery.addShares(bobDir);
+    await recovery.expectRecoveryComplete();
+
+    for (let i = 0; i < 2; i++) {
+      const download = page.waitForEvent('download', { timeout: 5000 });
+      await page.locator('#download-all-btn').click();
+      const file = await download;
+      expect(file.suggestedFilename()).toBe('archive.zip');
+      expect(fs.statSync(await file.path()).size).toBeGreaterThan(0);
+    }
+  });
+
+  // Older versions of seal stamped each piece separately, so pieces of one set
+  // could differ by a minute. Such a piece is added with a warning; unlocking
+  // decides whether it belongs.
+  test('a piece with a different creation time is added with a warning', async ({ page }) => {
+    const [aliceDir] = extractBundles(bundlesDir, ['Alice']);
+    // Read from the ZIP: other workers may be extracting Bob's bundle right now.
+    const readme = new AdmZip(path.join(bundlesDir, 'bundle-bob.zip')).readAsText('README.txt');
+    const shifted = readme.replace(/^Created: .*$/m, 'Created: 2000-01-01 00:00');
+    expect(shifted).not.toBe(readme);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-created-'));
+    fs.writeFileSync(path.join(dir, 'README.txt'), shifted);
+
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await page.locator('#share-file-input').setInputFiles(path.join(dir, 'README.txt'));
+
+    await expect(page.locator('.toast-warning')).toBeVisible();
+    await recovery.expectShareCount(2);
+    await recovery.expectRecoveryComplete();
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("the creation-time warning also shows for a dropped friend's recover.html", async ({ page }) => {
+    const [aliceDir] = extractBundles(bundlesDir, ['Alice']);
+    // Read from the ZIP: other workers may be extracting Bob's bundle right now.
+    const html = new AdmZip(path.join(bundlesDir, 'bundle-bob.zip')).readAsText('recover.html');
+    const shifted = html.replace(/Created: [0-9: -]+/, 'Created: 2000-01-01 00:00');
+    expect(shifted).not.toBe(html);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-created-html-'));
+    fs.writeFileSync(path.join(dir, 'recover.html'), shifted);
+
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await page.locator('#manifest-file-input').setInputFiles(path.join(dir, 'recover.html'));
+
+    await expect(page.locator('.toast-warning')).toBeVisible();
+    await recovery.expectShareCount(2);
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('shows need for more shares with only holder share', async ({ page }) => {
     const bundleDir = extractBundle(bundlesDir, 'Alice');
     const recovery = new RecoveryPage(page, bundleDir);
@@ -199,6 +296,32 @@ test.describe('Browser Recovery Tool', () => {
 
     // Bob's share should now be added (index extracted from 25th word)
     await recovery.expectShareCount(2);
+  });
+
+  // The 25th word has room for indices 1-15; from friend #16 on it says 0.
+  // Two such pieces used to be refused as duplicates of each other.
+  test('word pieces from friends #16 and #17 are both accepted', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const friends = Array.from({ length: 17 }, (_, i) => ({
+      name: `P${String(i + 1).padStart(2, '0')}`,
+      email: `p${i + 1}@test.com`,
+    }));
+    const bigProject = createTestProject({ friends, threshold: 3 });
+    const bigBundlesDir = path.join(bigProject, 'output', 'bundles');
+    const [p01Dir, p16Dir, p17Dir] = extractBundles(bigBundlesDir, ['P01', 'P16', 'P17']);
+
+    const recovery = new RecoveryPage(page, p01Dir);
+    await recovery.open();
+    await recovery.expectShareCount(1);
+
+    for (const dir of [p16Dir, p17Dir]) {
+      await recovery.clickPasteButton();
+      await recovery.pasteShare(extractWordsFromReadme(findReadmeFile(dir)));
+      await recovery.submitPaste();
+    }
+
+    await recovery.expectShareCount(3);
+    await recovery.expectRecoveryComplete();
   });
 
   test('paste area accepts numbered word grid directly', async ({ page }) => {
@@ -340,6 +463,33 @@ test.describe('Anonymous Bundle Recovery', () => {
     await recovery.expectDownloadVisible();
   });
 
+  // Anonymous bundles used to embed "otherFriends":null; pieces without a
+  // holder name (words, QR, compact text) hit it and vanished. Generators
+  // now emit [], and the page must also cope with null.
+  test('anonymous recovery accepts a piece typed as words', async ({ page }) => {
+    const [, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
+    // Read from the ZIP: other workers may be extracting this bundle right now.
+    const html = new AdmZip(path.join(anonBundlesDir, 'bundle-share-1.zip')).readAsText('recover.html');
+    const oldStyle = html.replace('"otherFriends":[]', '"otherFriends":null');
+    expect(oldStyle).not.toBe(html);
+    const share1Dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-anon-'));
+    fs.writeFileSync(path.join(share1Dir, 'recover.html'), oldStyle);
+    const recovery = new RecoveryPage(page, share1Dir);
+
+    await recovery.open();
+    await recovery.expectShareCount(1);
+
+    const words = extractWordsFromReadme(findReadmeFile(share2Dir));
+    await recovery.clickPasteButton();
+    await recovery.pasteShare(words);
+    await recovery.submitPaste();
+
+    await recovery.expectShareCount(2);
+    await recovery.expectRecoveryComplete();
+
+    fs.rmSync(share1Dir, { recursive: true, force: true });
+  });
+
   test('anonymous recovery shows generic share labels', async ({ page }) => {
     const [share1Dir, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
     const recovery = new RecoveryPage(page, share1Dir);
@@ -385,6 +535,27 @@ test.describe('Generic recover.html (no personalization)', () => {
     if (tmpDir && fs.existsSync(tmpDir)) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
+  });
+
+  // Once the archive is unlocked (age authenticates it), failing to list its
+  // contents must not hide the download. Older browsers lack
+  // DecompressionStream, which listing a tar.gz archive needs.
+  test('download stays available when the file list cannot be shown', async ({ page }) => {
+    await page.addInitScript(() => { delete (window as any).DecompressionStream; });
+    const recovery = new RecoveryPage(page, '');
+    await recovery.openFile(standaloneRecoverHtml);
+
+    const v1 = 'internal/core/testdata/v1-bundle';
+    await page.locator('#share-file-input').setInputFiles(
+      ['SHARE-alice.txt', 'SHARE-bob.txt', 'SHARE-carol.txt'].map(f => path.join(v1, f)));
+    await recovery.addManifestFile(path.join(v1, 'MANIFEST.age'));
+
+    await recovery.expectRecoveryComplete();
+    await expect(page.locator('body')).toContainText("couldn't list what's inside");
+    await recovery.expectDownloadVisible();
+    const download = page.waitForEvent('download', { timeout: 5000 });
+    await page.locator('#download-all-btn').click();
+    expect((await download).suggestedFilename()).toBe('archive.tar.gz');
   });
 
   test('words-only shares auto-recover when manifest is loaded', async ({ page }) => {

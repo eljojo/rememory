@@ -432,7 +432,7 @@ Even if someone tried every possible password, scrypt makes each guess deliberat
 
 The key is then split using Shamir's Secret Sharing. **Any fewer than *threshold* pieces contain zero information about the original.** Not "very little." Mathematically zero.
 
-Each bundle includes checksums so the recovery tool can verify nothing was corrupted or tampered with.
+Each bundle also lists checksums of its files, so `rememory verify-bundle` can tell you if one was damaged along the way. Checksums catch accidents, not deliberate changes: whoever alters a file can update its checksum too. The encrypted archive is protected on its own — if it's altered, it won't open.
 
 ### What Could Go Wrong {#what-could-go-wrong}
 

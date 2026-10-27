@@ -95,9 +95,16 @@ jobs:
             fi
 
             cat build-err.log >&2
-            NEW_HASH=$(grep -oE 'got:[[:space:]]+[^ ]+' build-err.log | sed 's/got:[[:space:]]*//')
+            NEW_HASH=$(grep -oE 'got:[[:space:]]+[^[:space:]]+' build-err.log | sed 's/got:[[:space:]]*//' | sort -u)
             if [ -z "$NEW_HASH" ]; then
               echo "Build failed without a hash mismatch"
+              exit 1
+            fi
+            # The value comes from build output and is spliced into a sed
+            # program, then committed with a write token: accept exactly one
+            # well-formed SRI hash and nothing else.
+            if ! [[ "$NEW_HASH" =~ ^sha256-[A-Za-z0-9+/]{43}=$ ]]; then
+              echo "Refusing unexpected hash value: $NEW_HASH"
               exit 1
             fi
 

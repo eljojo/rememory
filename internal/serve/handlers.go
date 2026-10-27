@@ -2,15 +2,73 @@ package serve
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/eljojo/rememory/internal/core"
 	"github.com/eljojo/rememory/internal/html"
 )
+
+const (
+	maxAuthBody    = 4 << 10 // setup and delete bodies: an ID and a password
+	maxPasswordLen = 1 << 10
+
+	maxUploadOverhead = 64 << 10 // multipart framing and the meta field
+	maxMetaSize       = 4 << 10
+	maxBundleName     = 256
+)
+
+// requireAdmin asks for the admin password (HTTP Basic, any user name)
+// before creating bundles, unless uploads are open. The browser asks once on
+// the maker page and resends it with the maker's upload. Before setup the
+// handlers redirect or refuse on their own.
+func (s *Server) requireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.openUploads || !IsSetup(s.store) {
+			next(w, r)
+			return
+		}
+		_, password, _ := r.BasicAuth()
+		ok, busy := s.checkAdminPassword(r, password)
+		if busy {
+			http.Error(w, "The server is busy. Please try again in a moment.", http.StatusServiceUnavailable)
+			return
+		}
+		if !ok {
+			w.Header().Set("WWW-Authenticate", `Basic realm="ReMemory admin", charset="UTF-8"`)
+			http.Error(w, "Enter the admin password to create bundles on this server.", http.StatusUnauthorized)
+			return
+		}
+		next(w, r)
+	}
+}
+
+// checkAdminPassword verifies password, one scrypt derivation at a time.
+// busy reports that too many checks are already waiting; a request whose
+// client has gone away by its turn is refused without a derivation.
+func (s *Server) checkAdminPassword(r *http.Request, password string) (ok, busy bool) {
+	if password == "" || len(password) > maxPasswordLen {
+		return false, false
+	}
+	select {
+	case s.authQueue <- struct{}{}:
+		defer func() { <-s.authQueue }()
+	default:
+		return false, true
+	}
+	s.authMu.Lock()
+	defer s.authMu.Unlock()
+	if r.Context().Err() != nil {
+		return false, false
+	}
+	return CheckPassword(s.store, password), false
+}
 
 func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
 	if !IsSetup(s.store) {
@@ -61,14 +119,15 @@ func (s *Server) handleRecover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Resolve the bundle ID: use the query param if provided, otherwise
-	// fall back to the latest bundle. The API endpoint requires an explicit ID,
-	// but the controller resolves it here so /recover always works.
+	// Resolve the bundle ID: use the query param if provided, otherwise fall
+	// back to the only bundle, so a bare /recover works for a household with
+	// one. With several, the newest could be anyone's upload; the friend picks
+	// from the home page or adds MANIFEST.age themselves.
 	var manifestURL string
 	if id := r.URL.Query().Get("id"); id != "" {
 		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(id)
-	} else if latest, err := s.store.Latest(); err == nil && latest != nil {
-		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(latest.ID)
+	} else if bundles, err := s.store.List(); err == nil && len(bundles) == 1 {
+		manifestURL = "/api/bundle/manifest?id=" + url.QueryEscape(bundles[0].ID)
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -108,11 +167,51 @@ func (s *Server) handleAPIStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
+	s.authMu.Lock()
+	defer s.authMu.Unlock()
+
 	if IsSetup(s.store) {
 		http.Error(w, "Admin password is already set.", http.StatusConflict)
 		return
 	}
 
+	// A reachable server got its password at startup; if admin.age is gone
+	// while it runs, setup stays closed until a restart sets a new one.
+	if s.reachable {
+		http.Error(w, "This server is reachable from other machines, so its admin password can't be chosen here. "+
+			"Restart it to generate a new one, or set REMEMORY_ADMIN_PASSWORD.", http.StatusForbidden)
+		return
+	}
+
+	// Behind a reverse proxy the server listens on 127.0.0.1 and keeps this
+	// setup page, but anyone can reach it through the proxy. Proxies add
+	// these headers; the owner sets the password from the server instead.
+	for _, h := range []string{"Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Real-IP"} {
+		if r.Header.Get(h) != "" {
+			http.Error(w, "This server is behind a proxy, so its admin password can't be chosen here. "+
+				"Set REMEMORY_ADMIN_PASSWORD when starting the server, or open the setup page from the server itself.",
+				http.StatusForbidden)
+			return
+		}
+	}
+
+	// A browser must address this machine by name. With DNS rebinding, a page
+	// on another site points its own name at 127.0.0.1, and the browser then
+	// treats its requests as same-origin, so cross-origin protection passes.
+	if r.Header.Get("Origin") != "" || r.Header.Get("Sec-Fetch-Site") != "" {
+		host := r.Host
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+		if !isLoopback(host) {
+			http.Error(w, "Open the setup page as http://localhost on the server itself, "+
+				"or set REMEMORY_ADMIN_PASSWORD when starting the server.", http.StatusForbidden)
+			return
+		}
+	}
+
+	// Anyone can reach this endpoint before setup, so keep the body small.
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBody)
 	var body struct {
 		Password string `json:"password"`
 	}
@@ -125,8 +224,16 @@ func (s *Server) handleAPISetup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Password cannot be empty.", http.StatusBadRequest)
 		return
 	}
+	if len(body.Password) > maxPasswordLen {
+		http.Error(w, "Password is too long.", http.StatusBadRequest)
+		return
+	}
 
 	if err := SetPassword(s.store, body.Password); err != nil {
+		if errors.Is(err, ErrAlreadySet) {
+			http.Error(w, "Admin password is already set.", http.StatusConflict)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -154,8 +261,12 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Cap the whole request: ParseMultipartForm's argument only sets how much
+	// is kept in memory, and spools the rest to disk without limit.
+	r.Body = http.MaxBytesReader(w, r.Body, int64(s.maxManifestSize)+maxUploadOverhead)
+
 	// Parse multipart form (manifest file + metadata JSON)
-	if err := r.ParseMultipartForm(int64(s.maxManifestSize) + 1<<20); err != nil {
+	if err := r.ParseMultipartForm(int64(s.maxManifestSize) + maxUploadOverhead); err != nil {
 		http.Error(w, "Could not parse form.", http.StatusBadRequest)
 		return
 	}
@@ -187,13 +298,23 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Uploads are anonymous and every page view reads every bundle's
+	// metadata, so it has to stay small.
 	metaStr := r.FormValue("meta")
+	if len(metaStr) > maxMetaSize {
+		http.Error(w, "Metadata too large.", http.StatusBadRequest)
+		return
+	}
 	var meta BundleMeta
 	if metaStr != "" {
 		if err := json.Unmarshal([]byte(metaStr), &meta); err != nil {
 			http.Error(w, "Invalid metadata.", http.StatusBadRequest)
 			return
 		}
+	}
+	if len(meta.Name) > maxBundleName || meta.Threshold < 0 || meta.Threshold > 255 || meta.Total < 0 || meta.Total > 255 {
+		http.Error(w, "Invalid metadata.", http.StatusBadRequest)
+		return
 	}
 
 	id, err := s.store.Save(manifest, meta)
@@ -207,6 +328,7 @@ func (s *Server) handleAPISaveBundle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAPIDeleteBundle(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxAuthBody)
 	var body struct {
 		ID       string `json:"id"`
 		Password string `json:"password"`
@@ -226,7 +348,24 @@ func (s *Server) handleAPIDeleteBundle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !CheckPassword(s.store, body.Password) {
+	// Cheap checks first: every password check is a 256 MiB scrypt.
+	if len(body.Password) > maxPasswordLen {
+		http.Error(w, "Password is too long.", http.StatusBadRequest)
+		return
+	}
+	// The bundle's folder, not its MANIFEST.age: an interrupted save can
+	// leave a listed bundle without one, and it must still be deletable.
+	if _, err := os.Stat(filepath.Dir(s.store.ManifestPath(body.ID))); err != nil {
+		http.Error(w, "Bundle not found.", http.StatusNotFound)
+		return
+	}
+
+	ok, busy := s.checkAdminPassword(r, body.Password)
+	if busy {
+		http.Error(w, "The server is busy. Please try again in a moment.", http.StatusServiceUnavailable)
+		return
+	}
+	if !ok {
 		http.Error(w, "Wrong password.", http.StatusUnauthorized)
 		return
 	}

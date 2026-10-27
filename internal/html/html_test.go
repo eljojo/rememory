@@ -1,9 +1,11 @@
 package html
 
 import (
+	"crypto/rand"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -325,4 +327,28 @@ func TestTlockEnabledBundlePanicsWithNoTlock(t *testing.T) {
 		Total:        3,
 		TlockEnabled: true,
 	}, RecoverHTMLOptions{NoTlock: true})
+}
+
+// rememory serve renders maker.html per request; gzip -9 over the ~14 MB
+// create.wasm on every view cost about a second of CPU each time.
+func TestMakerHTMLEncodesWASMOnce(t *testing.T) {
+	wasm := make([]byte, 8<<20)
+	if _, err := rand.Read(wasm); err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Now()
+	first := GenerateMakerHTML(wasm, MakerHTMLOptions{})
+	cold := time.Since(start)
+
+	start = time.Now()
+	second := GenerateMakerHTML(wasm, MakerHTMLOptions{})
+	warm := time.Since(start)
+
+	if len(first) != len(second) {
+		t.Fatalf("pages differ: %d vs %d bytes", len(first), len(second))
+	}
+	if warm > cold/4 {
+		t.Errorf("second render took %v after a first of %v; the WASM was encoded again", warm, cold)
+	}
 }

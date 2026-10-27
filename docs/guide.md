@@ -195,7 +195,7 @@ Good candidates for ReMemory:
 ### What NOT to Include
 
 - Files that change frequently (use ReMemory for static secrets)
-- Extremely large files (bundles become unwieldy)
+- Extremely large files (bundles become unwieldy). Each file can be at most 100 MB, and all files together at most 1 GB; `rememory seal` and the web maker refuse anything larger, since it couldn't be recovered.
 - Anything already backed up elsewhere with good recovery options
 
 ## Sealing the Project

@@ -73,7 +73,7 @@ export interface ProjectParseResult {
 export interface PersonalizationData {
   holder: string;
   holderShare: string;
-  otherFriends: FriendInfo[];
+  otherFriends: FriendInfo[] | null; // older generators emitted null for anonymous bundles
   threshold: number;
   total: number;
   language?: string;
@@ -191,6 +191,7 @@ declare global {
     VERSION?: string;
     BUILD_DATE?: string;
     MAX_TOTAL_FILE_SIZE?: number;
+    MAX_FILE_SIZE?: number;
 
     // Localized README filenames (embedded in recover.html)
     README_NAMES?: string[];

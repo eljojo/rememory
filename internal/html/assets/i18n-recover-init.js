@@ -1,6 +1,6 @@
 // If personalized with a language preference and no saved preference, use it
 if (window.PERSONALIZATION && window.PERSONALIZATION.language && !localStorage.getItem('rememory-lang')) {
-  currentLang = window.PERSONALIZATION.language;
+  currentLang = supportedLang(window.PERSONALIZATION.language);
 }
 
 // Hide "Recover" link (current page) from the default nav

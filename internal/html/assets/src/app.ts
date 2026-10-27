@@ -21,11 +21,9 @@ import {
   parseShare,
   parseCompactShare,
   encodeCompact,
-  combine,
-  recoverPassphrase,
   base64ToBytes,
   bytesToBase64,
-  decrypt,
+  unlockWithCandidates,
   extractArchive,
   isTlockContainer,
   openTlockContainer,
@@ -33,6 +31,7 @@ import {
   extractPersonalizationFromHTML,
   decodeShareWords,
   type ParsedShare,
+  type ShareWordsReading,
 } from './crypto';
 
 // Compile-time flag: esbuild replaces this with true or false.
@@ -44,7 +43,9 @@ declare const __TLOCK__: boolean;
 declare const t: TranslationFunction;
 
 // Extended share type with UI-specific fields
-type UIShare = ParsedShare & { isHolder?: boolean };
+// alternatives: other readings of a piece entered as recovery words, base64
+// like dataB64; unlocking tries them if the first reading doesn't open.
+type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
 
 (function() {
   'use strict';
@@ -226,6 +227,14 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       );
     },
 
+    createdTimeDiffers(): void {
+      toast.warning(
+        t('warning_created_title'),
+        t('warning_created_message'),
+        t('warning_created_guidance')
+      );
+    },
+
     mismatchedShare(_detail: string): void {
       toast.error(
         t('error_mismatch_title'),
@@ -378,6 +387,20 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   // URL Fragment Share Loading
   // ============================================
 
+  // A piece is identified by its x-coordinate, the last byte of its data. The
+  // index alone can't do it: the 25th recovery word only has room for 1-15,
+  // so pieces typed as words from friend #16 on all carry index 0.
+  function isDuplicateShare(share: UIShare): boolean {
+    const x = (s: UIShare) => {
+      const bytes = base64ToBytes(s.dataB64);
+      return bytes[bytes.length - 1];
+    };
+    // A matching index still counts too: the same friend's piece from an
+    // older seal has a different x but the same index. 0 means "unknown"
+    // (recovery words from friend #16 on), so it can't match.
+    return state.shares.some(s => x(s) === x(share) || (share.index !== 0 && s.index === share.index));
+  }
+
   async function loadShareFromFragment(): Promise<void> {
     const hash = window.location.hash;
     if (!hash || !hash.startsWith('#share=')) return;
@@ -388,7 +411,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     try {
       const share = await parseCompactShare(compact);
 
-      if (state.shares.some(s => s.index === share.index)) return;
+      if (isDuplicateShare(share)) return;
 
       if (state.shares.length === 0 || (state.threshold === 0 && share.threshold > 0)) {
         state.threshold = share.threshold;
@@ -550,7 +573,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     const share = await parseShare(shareContent);
     share.compact = await encodeCompact(share);
 
-    if (state.shares.some(s => s.index === share.index)) {
+    if (isDuplicateShare(share)) {
       if (!quiet) errorHandlers.duplicateShare(share.index);
       return false;
     }
@@ -568,11 +591,13 @@ type UIShare = ParsedShare & { isHolder?: boolean };
         errorHandlers.mismatchedShare('metadata');
         return false;
       }
+      // Older versions of seal stamped each piece separately, so pieces of
+      // one set could differ by a minute: add it with a warning, and let
+      // unlocking decide whether it belongs.
       if (share.created) {
         const withTimestamp = state.shares.find(s => s.created);
         if (withTimestamp && share.created !== withTimestamp.created) {
-          errorHandlers.mismatchedShare('created');
-          return false;
+          errorHandlers.createdTimeDiffers();
         }
       }
     }
@@ -872,8 +897,8 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       }
     }
 
-    if (state.shares.some(s => s.index === share!.index)) {
-      errorHandlers.duplicateShare(share!.index);
+    if (isDuplicateShare(share)) {
+      errorHandlers.duplicateShare(share.index);
       return;
     }
 
@@ -891,7 +916,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   // Build Share from Decoded Words
   // ============================================
 
-  function buildShareFromWords(wordResult: { data: Uint8Array; index: number }): UIShare {
+  function buildShareFromWords(wordResult: ShareWordsReading & { alternatives: ShareWordsReading[] }): UIShare {
     // Get version/total/threshold from first loaded share or personalization
     let version = 2;
     let total = 0;
@@ -913,6 +938,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       total,
       data: wordResult.data,
       dataB64: bytesToBase64(wordResult.data),
+      alternatives: wordResult.alternatives.map(r => bytesToBase64(r.data)),
     };
   }
 
@@ -1043,7 +1069,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
           return personalization.holder;
         }
       }
-      const friend = personalization.otherFriends.find(f => f.shareIndex === share.index);
+      const friend = personalization.otherFriends?.find(f => f.shareIndex === share.index);
       if (friend) return friend.name;
     }
     return 'Share ' + share.index;
@@ -1270,17 +1296,17 @@ type UIShare = ParsedShare & { isHolder?: boolean };
       setProgress(10);
       setStatus(t('combining'));
 
-      // Convert shares to raw bytes and combine
-      const shareBytes = state.shares.map(s => base64ToBytes(s.dataB64));
-      const recovered = await combine(shareBytes);
+      // Each piece's readings, most likely first; unlocking tries the
+      // others only if the first combination doesn't open the archive.
+      const candidates = state.shares.map(s =>
+        [s.dataB64, ...((s as UIShare).alternatives ?? [])].map(base64ToBytes));
       const version = state.shares[0].version;
-      const passphrase = recoverPassphrase(recovered, version);
 
       setProgress(30);
 
       // age-decrypt (always a plain age file now)
       setStatus(t('decrypting'));
-      let archive = await decrypt(state.manifest!, passphrase);
+      let archive = await unlockWithCandidates(state.manifest!, version, candidates);
 
       setProgress(50);
 
@@ -1354,11 +1380,19 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     state.decryptedArchive = archive;
 
     setStatus(t('reading'));
-    const files = await extractArchive(archive);
+    // age has already authenticated the archive. If this browser can't list
+    // what's inside (no DecompressionStream, an unusual archive), the files
+    // are still there to download.
+    let files: Awaited<ReturnType<typeof extractArchive>> | null = null;
+    try {
+      files = await extractArchive(archive);
+    } catch (err) {
+      console.warn('Could not list archive contents:', err);
+    }
 
     setProgress(90);
 
-    files.forEach(file => {
+    files?.forEach(file => {
       const item = document.createElement('div');
       item.className = 'file-item';
       item.innerHTML = `
@@ -1370,7 +1404,7 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     });
 
     setProgress(100);
-    setStatus(t('complete'), 'success', t('complete_subtitle'));
+    setStatus(t('complete'), 'success', files ? t('complete_subtitle') : t('files_list_unavailable'));
     elements.downloadActions?.classList.remove('hidden');
     elements.recoverBtn?.classList.add('hidden');
     state.recoveryComplete = true;
@@ -1473,6 +1507,12 @@ type UIShare = ParsedShare & { isHolder?: boolean };
   // Download
   // ============================================
 
+  // Kept until the next click rather than revoked right away: a browser may
+  // still be waiting on a "Save as" dialog when click() returns.
+  let downloadURL: string | null = null;
+
+  // The archive stays available until the page is closed, so a cancelled or
+  // failed download can be retried without recovering again.
   function downloadAll(): void {
     if (!state.decryptedArchive) return;
 
@@ -1483,19 +1523,12 @@ type UIShare = ParsedShare & { isHolder?: boolean };
     const fileName = isZip ? 'archive.zip' : 'archive.tar.gz';
 
     const blob = new Blob([archive as BlobPart], { type: mimeType });
-    const url = URL.createObjectURL(blob);
+    if (downloadURL) URL.revokeObjectURL(downloadURL);
+    downloadURL = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = downloadURL;
     a.download = fileName;
     a.click();
-    URL.revokeObjectURL(url);
-
-    clearSensitiveState();
-  }
-
-  function clearSensitiveState(): void {
-    state.decryptedArchive = undefined;
-    state.manifest = null;
   }
 
   // ============================================

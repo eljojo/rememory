@@ -107,6 +107,43 @@ func TestValidate(t *testing.T) {
 			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Contact: "a@x.com"}, {Name: "B"}}},
 			wantErr: true,
 		},
+		// Friends' share and bundle files are named after them; names that
+		// reduce to the same file name would overwrite each other's files.
+		{
+			name:    "names differing only in case",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "Alice"}, {Name: "alice"}, {Name: "Bob"}}},
+			wantErr: true,
+		},
+		{
+			name:    "names differing only in accents",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "José"}, {Name: "Jose"}, {Name: "Bob"}}},
+			wantErr: true,
+		},
+		{
+			name:    "names differing only in punctuation",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "Bob Smith"}, {Name: "bob_smith"}}},
+			wantErr: true,
+		},
+		{
+			name:    "names without latin letters",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "小明"}, {Name: "小華"}, {Name: "小美"}}},
+			wantErr: false,
+		},
+		{
+			name:    "supported languages",
+			project: Project{Name: "test", Threshold: 2, Language: "zh-TW", Friends: []Friend{{Name: "A", Language: "es"}, {Name: "B"}}},
+			wantErr: false,
+		},
+		{
+			name:    "unsupported project language",
+			project: Project{Name: "test", Threshold: 2, Language: "pt-BR", Friends: []Friend{{Name: "A"}, {Name: "B"}}},
+			wantErr: true,
+		},
+		{
+			name:    "unsupported friend language",
+			project: Project{Name: "test", Threshold: 2, Friends: []Friend{{Name: "A", Language: "zh-tw"}, {Name: "B"}}},
+			wantErr: true,
+		},
 		{
 			name: "anonymous valid without email",
 			project: Project{

@@ -5,6 +5,8 @@ import (
 	"io/fs"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/eljojo/rememory/docs"
 	"github.com/eljojo/rememory/internal/html"
@@ -18,14 +20,32 @@ type Config struct {
 	MaxManifestSize int // Maximum MANIFEST.age size in bytes
 	Version         string
 	BuildDate       string
+	// OpenUploads lets anyone who reaches the server create bundles on it.
+	// By default the maker page and uploads need the admin password.
+	OpenUploads bool
 }
+
+// maxAuthWaiting is how many password checks may be running or waiting at
+// once; more are turned away rather than queued without bound.
+const maxAuthWaiting = 8
 
 // Server implements http.Handler for the self-hosted ReMemory web app.
 type Server struct {
 	store           *Store
 	maxManifestSize int
 	version         string
-	mux             *http.ServeMux
+	openUploads     bool
+	// reachable: listening beyond loopback. Such a server gets its admin
+	// password at startup and never offers setup.
+	reachable bool
+	mux       *http.ServeMux
+	handler   http.Handler
+
+	// authMu serializes admin setup and password checks: each runs a 256 MiB
+	// scrypt, so concurrent requests queue instead of exhausting memory.
+	authMu sync.Mutex
+	// authQueue bounds how many password checks may wait for authMu.
+	authQueue chan struct{}
 }
 
 // New creates a new Server from the given config.
@@ -42,10 +62,17 @@ func New(cfg Config) (*Server, error) {
 		store:           store,
 		maxManifestSize: cfg.MaxManifestSize,
 		version:         cfg.Version,
+		openUploads:     cfg.OpenUploads,
+		reachable:       !isLoopback(cfg.Host),
 		mux:             http.NewServeMux(),
+		authQueue:       make(chan struct{}, maxAuthWaiting),
 	}
 
 	s.routes()
+	// Refuse cross-site state-changing requests (setup, upload, delete), so
+	// a page the owner visits can't act on a server reachable from their
+	// browser. Same-origin requests and non-browser clients pass.
+	s.handler = http.NewCrossOriginProtection().Handler(s.mux)
 	return s, nil
 }
 
@@ -53,7 +80,7 @@ func New(cfg Config) (*Server, error) {
 func (s *Server) routes() {
 	// Pages (filename-based routes)
 	s.mux.HandleFunc("GET /", s.handleRoot)
-	s.mux.HandleFunc("GET /maker.html", s.handleCreate)
+	s.mux.HandleFunc("GET /maker.html", s.requireAdmin(s.handleCreate))
 	s.mux.HandleFunc("GET /recover.html", s.handleRecover)
 	s.mux.HandleFunc("GET /about.html", s.handleAbout)
 	s.mux.HandleFunc("GET /docs.html", s.docsHandler("en"))
@@ -105,22 +132,34 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /api/status", s.handleAPIStatus)
 	s.mux.HandleFunc("POST /api/setup", s.handleAPISetup)
 	s.mux.HandleFunc("GET /api/bundles", s.handleAPIListBundles)
-	s.mux.HandleFunc("POST /api/bundle", s.handleAPISaveBundle)
+	s.mux.HandleFunc("POST /api/bundle", s.requireAdmin(s.handleAPISaveBundle))
 	s.mux.HandleFunc("DELETE /api/bundle", s.handleAPIDeleteBundle)
 	s.mux.HandleFunc("GET /api/bundle/manifest", s.handleAPIManifest)
 }
 
 // ServeHTTP implements http.Handler.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.mux.ServeHTTP(w, r)
+	s.handler.ServeHTTP(w, r)
 }
 
 // ListenAndServe starts the HTTP server.
 func (s *Server) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, s)
+	return s.httpServer(addr).ListenAndServe()
 }
 
-// Store returns the server's store (for testing).
+// httpServer bounds how long a client may take to send its headers or keep
+// an idle connection. Whole-request read/write timeouts are left unset so
+// large manifests can still be uploaded and downloaded over slow links.
+func (s *Server) httpServer(addr string) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           s,
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       2 * time.Minute,
+	}
+}
+
+// Store returns the server's store.
 func (s *Server) Store() *Store {
 	return s.store
 }

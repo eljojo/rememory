@@ -95,6 +95,9 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	if err := validateSharesCompatible(shares); err != nil {
 		return err
 	}
+	if warning := createdTimeWarning(shares); warning != "" {
+		fmt.Printf("Warning: %s\n", warning)
+	}
 
 	first := shares[0]
 
@@ -289,16 +292,28 @@ func validateSharesCompatible(shares []*core.Share) error {
 		if share.Threshold != first.Threshold {
 			return fmt.Errorf("share %d has different threshold (%d vs %d)", i+2, share.Threshold, first.Threshold)
 		}
-		if !share.Created.IsZero() {
-			for _, prev := range shares[:i+1] {
-				if !prev.Created.IsZero() && !share.Created.Equal(prev.Created) {
-					return fmt.Errorf("share %d has different creation time — shares may be from different operations", i+2)
-				}
-			}
-		}
 	}
 
 	return nil
+}
+
+// createdTimeWarning describes pieces whose creation times differ, or
+// returns "". It's a warning, not an error: older versions of seal stamped
+// each piece separately, so pieces of one set could differ by a minute.
+// Pieces from different seals fail to unlock anyway.
+func createdTimeWarning(shares []*core.Share) string {
+	for i, share := range shares {
+		if share.Created.IsZero() {
+			continue
+		}
+		for _, prev := range shares[:i] {
+			if !prev.Created.IsZero() && !share.Created.Equal(prev.Created) {
+				return fmt.Sprintf("share %d was created at a different time (%s, not %s); if these pieces are from different seals, unlocking will fail",
+					i+1, share.Created.Format("2006-01-02 15:04"), prev.Created.Format("2006-01-02 15:04"))
+			}
+		}
+	}
+	return ""
 }
 
 func isZipFile(path string) bool {

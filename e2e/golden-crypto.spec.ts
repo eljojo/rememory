@@ -135,6 +135,70 @@ test.describe('Golden Crypto Compatibility @cross-browser', () => {
     }
   });
 
+  // README.txt and README.pdf print the words in every list wordlists.go
+  // knows, so each of them must decode here. Read the list of files from
+  // the Go source so a language can't be added on one side only. Legacy
+  // lists were printed by a release and later changed in place.
+  const goWordlists = [...fs.readFileSync('internal/core/wordlists.go', 'utf8')
+    .matchAll(/"wordlists\/([a-z_]+\.txt)"/g)].map(m => m[1]);
+  const legacyWordlists = ['legacy/turkish-v0.0.19.txt'];
+  const readList = (file: string) => fs.readFileSync(path.join('internal/core/wordlists', file), 'utf8')
+    .trim().split('\n').map(w => w.trim());
+
+  for (const file of [...goWordlists, ...legacyWordlists]) {
+    test(`v2: decode 25 words from ${file}`, async ({ page }) => {
+      expect(goWordlists.length).toBeGreaterThan(8);
+      await page.goto('file://' + testHtmlPath);
+      await page.waitForFunction(() => (window as any).testReady);
+
+      const english = readList('english.txt');
+      const target = readList(file);
+
+      for (const share of v2Golden.shares) {
+        const words = share.words.split(' ').map((w: string) => target[english.indexOf(w)]);
+
+        const result = await page.evaluate(async (words: string[]) => {
+          const crypto = (window as any).rememoryCrypto;
+          try {
+            const decoded = await crypto.decodeShareWords(words);
+            const hex = Array.from(decoded.data as Uint8Array)
+              .map((b: number) => b.toString(16).padStart(2, '0'))
+              .join('');
+            return { index: decoded.index, dataHex: hex };
+          } catch (err) {
+            return { error: (err as Error).message };
+          }
+        }, words);
+
+        expect(result.error).toBeUndefined();
+        expect(result.index).toBe(share.index);
+        expect(result.dataHex).toBe(share.data_hex);
+      }
+    });
+  }
+
+  // Go's tar writer keeps non-ASCII and long names in PAX headers, with an
+  // ASCII-only stand-in in the basic name field. The file list must show
+  // the real names. Fixtures: TestGenerateNonASCIINameFixtures.
+  for (const fixture of ['non-ascii-names.tar.gz', 'non-ascii-names.zip']) {
+    test(`file list shows non-ASCII and long names from ${fixture}`, async ({ page }) => {
+      await page.goto('file://' + testHtmlPath);
+      await page.waitForFunction(() => (window as any).testReady);
+
+      const archive = Array.from(fs.readFileSync(path.join('internal/manifest/testdata', fixture)));
+      const names = await page.evaluate(async (archive: number[]) => {
+        const files = await (window as any).rememoryCrypto.extractArchive(new Uint8Array(archive));
+        return files.map((f: { name: string }) => f.name).sort();
+      }, archive);
+
+      expect(names).toEqual([
+        'manifest/' + 'a-very-long-file-name-'.repeat(5) + 'end.txt',
+        'manifest/contraseña.txt',
+        'manifest/密碼.txt',
+      ].sort());
+    });
+  }
+
   // v2-specific: compact share parsing
   test('v2: parse compact share correctly', async ({ page }) => {
     await page.goto('file://' + testHtmlPath);
@@ -197,6 +261,39 @@ test.describe('Golden Crypto Compatibility @cross-browser', () => {
     if (!result.error) {
       expect(result.matchesExpected).toBe(false);
     }
+  });
+
+  // Security: a share with x-coordinate 0 would make interpolation return its
+  // y-values verbatim, letting whoever crafted it choose the passphrase.
+  test('share with x-coordinate 0 is rejected', async ({ page }) => {
+    await page.goto('file://' + testHtmlPath);
+    await page.waitForFunction(() => (window as any).testReady);
+
+    const genuine = v2Golden.shares.slice(0, 2).map((s: any) => s.data_hex);
+
+    const result = await page.evaluate(async ({ genuine }: { genuine: string[] }) => {
+      const crypto = (window as any).rememoryCrypto;
+
+      const shareBytes = genuine.map(hex => {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes;
+      });
+      const crafted = new Uint8Array(shareBytes[0].length).fill(0x41);
+      crafted[crafted.length - 1] = 0;
+
+      try {
+        const recovered = await crypto.combine([...shareBytes, crafted]);
+        return { recovered: Array.from(recovered as Uint8Array) };
+      } catch (err) {
+        return { error: (err as Error).message };
+      }
+    }, { genuine });
+
+    expect(result.recovered).toBeUndefined();
+    expect(result.error).toBeTruthy();
   });
 });
 

@@ -75,7 +75,7 @@ sudo mv rememory /usr/local/bin/
 # Docker (self-hosted)
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:latest
 
@@ -184,9 +184,9 @@ See the **[Security Review](docs/security-review.md)** for details.
 | Component | Algorithm |
 |-----------|-----------|
 | Encryption | [age](https://github.com/FiloSottile/age) (scrypt passphrase mode) |
-| Key derivation | scrypt (N=2²⁰, r=8, p=1) |
+| Key derivation | scrypt (N=2¹⁸, r=8, p=1) |
 | Secret sharing | Shamir's Secret Sharing over GF(2⁸) |
-| Integrity | SHA-256 checksums |
+| Integrity | age authenticates the encrypted archive; SHA-256 checksums catch accidental damage to bundle files |
 | Passphrase | 256 bits from crypto/rand |
 | Time lock (optional) | [drand](https://www.cloudflare.com/en-ca/leagueofentropy/) tlock (BLS12-381 IBE, inner layer) |
 

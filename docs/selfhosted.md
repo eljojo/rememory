@@ -35,19 +35,27 @@ A pre-built image is published to GitHub Container Registry on every release.
 ```bash
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:latest
 ```
 
-Visit `http://localhost:8080` to set up. The first page asks you to choose an admin password for deleting bundles.
+The examples publish the port on `127.0.0.1`, so only this machine can reach it; to share it, put the [reverse proxy](#reverse-proxy) below in front.
+
+Because the container listens on every interface, the server chooses its admin password at first start and prints it once. Find it in the logs:
+
+```bash
+docker logs rememory
+```
+
+To choose the password yourself, set `REMEMORY_ADMIN_PASSWORD` (it replaces a stored one, so changing it later works too). Without Docker, `rememory serve` listens on `127.0.0.1` and the first page asks you to choose the password.
 
 To pin a specific version:
 
 ```bash
 docker run -d \
   --name rememory \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v rememory-data:/data \
   ghcr.io/eljojo/rememory:v0.0.16
 ```
@@ -59,12 +67,13 @@ services:
   rememory:
     image: ghcr.io/eljojo/rememory:latest
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - rememory-data:/data
     restart: unless-stopped
     # environment:
     #   REMEMORY_MAX_MANIFEST_SIZE: 200MB
+    #   REMEMORY_ADMIN_PASSWORD: choose-a-long-password
 
 volumes:
   rememory-data:
@@ -88,6 +97,8 @@ rememory serve
 | `--host` | `REMEMORY_HOST` | `127.0.0.1` | Host to bind to |
 | `--data, -d` | `REMEMORY_DATA` | `./rememory-data` | Data directory for bundles and config |
 | `--max-manifest-size` | `REMEMORY_MAX_MANIFEST_SIZE` | `50MB` | Maximum MANIFEST.age size (e.g. `50MB`, `1GB`) |
+| `--open-uploads` | `REMEMORY_OPEN_UPLOADS` | `false` | Let anyone who can reach the server create bundles, without the admin password |
+| | `REMEMORY_ADMIN_PASSWORD` | | Admin password. If unset, a server listening beyond `127.0.0.1` generates one and prints it once |
 
 Flags take precedence over environment variables.
 
@@ -95,7 +106,7 @@ Flags take precedence over environment variables.
 
 ### Reverse proxy
 
-Put the server behind a reverse proxy with TLS.
+Put the server behind a reverse proxy with TLS. Set `REMEMORY_ADMIN_PASSWORD` before you expose it: the setup page refuses requests that come through a proxy, so no visitor can choose the password. A proxy that adds no forwarding headers (`X-Forwarded-For`, `X-Real-IP`, `Forwarded`) can't be told apart, so don't skip this step.
 
 **Caddy:**
 ```
@@ -121,7 +132,9 @@ server {
 
 ### Authentication
 
-The admin password only protects bundle deletion. For access control, use an auth proxy:
+The admin password protects creating and deleting bundles. Your browser asks for it when you open the maker; any user name works. Recovery pages stay open, so friends never need it. To let anyone who can reach the server create bundles, start it with `--open-uploads`.
+
+For access control beyond that, use an auth proxy:
 
 - [Authelia](https://www.authelia.com/)
 - [Cloudflare Access](https://www.cloudflare.com/products/zero-trust/access/)

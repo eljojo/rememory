@@ -432,7 +432,7 @@ Selbst wenn jemand alle möglichen Passwörter durchprobieren würde, macht scry
 
 Der Schlüssel wird dann mit Shamir's Secret Sharing aufgeteilt. **Weniger als die Schwelle an Teilen enthalten null Information über den Schlüssel.** Nicht „sehr wenig." Mathematisch null.
 
-Jedes Paket enthält Prüfsummen, damit das Wiederherstellungstool überprüfen kann, ob etwas beschädigt oder manipuliert wurde.
+Jedes Paket listet außerdem Prüfsummen seiner Dateien auf, damit `rememory verify-bundle` dir sagen kann, ob unterwegs etwas beschädigt wurde. Prüfsummen erkennen Versehen, keine absichtlichen Änderungen: Wer eine Datei verändert, kann auch ihre Prüfsumme anpassen. Das verschlüsselte Archiv ist für sich geschützt — wird es verändert, lässt es sich nicht mehr öffnen.
 
 ### Was schiefgehen könnte {#what-could-go-wrong}
 

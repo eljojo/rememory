@@ -63,10 +63,14 @@ declare const __SELFHOSTED__: boolean;
   }
 
   // State
-  const state: CreationState & { anonymous: boolean; numShares: number } = {
+  const state: CreationState & { anonymous: boolean; numShares: number; chosenThreshold: number } = {
     projectName: generateProjectName(),
     friends: [],
     threshold: 2,
+    // What the person picked. The friends list is rebuilt one friend at a time
+    // on several actions, so state.threshold is derived from this by clamping
+    // to the current count and never written back into it.
+    chosenThreshold: 2,
     files: [],
     bundles: [],
     wasmReady: false,
@@ -359,8 +363,8 @@ declare const __SELFHOSTED__: boolean;
         });
       }
 
-      if (project.threshold && project.threshold >= 2) {
-        state.threshold = project.threshold;
+      if (project.threshold) {
+        state.chosenThreshold = project.threshold;
       }
 
       updateThresholdOptions();
@@ -378,7 +382,8 @@ declare const __SELFHOSTED__: boolean;
     elements.addFriendBtn?.addEventListener('click', () => addFriend());
 
     elements.thresholdSelect?.addEventListener('change', () => {
-      state.threshold = parseInt(elements.thresholdSelect?.value || '2', 10);
+      state.chosenThreshold = parseInt(elements.thresholdSelect?.value || '2', 10);
+      state.threshold = state.chosenThreshold;
     });
   }
 
@@ -491,7 +496,6 @@ declare const __SELFHOSTED__: boolean;
 
   function updateThresholdOptions(): void {
     const n = state.anonymous ? state.numShares : state.friends.length;
-    const current = state.threshold;
 
     if (elements.thresholdSelect) {
       elements.thresholdSelect.innerHTML = '';
@@ -502,13 +506,9 @@ declare const __SELFHOSTED__: boolean;
         elements.thresholdSelect.appendChild(option);
       }
 
-      if (current >= 2 && current <= n) {
-        elements.thresholdSelect.value = String(current);
-        state.threshold = current;
-      } else {
-        elements.thresholdSelect.value = String(Math.min(2, n));
-        state.threshold = Math.min(2, n);
-      }
+      const threshold = Math.max(2, Math.min(state.chosenThreshold, n));
+      elements.thresholdSelect.value = String(threshold);
+      state.threshold = threshold;
     }
 
     updateThresholdVisibility();
@@ -550,19 +550,24 @@ declare const __SELFHOSTED__: boolean;
 
       const items = e.dataTransfer?.items;
       if (items && items.length > 0) {
-        const files: { file: File; path: string }[] = [];
+        // The browser empties the item list once this handler first awaits,
+        // so take every entry (or plain file) out of it before reading any.
+        const dropped: (FileSystemEntry | File)[] = [];
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.kind === 'file') {
-            const entry = item.webkitGetAsEntry?.();
-            if (entry) {
-              await traverseFileTree(entry, '', files);
-            } else {
-              const file = item.getAsFile();
-              if (file) {
-                files.push({ file, path: file.name });
-              }
-            }
+          if (item.kind !== 'file') continue;
+          const entry = item.webkitGetAsEntry?.();
+          const file = entry ? null : item.getAsFile();
+          if (entry) dropped.push(entry);
+          else if (file) dropped.push(file);
+        }
+
+        const files: { file: File; path: string }[] = [];
+        for (const d of dropped) {
+          if (d instanceof File) {
+            files.push({ file: d, path: d.name });
+          } else {
+            await traverseFileTree(d, '', files);
           }
         }
         await loadFiles(files);
@@ -602,9 +607,16 @@ declare const __SELFHOSTED__: boolean;
     } else if (entry.isDirectory) {
       const dirEntry = entry as FileSystemDirectoryEntry;
       const dirReader = dirEntry.createReader();
-      const entries = await new Promise<FileSystemEntry[]>((resolve) => {
-        dirReader.readEntries(resolve);
-      });
+      // readEntries returns entries in batches (Chrome: at most 100) and an
+      // empty batch once the folder has been read in full.
+      const entries: FileSystemEntry[] = [];
+      for (;;) {
+        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+          dirReader.readEntries(resolve, reject);
+        });
+        if (batch.length === 0) break;
+        entries.push(...batch);
+      }
       const newBasePath = basePath ? `${basePath}/${entry.name}` : entry.name;
       for (const childEntry of entries) {
         await traverseFileTree(childEntry, newBasePath, files);
@@ -621,11 +633,6 @@ declare const __SELFHOSTED__: boolean;
     const existingPaths = new Set(state.files.map(f => f.name));
 
     for (const { file, path } of filesWithPaths) {
-      // Skip hidden files
-      if (path.split('/').some(part => part.startsWith('.'))) {
-        continue;
-      }
-
       // Skip duplicates
       if (existingPaths.has(path)) {
         continue;
@@ -657,12 +664,16 @@ declare const __SELFHOSTED__: boolean;
 
     state.files.forEach((file, index) => {
       totalSize += file.data.length;
+      const tooLarge = file.data.length > maxFileSize;
       const item = document.createElement('div');
-      item.className = 'file-item';
+      item.className = tooLarge ? 'file-item size-warning' : 'file-item';
+      const sizeText = tooLarge
+        ? `${formatSize(file.data.length)} — ${t('files_too_large', formatSize(maxFileSize))}`
+        : formatSize(file.data.length);
       item.innerHTML = `
         <span class="icon">&#128196;</span>
         <span class="name">${escapeHtml(file.name)}</span>
-        <span class="size">${formatSize(file.data.length)}</span>
+        <span class="size">${escapeHtml(sizeText)}</span>
         <button type="button" class="file-remove-btn" data-index="${index}" title="${t('remove')}">&times;</button>
       `;
       const removeBtn = item.querySelector('.file-remove-btn');
@@ -837,9 +848,12 @@ declare const __SELFHOSTED__: boolean;
 
   }
 
-  // Maximum total file size — injected by Go from core.MaxTotalSize (standalone)
-  // or the server's configured limit (selfhosted).
+  // Maximum total file size — injected by Go from core.MaxTotalSize, or the
+  // server's configured limit when smaller (selfhosted).
   const maxTotalFileSize = window.MAX_TOTAL_FILE_SIZE ?? 1024 * 1024 * 1024;
+  // Maximum size of one file — injected by Go from core.MaxFileSize, the
+  // most `rememory recover` extracts.
+  const maxFileSize = window.MAX_FILE_SIZE ?? 100 * 1024 * 1024;
 
   function getTotalFileSize(): number {
     let total = 0;
@@ -850,7 +864,8 @@ declare const __SELFHOSTED__: boolean;
   }
 
   function isOverSizeLimit(): boolean {
-    return state.files.length > 0 && getTotalFileSize() > maxTotalFileSize;
+    return state.files.length > 0 &&
+      (getTotalFileSize() > maxTotalFileSize || state.files.some(f => f.data.length > maxFileSize));
   }
 
   function checkGenerateReady(): void {

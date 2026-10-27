@@ -285,12 +285,34 @@ func shortChecksum(data []byte) string {
 
 // Filename returns a suggested filename for this share.
 func (s *Share) Filename() string {
-	name := s.Holder
-	if name == "" {
-		name = fmt.Sprintf("%d", s.Index)
+	return fmt.Sprintf("SHARE-%s.txt", FriendFileStem(s.Holder, s.Index))
+}
+
+// FriendFileStem returns the part of a friend's file names (SHARE-<stem>.txt,
+// bundle-<stem>.zip) derived from their name. Names with no ASCII letters or
+// digits, like "小明", fall back to the friend's 1-based index.
+func FriendFileStem(name string, index int) string {
+	if stem := SanitizeFilename(name); stem != "" {
+		return stem
 	}
-	name = SanitizeFilename(name)
-	return fmt.Sprintf("SHARE-%s.txt", name)
+	return fmt.Sprintf("%d", index)
+}
+
+// FriendFileStems returns FriendFileStem for each name, in order. It fails if
+// two friends would get the same file names, since their share and bundle
+// files would overwrite each other.
+func FriendFileStems(names []string) ([]string, error) {
+	stems := make([]string, len(names))
+	seen := make(map[string]int, len(names))
+	for i, name := range names {
+		stem := FriendFileStem(name, i+1)
+		if j, ok := seen[stem]; ok {
+			return nil, fmt.Errorf("friends %q and %q would both be saved as SHARE-%s.txt — give them names that differ by more than capitalization, accents or punctuation", names[j], name, stem)
+		}
+		seen[stem] = i
+		stems[i] = stem
+	}
+	return stems, nil
 }
 
 // SanitizeFilename converts a name to a filesystem-safe lowercase ASCII string.

@@ -364,6 +364,8 @@ It does **not** include other friends' shares. Each bundle is personalized with 
 | `output/bundles/bundle-*.zip` | 0644 | Complete bundles for each friend |
 | `project.yml` | 0644 | Friend names, SHA-256 of passphrase, share checksums |
 
+**Update (2026-10):** Each bundle carries its friend's share, so 0644 bundles undid the 0600 on `shares/` for other accounts on the machine. Bundles are now 0600, and `shares/` and `bundles/` are 0700; files and folders left by older versions are tightened when sealing again. Bundles and shares are written to a new private file and renamed into place, so a program that opened an old, readable file keeps seeing the old contents. Reported by [@lyrixx](https://github.com/lyrixx).
+
 **Note:** `project.yml` stores `sha256:<hash of passphrase>` as a verification hash. This is a one-way hash of a 256-bit random value — offline brute force is infeasible.
 
 **Confidence:** Code pointer.
@@ -571,6 +573,8 @@ Still, a maliciously crafted archive could cause a browser tab to crash via memo
 **At browser recovery (native JS):** [`crypto/shamir.ts:18-19`](https://github.com/eljojo/rememory/blob/80cebf2/internal/html/assets/src/crypto/shamir.ts#L18-L19) enforces minimum 2 shares. The UI prevents the "Recover" button from activating until enough shares are added.
 
 **Note:** `vault.Combine()` and `privyCombine()` both accept fewer than K shares and return garbage without error. The garbage passphrase then fails age decryption. This is not a vulnerability — it's a correct behavior for Shamir that's caught at the next layer (age produces an error on wrong passphrase).
+
+**Update (2026-10):** This holds for random or corrupted shares, not for a crafted one. Both libraries also accept a share whose x-coordinate (last byte) is 0, and interpolating at 0 returns that share's y-values verbatim — so whoever supplies it chooses the passphrase, and paired with a matching `MANIFEST.age` can make recovery "succeed" with files they made. `core.Combine` and `crypto/shamir.ts` now reject x = 0. Reported by [@lyrixx](https://github.com/lyrixx).
 
 **Confidence:** Code pointer.
 

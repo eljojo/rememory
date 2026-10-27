@@ -1,6 +1,6 @@
     <div class="setup-card">
       <h1>Set up ReMemory</h1>
-      <p>Choose an admin password. You'll need it to delete bundles from this server.</p>
+      <p>Choose an admin password. You'll need it to create bundles on this server and to delete them.</p>
       <form id="setup-form">
         <label for="password">Admin password</label>
         <input type="password" id="password" name="password" required autocomplete="new-password">
@@ -9,5 +9,5 @@
         <button type="submit">Set password</button>
         <div id="error" class="error"></div>
       </form>
-      <p class="hint">This password protects administrative actions only. Your encrypted archives are secured by age encryption and Shamir's Secret Sharing.</p>
+      <p class="hint">This password protects creating and deleting bundles. Your encrypted archives are secured by age encryption and Shamir's Secret Sharing; friends recovering them never need it.</p>
     </div>
