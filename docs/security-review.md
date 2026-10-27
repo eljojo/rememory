@@ -572,6 +572,8 @@ Still, a maliciously crafted archive could cause a browser tab to crash via memo
 
 **Note:** `vault.Combine()` and `privyCombine()` both accept fewer than K shares and return garbage without error. The garbage passphrase then fails age decryption. This is not a vulnerability — it's a correct behavior for Shamir that's caught at the next layer (age produces an error on wrong passphrase).
 
+**Update (2026-10):** This holds for random or corrupted shares, not for a crafted one. Both libraries also accept a share whose x-coordinate (last byte) is 0, and interpolating at 0 returns that share's y-values verbatim — so whoever supplies it chooses the passphrase, and paired with a matching `MANIFEST.age` can make recovery "succeed" with files they made. `core.Combine` and `crypto/shamir.ts` now reject x = 0. Reported by [@lyrixx](https://github.com/lyrixx).
+
 **Confidence:** Code pointer.
 
 ### 4.6 Tlock (Time-Lock Encryption)

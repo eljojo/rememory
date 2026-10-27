@@ -198,6 +198,39 @@ test.describe('Golden Crypto Compatibility @cross-browser', () => {
       expect(result.matchesExpected).toBe(false);
     }
   });
+
+  // Security: a share with x-coordinate 0 would make interpolation return its
+  // y-values verbatim, letting whoever crafted it choose the passphrase.
+  test('share with x-coordinate 0 is rejected', async ({ page }) => {
+    await page.goto('file://' + testHtmlPath);
+    await page.waitForFunction(() => (window as any).testReady);
+
+    const genuine = v2Golden.shares.slice(0, 2).map((s: any) => s.data_hex);
+
+    const result = await page.evaluate(async ({ genuine }: { genuine: string[] }) => {
+      const crypto = (window as any).rememoryCrypto;
+
+      const shareBytes = genuine.map(hex => {
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < hex.length; i += 2) {
+          bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+        return bytes;
+      });
+      const crafted = new Uint8Array(shareBytes[0].length).fill(0x41);
+      crafted[crafted.length - 1] = 0;
+
+      try {
+        const recovered = await crypto.combine([...shareBytes, crafted]);
+        return { recovered: Array.from(recovered as Uint8Array) };
+      } catch (err) {
+        return { error: (err as Error).message };
+      }
+    }, { genuine });
+
+    expect(result.recovered).toBeUndefined();
+    expect(result.error).toBeTruthy();
+  });
 });
 
 test.describe('extractBundle from recover.html', () => {

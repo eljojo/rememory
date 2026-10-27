@@ -166,6 +166,31 @@ func TestSplitCombine(t *testing.T) {
 	}
 }
 
+// A share whose x-coordinate (last byte) is 0 makes Lagrange interpolation at
+// x=0 return that share's y-values verbatim, so whoever crafts it chooses the
+// recovered secret. Both vault.Combine and shamir-secret-sharing accept it.
+func TestCombineRejectsZeroX(t *testing.T) {
+	secret := []byte("my-super-secret-passphrase")
+	shares, err := Split(secret, 3, 2)
+	if err != nil {
+		t.Fatalf("split: %v", err)
+	}
+
+	chosen := bytes.Repeat([]byte{0x41}, len(secret))
+	crafted := append(append([]byte{}, chosen...), 0x00)
+
+	for _, set := range [][][]byte{
+		{shares[0], crafted},
+		{crafted, shares[1]},
+		{shares[0], shares[1], crafted},
+	} {
+		recovered, err := Combine(set)
+		if err == nil {
+			t.Fatalf("Combine accepted a share with x=0 and returned %q", recovered)
+		}
+	}
+}
+
 func TestValidateShamirParams(t *testing.T) {
 	tests := []struct {
 		name    string

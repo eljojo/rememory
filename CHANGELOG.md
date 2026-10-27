@@ -4,6 +4,8 @@ All notable changes to ReMemory are documented here.
 
 ## Unreleased
 
+- **Forged pieces are refused** — A specially crafted piece could make recovery open files chosen by whoever made it, instead of failing. Both the recovery tool and `rememory recover` now reject such pieces. Real pieces are never affected, and existing bundles work as before. Thanks @lyrixx for reporting this!
+
 ## v0.0.21 — 2026-04-13
 
 - Minor improvements to arm64 support in the Docker image.

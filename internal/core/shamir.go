@@ -33,6 +33,16 @@ func Combine(shares [][]byte) ([]byte, error) {
 		return nil, fmt.Errorf("need at least 2 shares, got %d", len(shares))
 	}
 
+	// Split never issues x=0 (that point is the secret itself). Neither vault
+	// nor shamir-secret-sharing rejects it in Combine, and interpolating at 0
+	// returns such a share's y-values verbatim — so a crafted x=0 share would
+	// let its supplier choose the recovered secret.
+	for i, share := range shares {
+		if len(share) > 0 && share[len(share)-1] == 0 {
+			return nil, fmt.Errorf("share %d is invalid (x-coordinate 0)", i+1)
+		}
+	}
+
 	secret, err := vault.Combine(shares)
 	if err != nil {
 		return nil, fmt.Errorf("combining shares: %w", err)
