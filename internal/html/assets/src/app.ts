@@ -1489,6 +1489,12 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
   // Download
   // ============================================
 
+  // Kept until the next click rather than revoked right away: a browser may
+  // still be waiting on a "Save as" dialog when click() returns.
+  let downloadURL: string | null = null;
+
+  // The archive stays available until the page is closed, so a cancelled or
+  // failed download can be retried without recovering again.
   function downloadAll(): void {
     if (!state.decryptedArchive) return;
 
@@ -1499,19 +1505,12 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
     const fileName = isZip ? 'archive.zip' : 'archive.tar.gz';
 
     const blob = new Blob([archive as BlobPart], { type: mimeType });
-    const url = URL.createObjectURL(blob);
+    if (downloadURL) URL.revokeObjectURL(downloadURL);
+    downloadURL = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = downloadURL;
     a.download = fileName;
     a.click();
-    URL.revokeObjectURL(url);
-
-    clearSensitiveState();
-  }
-
-  function clearSensitiveState(): void {
-    state.decryptedArchive = undefined;
-    state.manifest = null;
   }
 
   // ============================================

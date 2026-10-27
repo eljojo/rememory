@@ -11,6 +11,7 @@ All notable changes to ReMemory are documented here.
 - **Anonymous bundles accept typed words** — In bundles made in anonymous mode, a piece typed in as recovery words, scanned from a QR code or pasted in its short form was silently ignored, so reading the words over the phone didn't work. These pieces are now added like any other. Each bundle carries its own copy of the recovery tool, so bundles made earlier keep the old one; with those, the recovery tool from a current release or the website accepts the pieces. Thanks @lyrixx for reporting this!
 - **Catalan and Turkish recovery words** — Catalan and Turkish bundles print the recovery words in their own language first, but the recovery tool couldn't read them, and said a word wasn't recognized. It now understands both. Turkish words printed by v0.0.19, before the Turkish list was corrected, work too. Thanks @lyrixx for reporting this!
 - **Recovery words for larger groups** — With 16 or more friends, the recovery tool refused the second piece typed as words from friend #16 onwards, saying it was already added. Each piece is now recognized by its own contents, so these are accepted. Thanks @lyrixx for reporting this!
+- **Download again after recovering** — The recovery tool let go of the unlocked files after the first click on Download. If that download was cancelled or didn't arrive, clicking again did nothing, and the only way back was to start over with every piece. The files now stay available until you close the page. Thanks @lyrixx for reporting this!
 
 ## v0.0.21 — 2026-04-13
 

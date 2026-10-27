@@ -204,6 +204,24 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectDownloadVisible();
   });
 
+  // A cancelled "Save as" dialog or a failed download must not mean redoing
+  // the whole recovery: the unlocked archive stays available.
+  test('the recovered archive can be downloaded more than once', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await recovery.addShares(bobDir);
+    await recovery.expectRecoveryComplete();
+
+    for (let i = 0; i < 2; i++) {
+      const download = page.waitForEvent('download', { timeout: 5000 });
+      await page.locator('#download-all-btn').click();
+      const file = await download;
+      expect(file.suggestedFilename()).toBe('archive.zip');
+      expect(fs.statSync(await file.path()).size).toBeGreaterThan(0);
+    }
+  });
+
   test('shows need for more shares with only holder share', async ({ page }) => {
     const bundleDir = extractBundle(bundlesDir, 'Alice');
     const recovery = new RecoveryPage(page, bundleDir);
