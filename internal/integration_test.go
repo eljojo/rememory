@@ -917,29 +917,29 @@ func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, thr
 		t.Fatal("README file not found")
 	}
 
-	// Anonymous READMEs should NOT contain "OTHER SHARE HOLDERS" section
-	if strings.Contains(readmeContent, "OTHER SHARE HOLDERS") {
-		t.Error("anonymous README should not contain OTHER SHARE HOLDERS section")
+	en := func(key string, args ...any) string { return translations.T("readme", "en", key, args...) }
+
+	// Anonymous READMEs have no list of the other holders
+	if strings.Contains(readmeContent, en("other_holders")) {
+		t.Error("anonymous README should not list the other holders")
 	}
 
-	// Should contain anonymous-specific warning text
-	if !strings.Contains(readmeContent, "combine it with other pieces") {
-		t.Error("anonymous README should mention combining with other pieces")
+	// Should contain anonymous-specific "what to do now" text
+	if !strings.Contains(readmeContent, en("warning_message_shares")) {
+		t.Error("anonymous README should use the anonymous what-to-do-now text")
 	}
 
-	// Should NOT contain "friends listed below"
-	if strings.Contains(readmeContent, "friends listed below") {
-		t.Error("anonymous README should not mention friends listed below")
+	// Should NOT point at a list it doesn't have
+	if strings.Contains(readmeContent, "listed below") || strings.Contains(readmeContent, "listed above") {
+		t.Error("anonymous README should not point at a list of friends")
 	}
 
 	// Should contain correct threshold info
-	thresholdText := fmt.Sprintf("At least %d of you must come together", threshold)
-	if !strings.Contains(readmeContent, thresholdText) {
+	if thresholdText := en("what_threshold", threshold); !strings.Contains(readmeContent, thresholdText) {
 		t.Errorf("README should contain threshold info: %s", thresholdText)
 	}
 
-	totalText := fmt.Sprintf("one of %d people", total)
-	if !strings.Contains(readmeContent, totalText) {
+	if totalText := en("what_one_of", total); !strings.Contains(readmeContent, totalText) {
 		t.Errorf("README should contain total info: %s", totalText)
 	}
 

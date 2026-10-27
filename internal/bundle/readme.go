@@ -73,12 +73,14 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("%s\n", t("what_one_of", data.Total)))
 	sb.WriteString(fmt.Sprintf("%s\n\n", t("what_threshold", data.Threshold)))
 
-	// Warning
-	sb.WriteString(fmt.Sprintf("!!  %s\n", t("warning_title")))
+	// What to do now
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("warning_title")))
+	sb.WriteString("--------------------------------------------------------------------------------\n")
 	if data.Anonymous {
-		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_message_shares")))
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("warning_message_shares")))
 	} else {
-		sb.WriteString(fmt.Sprintf("    %s\n\n", t("warning_message_friends")))
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("warning_message_friends")))
 	}
 
 	// Other share holders (skip for anonymous mode)
@@ -104,51 +106,6 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("  - %s\n", t("sharing_readme_only")))
 	sb.WriteString(fmt.Sprintf("  - %s\n", t("sharing_words_phone")))
 	sb.WriteString(fmt.Sprintf("  - %s\n\n", t("sharing_qr_mail")))
-
-	// Primary method - Browser
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString(fmt.Sprintf("%s\n", t("recover_browser")))
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step1")))
-	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_share_loaded")))
-	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_no_html")))
-	if data.ManifestEmbedded {
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2_embedded")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_embedded_hint")))
-	} else {
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step2")))
-		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step2_drag")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step2_click")))
-	}
-	if data.Anonymous {
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_anon_step3")))
-		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_anon_step3_drag")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_anon_step3_paste")))
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_anon_step4_auto", data.Threshold)))
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_anon_step5")))
-	} else {
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step3_contact")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step3_ask")))
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step4")))
-		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step4_drag")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step4_paste")))
-		sb.WriteString(fmt.Sprintf("%s\n", t("recover_step5_checkmarks")))
-		sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_step5_auto", data.Threshold)))
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_step6")))
-	}
-	if data.TlockEnabled {
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_offline_tlock")))
-	} else {
-		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_offline")))
-	}
-
-	// Fallback method - CLI
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli")))
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli_hint")))
-	sb.WriteString(fmt.Sprintf("%s\n\n", data.GitHubReleaseURL))
-	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_cli_usage")))
 
 	// Share block
 	sb.WriteString("--------------------------------------------------------------------------------\n")
@@ -183,6 +140,54 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(data.Share.Encode())
 	sb.WriteString("\n")
 
+	// Bringing the pieces together. Steps are numbered here, not in the
+	// translations, because some are skipped depending on the bundle.
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_browser")))
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	step := 0
+	writeStep := func(text string) {
+		step++
+		sb.WriteString(fmt.Sprintf("%d. %s\n", step, text))
+	}
+	writeStep(t("recover_step_open"))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_share_loaded")))
+	sb.WriteString(fmt.Sprintf("   %s\n\n", t("recover_no_html", core.DefaultRecoveryURL)))
+	if !data.ManifestEmbedded {
+		writeStep(t("recover_step_locked_files"))
+		sb.WriteString("\n")
+	}
+	if !data.Anonymous {
+		writeStep(t("recover_step_contact"))
+		sb.WriteString("\n")
+	}
+	writeStep(t("recover_step_add"))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step_add_file")))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step_add_paste")))
+	sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step_add_scan")))
+	if !data.Anonymous {
+		sb.WriteString(fmt.Sprintf("   %s\n", t("recover_step_checkmarks")))
+	}
+	sb.WriteString("\n")
+	writeStep(t("recover_step_auto", data.Threshold))
+	sb.WriteString("\n")
+	writeStep(t("recover_step_download"))
+	sb.WriteString("\n")
+	if data.TlockEnabled {
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_offline_tlock")))
+	} else {
+		sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_offline")))
+	}
+
+	// For a helper, if the browser tool doesn't work
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli")))
+	sb.WriteString("--------------------------------------------------------------------------------\n")
+	sb.WriteString(fmt.Sprintf("%s\n", t("recover_cli_hint")))
+	sb.WriteString(fmt.Sprintf("%s\n\n", data.GitHubReleaseURL))
+	sb.WriteString(fmt.Sprintf("%s\n\n", t("recover_cli_usage")))
+
+	sb.WriteString(fmt.Sprintf("%s\n", t("metadata_note")))
 	// Metadata footer (use fixed English marker for machine parsing)
 	sb.WriteString("================================================================================\n")
 	sb.WriteString("METADATA FOOTER (machine-parseable)\n")
