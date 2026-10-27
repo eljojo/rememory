@@ -227,6 +227,14 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
       );
     },
 
+    createdTimeDiffers(): void {
+      toast.warning(
+        t('warning_created_title'),
+        t('warning_created_message'),
+        t('warning_created_guidance')
+      );
+    },
+
     mismatchedShare(_detail: string): void {
       toast.error(
         t('error_mismatch_title'),
@@ -583,11 +591,13 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
         errorHandlers.mismatchedShare('metadata');
         return false;
       }
+      // Older versions of seal stamped each piece separately, so pieces of
+      // one set could differ by a minute: add it with a warning, and let
+      // unlocking decide whether it belongs.
       if (share.created) {
         const withTimestamp = state.shares.find(s => s.created);
         if (withTimestamp && share.created !== withTimestamp.created) {
-          errorHandlers.mismatchedShare('created');
-          return false;
+          errorHandlers.createdTimeDiffers();
         }
       }
     }

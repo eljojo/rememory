@@ -70,14 +70,22 @@ func TestFriendNames(t *testing.T) {
 	}
 }
 
-func TestValidateSharesCompatible_CreatedMismatchWhenFirstHasNoTimestamp(t *testing.T) {
+// Older versions of seal stamped each piece separately, so pieces of one
+// set can differ by a minute. A difference is a warning; unlocking decides.
+func TestCreatedTimeMismatchIsAWarning(t *testing.T) {
 	now := time.Now()
 	a := &core.Share{Version: 2, Total: 3, Threshold: 2} // no timestamp (QR)
 	b := &core.Share{Version: 2, Total: 3, Threshold: 2, Created: now}
 	c := &core.Share{Version: 2, Total: 3, Threshold: 2, Created: now.Add(-time.Hour)}
 
-	err := validateSharesCompatible([]*core.Share{a, b, c})
-	if err == nil || !strings.Contains(err.Error(), "creation time") {
-		t.Errorf("expected creation time error, got: %v", err)
+	shares := []*core.Share{a, b, c}
+	if err := validateSharesCompatible(shares); err != nil {
+		t.Errorf("creation time difference refused the set: %v", err)
+	}
+	if w := createdTimeWarning(shares); !strings.Contains(w, "different time") {
+		t.Errorf("expected a creation time warning, got %q", w)
+	}
+	if w := createdTimeWarning([]*core.Share{a, b}); w != "" {
+		t.Errorf("matching times warned: %q", w)
 	}
 }

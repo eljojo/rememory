@@ -222,6 +222,48 @@ test.describe('Browser Recovery Tool', () => {
     }
   });
 
+  // Older versions of seal stamped each piece separately, so pieces of one set
+  // could differ by a minute. Such a piece is added with a warning; unlocking
+  // decides whether it belongs.
+  test('a piece with a different creation time is added with a warning', async ({ page }) => {
+    const [aliceDir] = extractBundles(bundlesDir, ['Alice']);
+    // Read from the ZIP: other workers may be extracting Bob's bundle right now.
+    const readme = new AdmZip(path.join(bundlesDir, 'bundle-bob.zip')).readAsText('README.txt');
+    const shifted = readme.replace(/^Created: .*$/m, 'Created: 2000-01-01 00:00');
+    expect(shifted).not.toBe(readme);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-created-'));
+    fs.writeFileSync(path.join(dir, 'README.txt'), shifted);
+
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await page.locator('#share-file-input').setInputFiles(path.join(dir, 'README.txt'));
+
+    await expect(page.locator('.toast-warning')).toBeVisible();
+    await recovery.expectShareCount(2);
+    await recovery.expectRecoveryComplete();
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("the creation-time warning also shows for a dropped friend's recover.html", async ({ page }) => {
+    const [aliceDir] = extractBundles(bundlesDir, ['Alice']);
+    // Read from the ZIP: other workers may be extracting Bob's bundle right now.
+    const html = new AdmZip(path.join(bundlesDir, 'bundle-bob.zip')).readAsText('recover.html');
+    const shifted = html.replace(/Created: [0-9: -]+/, 'Created: 2000-01-01 00:00');
+    expect(shifted).not.toBe(html);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-created-html-'));
+    fs.writeFileSync(path.join(dir, 'recover.html'), shifted);
+
+    const recovery = new RecoveryPage(page, aliceDir);
+    await recovery.open();
+    await page.locator('#manifest-file-input').setInputFiles(path.join(dir, 'recover.html'));
+
+    await expect(page.locator('.toast-warning')).toBeVisible();
+    await recovery.expectShareCount(2);
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('shows need for more shares with only holder share', async ({ page }) => {
     const bundleDir = extractBundle(bundlesDir, 'Alice');
     const recovery = new RecoveryPage(page, bundleDir);

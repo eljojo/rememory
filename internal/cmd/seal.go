@@ -16,6 +16,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// sealClock is the time source for seal; tests replace it.
+var sealClock = time.Now
+
 var sealCmd = &cobra.Command{
 	Use:   "seal",
 	Short: "Encrypt the manifest, create shares, and generate bundles",
@@ -217,11 +220,16 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 		return fmt.Errorf("splitting passphrase: %w", err)
 	}
 
+	// One time for the whole seal: recovery refuses pieces whose creation
+	// times differ, and a per-share clock could cross a minute boundary.
+	sealedAt := sealClock().UTC()
+
 	// Create share files
 	shareInfos := make([]project.ShareInfo, len(shares))
 	for i, shareData := range shares {
 		friend := p.Friends[i]
 		share := core.NewShare(2, i+1, len(p.Friends), p.Threshold, friend.Name, shareData)
+		share.Created = sealedAt
 
 		filename := share.Filename()
 		sharePath := filepath.Join(sharesDir, filename)
@@ -267,7 +275,7 @@ func sealProject(p *project.Project, recoveryURL string, noEmbedManifest bool, t
 	}
 
 	sealed := &project.Sealed{
-		At:               time.Now().UTC(),
+		At:               sealedAt,
 		ManifestChecksum: manifestChecksum,
 		VerificationHash: core.HashString(passphrase),
 		Shares:           shareInfos,
