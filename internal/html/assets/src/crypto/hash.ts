@@ -1,6 +1,6 @@
 // SHA-256 hashing utilities using @noble/hashes (pure JS, works in any context)
 
-import { sha256 as nobleSha256 } from '@noble/hashes/sha256';
+import { sha256 as nobleSha256 } from '@noble/hashes/sha2.js';
 
 /**
  * Compute SHA-256 hash of data.
