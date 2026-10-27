@@ -12,6 +12,7 @@ All notable changes to ReMemory are documented here.
 - **Catalan and Turkish recovery words** — Catalan and Turkish bundles print the recovery words in their own language first, but the recovery tool couldn't read them, and said a word wasn't recognized. It now understands both. Turkish words printed by v0.0.19, before the Turkish list was corrected, work too. Thanks @lyrixx for reporting this!
 - **Recovery words for larger groups** — With 16 or more friends, the recovery tool refused the second piece typed as words from friend #16 onwards, saying it was already added. Each piece is now recognized by its own contents, so these are accepted. Thanks @lyrixx for reporting this!
 - **Download again after recovering** — The recovery tool let go of the unlocked files after the first click on Download. If that download was cancelled or didn't arrive, clicking again did nothing, and the only way back was to start over with every piece. The files now stay available until you close the page. Thanks @lyrixx for reporting this!
+- **Files are offered even when the list can't be shown** — If a browser couldn't list what's inside the recovered archive (some older browsers can't open the format bundles before v0.0.15 used), the recovery tool showed an error and no download, even though everything had been unlocked. It now offers the download with a short note. Thanks @lyrixx for reporting this!
 
 ## v0.0.21 — 2026-04-13
 

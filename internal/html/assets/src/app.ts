@@ -1370,11 +1370,19 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
     state.decryptedArchive = archive;
 
     setStatus(t('reading'));
-    const files = await extractArchive(archive);
+    // age has already authenticated the archive. If this browser can't list
+    // what's inside (no DecompressionStream, an unusual archive), the files
+    // are still there to download.
+    let files: Awaited<ReturnType<typeof extractArchive>> | null = null;
+    try {
+      files = await extractArchive(archive);
+    } catch (err) {
+      console.warn('Could not list archive contents:', err);
+    }
 
     setProgress(90);
 
-    files.forEach(file => {
+    files?.forEach(file => {
       const item = document.createElement('div');
       item.className = 'file-item';
       item.innerHTML = `
@@ -1386,7 +1394,7 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
     });
 
     setProgress(100);
-    setStatus(t('complete'), 'success', t('complete_subtitle'));
+    setStatus(t('complete'), 'success', files ? t('complete_subtitle') : t('files_list_unavailable'));
     elements.downloadActions?.classList.remove('hidden');
     elements.recoverBtn?.classList.add('hidden');
     state.recoveryComplete = true;

@@ -27,6 +27,7 @@
   "reading": "Arşiv açılıyor...",
   "complete": "Dosyaların hazır.",
   "complete_subtitle": "ReMemory’e güvendiğin için teşekkürler.",
+  "files_list_unavailable": "Bu tarayıcı içeriği gösteremedi, ama dosyaların kilidi açıldı. Onları indir ve arşivi bilgisayarında aç.",
   "step3_complete_title": "Dosyalar kurtarıldı",
   "paste_btn": "Bir parça yapıştır veya kurtarma kelimelerini yaz",
   "paste_placeholder": "Parça metnini yapıştır veya kurtarma kelimelerini yaz...",

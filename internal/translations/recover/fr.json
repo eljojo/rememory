@@ -27,6 +27,7 @@
   "reading": "Ouverture de l'archive...",
   "complete": "Vos fichiers sont prêts.",
   "complete_subtitle": "Merci d'avoir fait confiance à ReMemory.",
+  "files_list_unavailable": "Ce navigateur n'a pas pu afficher le contenu, mais vos fichiers sont déverrouillés. Téléchargez-les et ouvrez l'archive sur votre ordinateur.",
   "step3_complete_title": "Fichiers récupérés",
   "paste_btn": "Coller une part ou saisir les mots de récupération",
   "paste_placeholder": "Collez le texte de la part ou saisissez vos mots de récupération...\nLes accents ne sont pas nécessaires.",

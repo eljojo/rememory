@@ -27,6 +27,7 @@
   "reading": "Opening archive...",
   "complete": "Your files are ready.",
   "complete_subtitle": "Thank you for trusting ReMemory.",
+  "files_list_unavailable": "This browser couldn't list what's inside, but your files are unlocked. Download them and open the archive on your computer.",
   "step3_complete_title": "Files recovered",
   "paste_btn": "Paste a piece or type recovery words",
   "paste_placeholder": "Paste piece text or type recovery words...",

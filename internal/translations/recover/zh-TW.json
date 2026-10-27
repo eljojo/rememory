@@ -27,6 +27,7 @@
   "reading": "正在開啟封存檔……",
   "complete": "您的檔案已準備就緒。",
   "complete_subtitle": "感謝您信任 ReMemory。",
+  "files_list_unavailable": "此瀏覽器無法顯示封存檔的內容，但您的檔案已經解鎖。請下載後在您的電腦上開啟封存檔。",
   "step3_complete_title": "檔案已復原",
   "paste_btn": "貼上金鑰片段或輸入復原詞組",
   "paste_placeholder": "貼上收到的文字或輸入復原詞組……",

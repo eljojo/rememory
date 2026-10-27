@@ -27,6 +27,7 @@
   "reading": "Archiv öffnen...",
   "complete": "Deine Dateien sind bereit.",
   "complete_subtitle": "Danke, dass du ReMemory vertraut hast.",
+  "files_list_unavailable": "Dieser Browser konnte den Inhalt nicht anzeigen, aber deine Dateien sind entsperrt. Lade sie herunter und öffne das Archiv auf deinem Computer.",
   "step3_complete_title": "Dateien wiederhergestellt",
   "paste_btn": "Teil einfügen oder Wiederherstellungswörter eingeben",
   "paste_placeholder": "Teil-Text einfügen oder Wiederherstellungswörter eingeben...\nUmlaute gehen auch als ue, oe, ae.",

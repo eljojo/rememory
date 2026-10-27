@@ -27,6 +27,7 @@
   "reading": "Aprendo l'archivio...",
   "complete": "I tuoi file sono pronti.",
   "complete_subtitle": "Grazie per aver scelto ReMemory.",
+  "files_list_unavailable": "Questo browser non è riuscito a mostrare il contenuto, ma i tuoi file sono sbloccati. Scaricali e apri l'archivio sul tuo computer.",
   "step3_complete_title": "File recuperati",
   "paste_btn": "Incolla il tuo pezzo oppure scrivi le tue parole di recupero",
   "paste_placeholder": "Incolla il tuo pezzo oppure scrivi le tue parole di recupero...",

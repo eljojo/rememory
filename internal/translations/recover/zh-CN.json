@@ -27,6 +27,7 @@
   "reading": "正在打开归档文件……",
   "complete": "您的文件已准备就绪。",
   "complete_subtitle": "感谢您信任 ReMemory。",
+  "files_list_unavailable": "此浏览器无法显示归档文件的内容，但您的文件已经解锁。请下载后在您的电脑上打开归档文件。",
   "step3_complete_title": "文件已恢复",
   "paste_btn": "粘贴密钥片段或输入恢复词组",
   "paste_placeholder": "粘贴收到的文字或输入恢复词组……",

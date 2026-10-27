@@ -495,6 +495,27 @@ test.describe('Generic recover.html (no personalization)', () => {
     }
   });
 
+  // Once the archive is unlocked (age authenticates it), failing to list its
+  // contents must not hide the download. Older browsers lack
+  // DecompressionStream, which listing a tar.gz archive needs.
+  test('download stays available when the file list cannot be shown', async ({ page }) => {
+    await page.addInitScript(() => { delete (window as any).DecompressionStream; });
+    const recovery = new RecoveryPage(page, '');
+    await recovery.openFile(standaloneRecoverHtml);
+
+    const v1 = 'internal/core/testdata/v1-bundle';
+    await page.locator('#share-file-input').setInputFiles(
+      ['SHARE-alice.txt', 'SHARE-bob.txt', 'SHARE-carol.txt'].map(f => path.join(v1, f)));
+    await recovery.addManifestFile(path.join(v1, 'MANIFEST.age'));
+
+    await recovery.expectRecoveryComplete();
+    await expect(page.locator('body')).toContainText("couldn't list what's inside");
+    await recovery.expectDownloadVisible();
+    const download = page.waitForEvent('download', { timeout: 5000 });
+    await page.locator('#download-all-btn').click();
+    expect((await download).suggestedFilename()).toBe('archive.tar.gz');
+  });
+
   test('words-only shares auto-recover when manifest is loaded', async ({ page }) => {
     const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
     const recovery = new RecoveryPage(page, tmpDir);

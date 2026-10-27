@@ -27,6 +27,7 @@
   "reading": "Abriendo el archivo...",
   "complete": "Tus archivos están listos.",
   "complete_subtitle": "Gracias por confiar en ReMemory.",
+  "files_list_unavailable": "Este navegador no pudo mostrar el contenido, pero tus archivos están desbloqueados. Descárgalos y abre el archivo en tu computadora.",
   "step3_complete_title": "Archivos recuperados",
   "paste_btn": "Pegar una parte o escribir palabras clave",
   "paste_placeholder": "Pega el texto de la parte o escribe tus palabras de recuperación...\nNo es necesario escribir los acentos.",

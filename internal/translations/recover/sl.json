@@ -27,6 +27,7 @@
   "reading": "Odpiranje arhiva ...",
   "complete": "Vaše datoteke so pripravljene.",
   "complete_subtitle": "Hvala za zaupanje v ReMemory.",
+  "files_list_unavailable": "Ta brskalnik ni mogel prikazati vsebine, vendar so vaše datoteke odklenjene. Prenesite jih in odprite arhiv na svojem računalniku.",
   "step3_complete_title": "Datoteke obnovljene",
   "paste_btn": "Prilepite del ali vnesite obnovitvene besede",
   "paste_placeholder": "Prilepite besedilo dela ali vnesite obnovitvene besede ...\nŠumniki niso potrebni.",
