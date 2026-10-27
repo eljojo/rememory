@@ -432,7 +432,7 @@ Même si quelqu'un essayait tous les mots de passe possibles, scrypt rend chaque
 
 La clé est ensuite divisée avec le partage de secret de Shamir. **Toute quantité de parts inférieure au seuil contient zéro information sur la clé.** Pas « très peu. » Mathématiquement zéro.
 
-Chaque enveloppe inclut des sommes de contrôle pour que l'outil de récupération puisse vérifier que rien n'a été corrompu ou altéré.
+Chaque enveloppe liste aussi les sommes de contrôle de ses fichiers, pour que `rememory verify-bundle` puisse vous dire si l'un d'eux a été abîmé en chemin. Les sommes de contrôle détectent les accidents, pas les modifications délibérées : quiconque modifie un fichier peut aussi mettre à jour sa somme. L'archive chiffrée est protégée à part — si elle est modifiée, elle ne s'ouvrira pas.
 
 ### Ce qui pourrait mal tourner {#what-could-go-wrong}
 
