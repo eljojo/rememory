@@ -20,7 +20,7 @@
   "import_btn": "Übernehmen",
   "step2_title": "Zu schützende Dateien",
   "files_drop": "Ziehe einen Ordner hierher oder klicke, um Dateien auszuwählen",
-  "files_hint": "Diese Dateien werden verschlossen. Jede Person bekommt eine Kopie, und nur genug von ihnen zusammen können sie öffnen.",
+  "files_hint": "Diese Dateien werden verschlossen. Jede Person bekommt eine Kopie und einen Teil, und geöffnet werden sie erst, wenn genügend Teile zusammenkommen.",
   "files_summary": "{0} Datei(en), {1} insgesamt",
   "files_too_large": "Zu groß — Limit ist {0}",
   "step3_title": "Umschläge erstellen",

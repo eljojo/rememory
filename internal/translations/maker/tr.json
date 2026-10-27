@@ -20,7 +20,7 @@
   "import_btn": "Kişileri ekle",
   "step2_title": "Korunacak Dosyalar",
   "files_drop": "Bir klasörü buraya sürükleyip bırak veya seçmek için tıkla",
-  "files_hint": "Bu dosyalar kilitlenecek. Herkes bir kopya alır, ama onu ancak yeterli sayıda kişi bir araya gelince açabilir.",
+  "files_hint": "Bu dosyalar kilitlenecek. Herkes bir kopya ve bir parça alır; dosyalar ancak yeterli parça bir araya gelince açılır.",
   "files_summary": "{0} dosya, toplam {1}",
   "files_too_large": "Çok büyük — sınır: {0}",
   "step3_title": "Paketleri Oluştur",

@@ -20,7 +20,7 @@
   "import_btn": "Les ajouter",
   "step2_title": "Fichiers à protéger",
   "files_drop": "Déposez un dossier ici ou cliquez pour sélectionner des fichiers",
-  "files_hint": "Ces fichiers seront verrouillés. Chaque personne en reçoit une copie, et seules suffisamment d'entre elles, ensemble, peuvent les ouvrir.",
+  "files_hint": "Ces fichiers seront verrouillés. Chaque personne en reçoit une copie et une part. Pour les ouvrir, il faudra réunir suffisamment de parts.",
   "files_summary": "{0} fichier(s), {1} au total",
   "files_too_large": "Trop volumineux — la limite est de {0}",
   "step3_title": "Créer les enveloppes",

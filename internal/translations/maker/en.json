@@ -20,7 +20,7 @@
   "import_btn": "Bring them in",
   "step2_title": "Files to Protect",
   "files_drop": "Drag & drop a folder here, or click to select files",
-  "files_hint": "These will be locked. Each person gets a copy, and only enough of them together can open it.",
+  "files_hint": "These will be locked. Each person gets a copy and one piece, and the files open only when enough pieces are brought together.",
   "files_summary": "{0} file(s), {1} total",
   "files_too_large": "Too large — limit is {0}",
   "step3_title": "Generate Bundles",

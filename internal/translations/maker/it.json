@@ -20,7 +20,7 @@
   "import_btn": "Aggiungi le persone",
   "step2_title": "File da proteggere",
   "files_drop": "Trascina e rilascia una cartella qui, oppure clicca per selezionare i file",
-  "files_hint": "Verranno messi sotto chiave. Ogni persona ne riceve una copia, ma solo abbastanza persone insieme possono aprirla.",
+  "files_hint": "Verranno messi sotto chiave. Ogni persona riceve una copia e un pezzo, e i file si aprono solo quando si riuniscono abbastanza pezzi.",
   "files_summary": "{0} file, {1} totali",
   "files_too_large": "Troppo grande — il limite è {0}",
   "step3_title": "Genera pacchetti",

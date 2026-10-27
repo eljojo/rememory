@@ -741,4 +741,52 @@ friends:
     await recovery.expectRecoveryComplete();
     await recovery.expectFileCount(2);
   });
+
+  // Generating again makes a new key, so the saved locked files must be the
+  // new ones. A copy left over from the first run would open with nothing.
+  test('the locked files saved after generating again open with the new pieces', async ({ page }, testInfo) => {
+    testInfo.setTimeout(180000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+    await creation.setFriend(0, 'Alice', 'alice@test.com');
+    await creation.setFriend(1, 'Bob', 'bob@test.com');
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'regen-first'));
+    await creation.generate();
+    await creation.expectGenerationComplete();
+    await page.evaluate(() => { (window as any).firstRun = (window as any).rememoryBundles; });
+
+    await creation.addFiles(creation.createTestFiles(tmpDir, 'regen-second'));
+    await creation.generate();
+    await page.waitForFunction(() => {
+      const w = window as any;
+      return w.rememoryBundles && w.rememoryBundles !== w.firstRun;
+    }, null, { timeout: 120000 });
+    await creation.expectGenerationComplete();
+
+    const download = page.waitForEvent('download');
+    await page.locator('#download-manifest-btn').click();
+    const saved = await download;
+    const bundlesDir = path.join(tmpDir, 'regen-bundles');
+    fs.mkdirSync(bundlesDir, { recursive: true });
+    const manifestPath = path.join(bundlesDir, 'MANIFEST.age');
+    await saved.saveAs(manifestPath);
+
+    const friendDirs = [];
+    for (const [index, name] of ['alice', 'bob'].entries()) {
+      const data = await creation.downloadBundle(index);
+      expect(data).toBeTruthy();
+      const dir = path.join(bundlesDir, name);
+      new AdmZip(Buffer.from(data!)).extractAllTo(dir, true);
+      friendDirs.push(dir);
+    }
+
+    const recovery = new RecoveryPage(page, bundlesDir);
+    await recovery.openFile(generateStandaloneHTML(tmpDir, 'recover'));
+    await recovery.addShares(...friendDirs);
+    await recovery.addManifestFile(manifestPath);
+
+    await recovery.expectRecoveryComplete();
+    await expect(page.locator('.file-item', { hasText: 'regen-second-secret.txt' })).toHaveCount(1);
+  });
 });

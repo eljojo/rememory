@@ -20,7 +20,7 @@
   "import_btn": "Agregar personas",
   "step2_title": "Archivos a proteger",
   "files_drop": "Arrastra una carpeta aquí o haz clic para seleccionar archivos",
-  "files_hint": "Estos archivos se bloquearán. Cada persona recibe una copia, y solo pueden abrirla suficientes personas juntas.",
+  "files_hint": "Estos archivos se bloquearán. Cada persona recibe una copia y una parte, y solo se abren cuando se reúnen suficientes partes.",
   "files_summary": "{0} archivo(s), {1} en total",
   "files_too_large": "Demasiado grande — el límite es {0}",
   "step3_title": "Generar kits",

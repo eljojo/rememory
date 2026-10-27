@@ -20,7 +20,7 @@
   "import_btn": "Dodaj jih",
   "step2_title": "Datoteke za zaščito",
   "files_drop": "Povlecite in spustite mapo ali kliknite za izbiro datotek",
-  "files_hint": "Te datoteke bodo zaklenjene. Vsak prejme kopijo, odpre pa jo lahko le dovolj ljudi skupaj.",
+  "files_hint": "Te datoteke bodo zaklenjene. Vsak prejme kopijo in en del, datoteke pa se odprejo šele, ko se zbere dovolj delov.",
   "files_summary": "{0} datotek, skupaj {1}",
   "files_too_large": "Preveliko — omejitev je {0}",
   "step3_title": "Ustvari svežnje",

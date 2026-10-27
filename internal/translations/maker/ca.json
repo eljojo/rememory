@@ -20,7 +20,7 @@
   "import_btn": "Afegir persones",
   "step2_title": "Arxius a protegir",
   "files_drop": "Arrossega una carpeta aquí o fes clic per seleccionar arxius",
-  "files_hint": "Aquests arxius es bloquejaran. Cada persona en rep una còpia, i només la poden obrir prou persones juntes.",
+  "files_hint": "Aquests arxius es bloquejaran. Cada persona en rep una còpia i una part, i només s'obren quan es reuneixen prou parts.",
   "files_summary": "{0} arxiu(s), {1} en total",
   "files_too_large": "Massa gran — el límit és {0}",
   "step3_title": "Generar kits",

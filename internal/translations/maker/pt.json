@@ -20,7 +20,7 @@
   "import_btn": "Adicionar pessoas",
   "step2_title": "Arquivos a Proteger",
   "files_drop": "Arraste e solte uma pasta aqui ou clique para selecionar arquivos",
-  "files_hint": "Estes arquivos serão bloqueados. Cada pessoa recebe uma cópia, e só pessoas suficientes juntas conseguem abri-la.",
+  "files_hint": "Estes arquivos serão bloqueados. Cada pessoa recebe uma cópia e uma parte, e eles só se abrem quando partes suficientes são reunidas.",
   "files_summary": "{0} arquivo(s), {1} total",
   "files_too_large": "Grande demais — o limite é {0}",
   "step3_title": "Gerar Pacotes",

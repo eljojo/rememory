@@ -20,7 +20,7 @@
   "import_btn": "Overnemen",
   "step2_title": "Te beveiligen bestanden",
   "files_drop": "Sleep bestanden hierheen, of klik om deze te selecteren",
-  "files_hint": "Deze bestanden worden vergrendeld. Iedere persoon krijgt een kopie, en alleen genoeg van hen samen kunnen ze openen.",
+  "files_hint": "Deze bestanden worden vergrendeld. Iedere persoon krijgt een kopie en een fragment, en de bestanden gaan pas open als er genoeg fragmenten samenkomen.",
   "files_summary": "{0} document(en) geselecteerd, totale omvang: {1}",
   "files_too_large": "De bestandsomvang overschrijdt de limiet — maximaal toegestaan is {0}",
   "step3_title": "Bundels Genereren",
