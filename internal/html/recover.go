@@ -40,7 +40,7 @@ type PersonalizationData struct {
 const tlockWaitingHTML = `<div id="tlock-waiting" class="tlock-waiting hidden" aria-live="polite">
         <div class="tlock-waiting-icon">&#128336;</div>
         <div class="tlock-waiting-body">
-          <strong id="tlock-waiting-title" data-i18n="tlock_waiting_title">Not yet</strong>
+          <strong id="tlock-waiting-title" data-i18n="tlock_waiting_title">Locked until a set date</strong>
           <p id="tlock-waiting-date"></p>
           <p class="tlock-waiting-hint"><a href="{{GITHUB_PAGES}}/docs#timelock" target="_blank" data-i18n="tlock_learn_more">What is this?</a></p>
         </div>

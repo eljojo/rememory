@@ -93,7 +93,7 @@
   "tlock_in_minutes": "in {0} minuti",
   "tlock_in_one_minute": "in circa un minuto",
   "tlock_decrypting": "Aprendo il blocco a tempo...",
-  "tlock_waiting_title": "Non ancora",
+  "tlock_waiting_title": "Sotto chiave fino a una data stabilita",
   "tlock_waiting_message": "Apertura in {0}. Aspetta qui, o ritorna dopo.",
   "tlock_waiting_message_relative": "Apertura in {0}. Quasi lì.",
   "tlock_learn_more": "Cos'è questo?",

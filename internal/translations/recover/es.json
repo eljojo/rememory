@@ -93,7 +93,7 @@
   "tlock_in_minutes": "en {0} minutos",
   "tlock_in_one_minute": "en un minuto",
   "tlock_decrypting": "Desbloqueando por fecha...",
-  "tlock_waiting_title": "Todavía no",
+  "tlock_waiting_title": "Bloqueado hasta una fecha fijada",
   "tlock_waiting_message": "Se abre el {0}. Espera, o vuelve después.",
   "tlock_waiting_message_relative": "Se abre {0}. Ya casi.",
   "tlock_learn_more": "¿Qué es esto?",

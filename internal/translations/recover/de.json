@@ -93,7 +93,7 @@
   "tlock_in_minutes": "in {0} Minuten",
   "tlock_in_one_minute": "in etwa einer Minute",
   "tlock_decrypting": "Zeitsperre wird aufgehoben...",
-  "tlock_waiting_title": "Noch nicht",
+  "tlock_waiting_title": "Verschlossen bis zu einem festgelegten Datum",
   "tlock_waiting_message": "Öffnet am {0}. Warte hier, oder komm später wieder.",
   "tlock_waiting_message_relative": "Öffnet {0}. Gleich soweit.",
   "tlock_learn_more": "Was ist das?",

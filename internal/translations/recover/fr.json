@@ -93,7 +93,7 @@
   "tlock_in_minutes": "dans {0} minutes",
   "tlock_in_one_minute": "dans environ une minute",
   "tlock_decrypting": "Déverrouillage temporel en cours...",
-  "tlock_waiting_title": "Pas encore",
+  "tlock_waiting_title": "Verrouillé jusqu'à une date fixée",
   "tlock_waiting_message": "S'ouvre le {0}. Patientez, ou revenez plus tard.",
   "tlock_waiting_message_relative": "S'ouvre {0}. Presque prêt.",
   "tlock_learn_more": "Qu'est-ce que c'est ?",

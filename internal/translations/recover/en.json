@@ -93,7 +93,7 @@
   "tlock_in_minutes": "in {0} minutes",
   "tlock_in_one_minute": "in about a minute",
   "tlock_decrypting": "Opening time lock...",
-  "tlock_waiting_title": "Not yet",
+  "tlock_waiting_title": "Locked until a set date",
   "tlock_waiting_message": "Opens {0}. Wait here, or come back later.",
   "tlock_waiting_message_relative": "Opens {0}. Almost there.",
   "tlock_learn_more": "What is this?",

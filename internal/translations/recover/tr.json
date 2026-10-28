@@ -93,7 +93,7 @@
   "tlock_in_minutes": "{0} dakika içinde",
   "tlock_in_one_minute": "yaklaşık bir dakika içinde",
   "tlock_decrypting": "Zaman kilidi açılıyor...",
-  "tlock_waiting_title": "Henüz değil",
+  "tlock_waiting_title": "Belirlenen bir tarihe kadar kilitli",
   "tlock_waiting_message": "{0} tarihinde açılacak. Burada bekle veya sonra tekrar gel.",
   "tlock_waiting_message_relative": "{0} tarihinde açılacak. Az kaldı.",
   "tlock_learn_more": "Bu nedir?",

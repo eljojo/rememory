@@ -93,7 +93,7 @@
   "tlock_in_minutes": "en {0} minuts",
   "tlock_in_one_minute": "en un minut",
   "tlock_decrypting": "Desbloquejant per data...",
-  "tlock_waiting_title": "Encara no",
+  "tlock_waiting_title": "Bloquejat fins a una data fixada",
   "tlock_waiting_message": "S'obre el {0}. Espera, o torna més tard.",
   "tlock_waiting_message_relative": "S'obre {0}. Ja gairebé.",
   "tlock_learn_more": "Què és això?",

@@ -93,7 +93,7 @@
   "tlock_in_minutes": "over {0} minuten",
   "tlock_in_one_minute": "over ongeveer 1 minuut",
   "tlock_decrypting": "Tijdslot wordt momenteel geverifieerd...",
-  "tlock_waiting_title": "Nog niet",
+  "tlock_waiting_title": "Vergrendeld tot een vastgestelde datum",
   "tlock_waiting_message": "Ontgrendeling is mogelijk {0}. Probeer het tegen die tijd opnieuw.",
   "tlock_waiting_message_relative": "Ontgrendeling is mogelijk over {0}. Het herstel zal dan verder gaan.",
   "tlock_learn_more": "Meer informatie over het tijdslot...",

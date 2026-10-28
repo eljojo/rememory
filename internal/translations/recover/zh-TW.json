@@ -93,7 +93,7 @@
   "tlock_in_minutes": "{0} 分鐘後",
   "tlock_in_one_minute": "大約一分鐘後",
   "tlock_decrypting": "正在解除時間鎖定……",
-  "tlock_waiting_title": "時間還沒到",
+  "tlock_waiting_title": "在設定的日期之前保持上鎖",
   "tlock_waiting_message": "{0} 開放。請稍候，或稍後再來。",
   "tlock_waiting_message_relative": "{0}開放。請稍候。",
   "tlock_learn_more": "這是什麼？",

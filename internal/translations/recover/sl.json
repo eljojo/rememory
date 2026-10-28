@@ -93,7 +93,7 @@
   "tlock_in_minutes": "čez {0} minut",
   "tlock_in_one_minute": "čez približno minuto",
   "tlock_decrypting": "Odklepanje časovne zaklepa...",
-  "tlock_waiting_title": "Še ne",
+  "tlock_waiting_title": "Zaklenjeno do določenega datuma",
   "tlock_waiting_message": "Odpre se {0}. Počakajte ali se vrnite kasneje.",
   "tlock_waiting_message_relative": "Odpre se {0}. Počakajte.",
   "tlock_learn_more": "Kaj je to?",
