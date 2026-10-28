@@ -20,6 +20,8 @@ Por dentro, cifra tus archivos con [age](https://github.com/FiloSottile/age), di
 
 Recuperar es abrir un archivo en el navegador.\* Sin servidores, sin necesidad de que este sitio web exista.
 
+Si guardas una parte para alguien, empieza en [Recuperar archivos](#recovering).
+
 <p style="font-size: 0.8125rem; color: #8A8480;">* Los archivos con <a href="#timelock" style="color: #8A8480;">bloqueo por fecha</a> necesitan una breve conexión a internet al momento de la recuperación.</p>
 
 <div class="tip">
@@ -59,16 +61,16 @@ Agrega a las personas que guardarán partes de tu clave de recuperación. Para c
 <figcaption>Cada persona aquí guardará una parte de la clave</figcaption>
 </figure>
 
-Luego elige tu **umbral** — cuántas personas deben reunirse para recuperar tus archivos.
+Luego elige cuántas de ellas deben reunirse para abrir tus archivos.
 
 <div class="tip">
-<strong>Cómo elegir un umbral:</strong>
+<strong>Cómo elegir cuántas:</strong>
 <ul>
-<li><strong>3 personas, umbral 2:</strong> La configuración más sencilla</li>
-<li><strong>5 personas, umbral 3:</strong> Un buen equilibrio</li>
-<li><strong>7 personas, umbral 4–5:</strong> Más seguro, más coordinación</li>
+<li><strong>2 de 3 personas:</strong> La configuración más sencilla</li>
+<li><strong>3 de 5 personas:</strong> Un buen equilibrio</li>
+<li><strong>4 o 5 de 7 personas:</strong> Más seguro, más coordinación</li>
 </ul>
-Lo suficientemente alto para que la colusión sea improbable. Lo suficientemente bajo para que la recuperación funcione si una o dos personas no están disponibles.
+Lo suficientemente alto para que unas pocas personas no puedan abrirlo sin las demás. Lo suficientemente bajo para que siga funcionando si no se puede contactar a una o dos.
 </div>
 
 ### Paso 2: Agregar archivos {#step2}
@@ -95,7 +97,7 @@ Arrastra y suelta los archivos o la carpeta que quieres proteger.
 
 ### Paso 3: Generar kits {#step3}
 
-Haz clic en "Generar kits" para cifrar tus archivos y crear un kit para cada persona.
+Haz clic en "Generar kits" para bloquear tus archivos y preparar un kit para cada persona.
 
 <figure class="screenshot">
 <img src="screenshots/es/bundles.png" alt="Generando kits en el Paso 3">
@@ -119,19 +121,25 @@ Si envías los kits por correo o mensajería, borra los mensajes de tu carpeta d
 
 Una vez que tus kits están listos, hay algunas cosas que vale la pena hacer antes de dejarlo de lado:
 
-- Verifica que cada persona recibió su kit y puede abrir `recover.html`
+- Pide a cada persona que abra `recover.html` una vez. Muestra "Tu parte está aquí" cuando puede leer su parte.
 - Dile a cada persona qué es esto, por qué lo tiene, y que debe guardarlo en un lugar seguro. No puede usarlo solo — necesitará coordinarse con otros.
-- Guarda una copia de `MANIFEST.age` en algún lugar seguro — son solo datos cifrados, inútiles sin suficientes partes
+- Guarda los archivos bloqueados con "Guardar los archivos bloqueados (MANIFEST.age)" y conserva esa copia en un lugar seguro. No contiene ninguna parte, así que no le sirve a nadie que no tenga suficientes partes.
 - Guarda tu `project.yml` para poder regenerar los kits más adelante
-- Imprime `README.pdf` como respaldo en papel antes de enviar el kit digital. El papel no necesita adaptadores ni electricidad.
+- Imprime `LEEME.pdf` como respaldo en papel antes de enviar el kit digital. El papel no necesita adaptadores ni electricidad.
 - Pon un recordatorio anual para verificar — consulta [Mantener los kits actualizados](#keeping-current)
 - Considera hacer un [simulacro de recuperación](#recovery-drills) — es la única forma de saber si tu plan realmente funciona
 
 ## Recuperar archivos {#recovering}
 
-Si estás aquí porque alguien que te importa ya no está disponible — respira. No hay prisa. Los kits no expiran, y el proceso está diseñado para hacerlo a tu ritmo.
+Esta sección es para los amigos que guardan una parte. Casi siempre, lo único que hace un amigo es guardar su kit en un lugar seguro. Algún día, alguien puede pedirle su parte, o puede ser quien reúna las partes.
 
-Si no tienes un kit todavía, puedes abrir la [herramienta de recuperación](recover.html) directamente — agregarás las piezas a mano a medida que las reúnas.
+Si estás aquí porque ya no puedes contactar a alguien que te importa, no hay prisa. Nada de esto caduca. Puedes tomarte todo el tiempo que necesites — si cierras la página de recuperación a mitad de camino, volverás a agregar las partes cuando regreses.
+
+### ¿Qué es una parte? {#what-is-a-piece}
+
+Una parte es un fragmento de la clave que bloquea los archivos. Por sí sola, no abre nada ni revela nada.
+
+Tu LEEME guarda tu parte como un bloque de texto y como 25 palabras. El LEEME.pdf impreso también la tiene como código QR. Todas son la misma parte — cualquiera de ellas basta para entregarla.
 
 ### Qué reciben los amigos {#bundle-contents}
 
@@ -139,200 +147,130 @@ Cada kit contiene:
 
 <div class="bundle-contents">
 <div class="file">
-<span class="file-name">README.txt</span>
-<span class="file-desc">Instrucciones, tu parte, lista de contactos</span>
+<span class="file-name">LEEME.txt</span>
+<span class="file-desc">Qué es esto, quién más tiene una parte, y tu propia parte</span>
 </div>
 <div class="file">
-<span class="file-name">README.pdf</span>
-<span class="file-desc">El mismo contenido, con formato para imprimir. Incluye un <strong>código QR</strong> para importar la parte.</span>
+<span class="file-name">LEEME.pdf</span>
+<span class="file-desc">Lo mismo, listo para imprimir. Tu parte aparece como <strong>código QR</strong> y como palabras.</span>
 </div>
 <div class="file">
 <span class="file-name">MANIFEST.age</span>
-<span class="file-desc">Tus archivos cifrados. Incluido como archivo separado para archivos grandes.</span>
+<span class="file-desc">Los archivos bloqueados. Solo viene en algunos kits — la mayoría los lleva dentro de recover.html.</span>
 </div>
 <div class="file">
 <span class="file-name">recover.html</span>
-<span class="file-desc">Herramienta de recuperación (~300 KB), funciona en cualquier navegador</span>
+<span class="file-desc">La página de recuperación. Se abre en cualquier navegador, con tu parte ya incluida.</span>
 </div>
 </div>
 
 <p style="margin-top: 1rem;">
-Cada kit es personalizado — la parte de tu amigo ya está cargada, y una lista de contactos muestra quién más tiene partes. Cuando los datos cifrados son lo suficientemente pequeños, también se incluyen dentro del kit.
+Cada kit está hecho para un amigo: su parte ya está dentro de su recover.html, junto con los nombres de los demás y cómo contactarlos.
 </p>
 
-### Opción A: Tengo el ZIP del kit {#recovery-bundle}
+### Guardar tu kit {#keeping-bundle}
 
-El camino más sencillo. Si tienes el ZIP del kit (o los archivos que contiene):
+Guárdalo en un lugar seguro y, si puedes, también una copia impresa de LEEME.pdf. No hay nada más que hacer hasta que llegue el momento.
+
+Para comprobarlo, abre recover.html. Muestra "Tu parte está aquí", qué parte tienes, cuántas hacen falta para abrir los archivos y si los archivos bloqueados también están ahí.
+
+### Si alguien te pide tu parte {#sharing-piece}
+
+Primero, confirma que la petición es real. Si puedes, consúltalo con la persona que hizo el kit. Si no puedes contactarla, consúltalo con otro amigo que tenga una parte.
+
+Luego envíala de la forma que te resulte más fácil:
+
+- **El kit completo** (el archivo ZIP) — lo más sencillo.
+- **Tu LEEME.txt** — contiene tu parte por sí solo.
+- **Tus palabras de recuperación**, leídas en voz alta por teléfono.
+- **Tu página impresa**, por correo postal — el código QR de la página contiene tu parte.
+
+### Reunir las partes {#recovery-bundle}
+
+Una persona reúne las partes. Puede ser cualquiera de los amigos — quien se haga cargo.
 
 <div class="step-guide">
 <div class="step-number">1</div>
 <div class="step-content">
-<h4>Extrae el ZIP y abre recover.html</h4>
-<p>Ábrelo en cualquier navegador moderno. Tu parte ya está cargada.</p>
+<h4>Abre recover.html</h4>
+<p>Haz doble clic en el kit para abrirlo, y luego doble clic en recover.html. Se abre en tu navegador, como una página web, con tu propia parte ya incluida. Si no tienes un kit, cualquier amigo puede enviarte su recover.html, o puedes usar la <a href="recover.html">página de recuperación</a> de este sitio.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">2</div>
 <div class="step-content">
-<h4>Carga el archivo cifrado</h4>
-<p>Para archivos pequeños (10 MB o menos), esto es automático — los datos ya están incluidos. De lo contrario, arrastra <code>MANIFEST.age</code> del kit a la página.</p>
+<h4>Contacta a los demás</h4>
+<p>Si tienes un kit, su recover.html y su LEEME muestran quién más tiene una parte y cómo contactarlos — salvo que los kits se hayan hecho sin nombres. Cuéntales lo que pasó y pídeles su parte. Algunos querrán confirmar contigo primero que la petición es real — sus instrucciones les piden hacerlo.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">3</div>
 <div class="step-content">
-<h4>Coordina con otros amigos</h4>
-<p>La herramienta muestra una lista de contactos con los nombres de otros amigos y cómo comunicarte con ellos. Pídeles que envíen su <code>README.txt</code>.</p>
+<h4>Agrega cada parte a medida que llegue</h4>
+<p>Arrastra su kit o su LEEME.txt a la página, pega su texto, escribe las palabras de recuperación que te lean, o escanea el código QR de su página impresa. Si hay nombres en la lista, aparece una marca junto a cada uno.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">4</div>
 <div class="step-content">
-<h4>Agrega las partes de otros amigos</h4>
-<p>Por cada parte: arrastra el <code>README.txt</code> de tu amigo a la página, pega el texto, o escanea el código QR de su PDF. Una marca aparece conforme se agrega cada parte.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>La recuperación ocurre automáticamente</h4>
-<p>Una vez que se reúnen suficientes partes (por ejemplo, 3 de 5), la recuperación comienza por sí sola.</p>
+<h4>Los archivos se desbloquean solos</h4>
+<p>Cuando hay suficientes partes, la página abre los archivos sin que tengas que hacer nada. Descárgalos y guárdalos en un lugar privado.</p>
 </div>
 </div>
 
 <div class="tip">
-<strong>Consejo:</strong> Si un amigo te envía su kit <code>.zip</code> completo, arrástralo a la página — tanto la parte como el archivo cifrado se importan a la vez.
+<strong>Si la página te pide los archivos bloqueados:</strong> arrastra a la página el <code>MANIFEST.age</code> del kit de un amigo — o, si su kit no lo trae, su recover.html. La mayoría de los kits ya los llevan, así que probablemente no veas este paso.
 </div>
 
 <figure class="screenshot">
-<img src="screenshots/es/recovery-1.png" alt="Interfaz de recuperación - recolectando partes">
-<figcaption>La herramienta de recuperación mostrando las partes recolectadas y la lista de contactos</figcaption>
+<img src="screenshots/es/recovery-1.png" alt="Página de recuperación con las partes reunidas hasta ahora">
+<figcaption>Las partes reunidas hasta ahora, y a quién contactar</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/es/recovery-2.png" alt="Interfaz de recuperación - descifrado completo">
-<figcaption>Cuando se alcanza el umbral, los archivos se descifran y están listos para descargar</figcaption>
+<img src="screenshots/es/recovery-2.png" alt="Página de recuperación después de desbloquear los archivos">
+<figcaption>Cuando hay suficientes partes, los archivos se desbloquean y quedan listos para descargar</figcaption>
 </figure>
 
-### Opción B: Tengo un PDF impreso con palabras {#recovery-words}
+### Escribir las palabras de recuperación {#recovery-words}
 
-Cada PDF impreso incluye tu parte como una lista de palabras numeradas. Escríbelas en la herramienta de recuperación — no necesitas cámara ni escáner.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Abre la herramienta de recuperación</h4>
-<p>Visita la URL impresa en el PDF, o abre <code>recover.html</code> del kit de cualquier amigo.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Escribe tus palabras de recuperación</h4>
-<p>Busca la lista de palabras en tu PDF y escríbelas en el campo de texto. No necesitas los números — solo las palabras, separadas por espacios.</p>
-</div>
-</div>
+Cada página impresa tiene la parte como una lista de palabras numeradas. Si un amigo te lee las suyas por teléfono, o solo tienes papel, escribe las palabras en la página de recuperación. Pulsa "Pegar una parte o escribir palabras clave" y escríbelas separadas por espacios. Solo importan las palabras, no los números.
 
 <figure class="screenshot">
-<img src="screenshots/es/recovery-words-typing.png" alt="Escribiendo palabras de recuperación desde un PDF impreso en la herramienta">
-<figcaption>Escribe las palabras numeradas de tu PDF impreso en el campo de texto</figcaption>
+<img src="screenshots/es/recovery-words-typing.png" alt="Escribiendo las palabras de una página impresa en la página de recuperación">
+<figcaption>Escribe las palabras de la página impresa</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/es/recovery-words-recognized.png" alt="Herramienta de recuperación después de ingresar las palabras, mostrando que la parte fue reconocida">
-<figcaption>La herramienta reconoce las palabras y carga tu parte</figcaption>
+<img src="screenshots/es/recovery-words-recognized.png" alt="Página de recuperación después de escribir las palabras, mostrando que se agregó la parte">
+<figcaption>La página reconoce las palabras y agrega la parte</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Carga el archivo cifrado</h4>
-<p>Puede que necesites el archivo <code>MANIFEST.age</code> — arrástralo a la página o haz clic para buscarlo. Si no lo tienes, cualquier amigo puede enviarte el suyo. Todos los kits tienen la misma copia.</p>
-</div>
-</div>
+### Escanear un código QR {#recovery-pdf}
 
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Reúne las partes de otros amigos</h4>
-<p>Contacta a otros amigos y pídeles sus partes. Pueden enviar su <code>README.txt</code>, leer sus palabras por teléfono, o puedes escanear su código QR.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>La recuperación ocurre automáticamente</h4>
-<p>Cuando se alcanza el umbral, el descifrado comienza de inmediato.</p>
-</div>
-</div>
-
-<div class="tip">
-<strong>Consejo:</strong> Las palabras son la forma más fácil de compartir por teléfono. Si un amigo no puede enviar su parte digitalmente, puede leer las palabras en voz alta y tú las escribes.
-</div>
-
-### Opción C: Tengo un PDF impreso con código QR {#recovery-pdf}
-
-Si tu dispositivo tiene cámara, escanea el código QR del PDF para importar tu parte directamente.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Abre la herramienta de recuperación</h4>
-<p>Escanea el código QR con la cámara de tu teléfono — se abre la herramienta de recuperación con tu parte ya cargada. O visita la URL del PDF y escribe el código corto que aparece debajo del QR.</p>
-</div>
-</div>
+En una computadora o un teléfono con cámara, pulsa "Escanear QR" en la página de recuperación y pon la página impresa frente a la cámara.
 
 <figure class="screenshot">
 <img src="screenshots/qr-camera-permission.png" alt="El navegador pide permiso para usar la cámara">
-<figcaption>Tu navegador pedirá permiso para usar la cámara</figcaption>
+<figcaption>Tu navegador te pedirá permiso para usar la cámara</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/qr-scanning.png" alt="Escaneando un código QR desde un PDF impreso">
-<figcaption>Apunta tu cámara al código QR del PDF impreso para importar la parte</figcaption>
+<img src="screenshots/qr-scanning.png" alt="Escaneando un código QR de una página impresa">
+<figcaption>Pon el código QR frente a la cámara para agregar la parte</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Carga el archivo cifrado</h4>
-<p>Puede que necesites el archivo <code>MANIFEST.age</code> — arrástralo a la página o haz clic para buscarlo. Si no lo tienes, cualquier amigo puede enviarte el suyo. Todos los kits tienen la misma copia.</p>
-</div>
-</div>
-
-<figure class="screenshot">
-<img src="screenshots/manifest-file-picker.png" alt="Seleccionando MANIFEST.age desde una carpeta">
-<figcaption>Selecciona el archivo MANIFEST.age de donde lo guardaste</figcaption>
-</figure>
-
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Reúne las partes de otros amigos</h4>
-<p>Contacta a otros amigos y pídeles sus partes. Pueden enviar su <code>README.txt</code>, o puedes escanear su código QR.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>La recuperación ocurre automáticamente</h4>
-<p>Cuando se alcanza el umbral, el descifrado comienza de inmediato.</p>
-</div>
-</div>
+Escanear el código QR con la cámara del teléfono también funciona: abre la página de recuperación de este sitio, con la parte ya puesta.
 
 <div class="tip">
 <strong>Sobre la recuperación:</strong>
 <ul>
-<li>Funciona completamente <span title="No necesita internet. Los archivos con bloqueo por fecha necesitan una conexión para verificar la fecha de apertura.">sin conexión*</span></li>
-<li>Nada sale del navegador</li>
-<li>Los amigos pueden estar en cualquier lugar — solo necesitan enviar sus archivos README.txt</li>
+<li>Funciona sin conexión a <span title="Los archivos con bloqueo por fecha necesitan una conexión para comprobar la fecha de apertura.">internet*</span></li>
+<li>Las partes y los archivos se quedan en tu dispositivo</li>
+<li>Los amigos pueden estar en cualquier lugar — cada uno solo tiene que hacerte llegar su parte</li>
 </ul>
 </div>
 
@@ -342,26 +280,26 @@ Si tu dispositivo tiene cámara, escanea el código QR del PDF para importar tu 
 
 - **Permanencia:** Personas con quienes puedas contactarte en 5 a 10 años
 - **Distribución geográfica:** Que no estén todos en el mismo lugar
-- **Habilidad técnica:** Cualquier nivel está bien — la herramienta está diseñada para todos
+- **Habilidad técnica:** No hace falta que sean personas técnicas. Sus instrucciones los guían paso a paso, y un [simulacro de recuperación](#recovery-drills) te mostrará dónde se atasca alguien.
 - **Relaciones:** ¿Cooperarán entre ellos?
 - **Confianza:** Una sola parte no revela nada, pero les estás confiando una responsabilidad
 
 ### Consideraciones de seguridad
 
 - No guardes todos los kits juntos — eso anula el propósito de dividirlos
-- Considera imprimir `README.pdf` — el papel sobrevive desastres digitales
+- Considera imprimir `LEEME.pdf` — el papel sobrevive desastres digitales
 - Guarda `project.yml` si quieres regenerar los kits más adelante
 
 ### Almacenar los kits de forma segura {#storing-bundles}
 
 Los kits son pequeños (menos de 10 MB) y están diseñados para guardarse en lugares cotidianos. Esto es lo que funciona bien:
 
-- **El correo electrónico** es una opción sorprendentemente buena. La mayoría de las personas mantiene la misma dirección de correo durante décadas, y los kits son lo suficientemente pequeños para adjuntarlos. Muchos proveedores conservan los mensajes indefinidamente.
+- **El correo electrónico** funciona bien. La mayoría de las personas mantiene la misma dirección de correo durante décadas, y los kits son lo suficientemente pequeños para adjuntarlos. Muchos proveedores conservan los mensajes indefinidamente.
 - **El almacenamiento en la nube** (Google Drive, Dropbox, iCloud) funciona bien como copia secundaria.
 - **Las memorias USB** pueden servir, pero ten en cuenta que los conectores cambian con el tiempo (el USB-A ya está dando paso al USB-C) y la memoria flash puede degradarse si pasa años sin energía. No es ideal como única copia.
-- **El papel** es la opción más duradera. Imprimir `README.pdf` le da a tus amigos una copia que no necesita adaptadores, electricidad ni ningún dispositivo funcional.
+- **El papel** es la opción más duradera. Imprimir `LEEME.pdf` le da a tus amigos una copia de su parte que no necesita adaptadores, electricidad ni ningún dispositivo funcional.
 
-El mejor enfoque es la redundancia — correo más papel, o nube más papel. Más de una copia, en más de una forma.
+El papel guarda las partes, pero no los archivos bloqueados en sí — esos solo están en copias digitales. Por eso el mejor enfoque es la redundancia — correo más papel, o nube más papel. Más de una copia, en más de una forma.
 
 ### Mantener los kits actualizados {#keeping-current}
 
@@ -377,7 +315,7 @@ Piénsalo como actualizar tus contactos de emergencia. Breve, periódico, vale l
 
 ### Simulacros de recuperación {#recovery-drills}
 
-Nadie prueba su plan de respaldo. Un simulacro de recuperación cambia eso — y resulta que es básicamente un escape room.
+Nadie prueba su plan de respaldo. Un simulacro de recuperación cambia eso — y se juega un poco como un escape room.
 
 Crea un kit de prueba con un secreto inofensivo (una foto, un mensaje, una receta). Reparte las partes a tus amigos. Pon un [bloqueo por fecha](#timelock) si quieres una cuenta regresiva real. Después aléjate y déjalos resolver: coordinarse, combinar partes, desbloquear los archivos — sin tu ayuda.
 
@@ -414,7 +352,7 @@ Cuando creas kits, tu proyecto se guarda en un archivo `project.yml`. Este archi
 - Un hash de verificación para comprobar si los kits coinciden
 - Sumas de verificación de las partes para confirmar la integridad de los kits
 
-**No** almacena ningún secreto — ni contraseña, ni material criptográfico, ni contenido de archivos. Es seguro guardarlo junto con tus otros archivos de proyecto.
+**No** almacena ningún secreto — ni contraseña, ni material criptográfico, ni contenido de archivos. Es seguro guardarlo junto con el resto de tus documentos.
 
 Con `project.yml`, puedes regenerar los kits, verificar los existentes y revisar el estado de tu configuración.
 
@@ -459,7 +397,7 @@ Cada kit también lista sumas de verificación de sus archivos, para que `rememo
 </div>
 <div class="file">
 <span class="file-name">Olvidas cómo funciona esto</span>
-<span class="file-desc">El README.txt de cada kit lo explica todo. Tus amigos no necesitan recordar nada — todo está escrito para ellos.</span>
+<span class="file-desc">El LEEME.txt de cada kit lo explica todo. Tus amigos no necesitan recordar nada — todo está escrito para ellos.</span>
 </div>
 </div>
 

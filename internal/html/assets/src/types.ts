@@ -116,6 +116,7 @@ export interface CreationState {
   threshold: number;
   files: BundleFile[];
   bundles: GeneratedBundle[];
+  manifest: Uint8Array | null;
   wasmReady: boolean;
   generating: boolean;
   generationComplete: boolean;

@@ -20,6 +20,8 @@ Sous le capot, il chiffre vos fichiers avec [age](https://github.com/FiloSottile
 
 Récupérer, c'est ouvrir un fichier dans un navigateur.\* Pas de serveur, pas besoin que ce site existe.
 
+Si vous gardez une part pour quelqu'un, commencez par [Récupérer des fichiers](#recovering).
+
 <p style="font-size: 0.8125rem; color: #8A8480;">* Les archives avec <a href="#timelock" style="color: #8A8480;">verrouillage temporel</a> nécessitent une brève connexion internet au moment de la récupération.</p>
 
 <div class="tip">
@@ -59,16 +61,16 @@ Ajoutez les personnes qui garderont une part de votre clé de récupération. Po
 <figcaption>Chaque personne ici gardera une part de la clé</figcaption>
 </figure>
 
-Choisissez ensuite votre **seuil** — combien de personnes doivent se réunir pour récupérer vos fichiers.
+Choisissez ensuite combien d'entre elles doivent se réunir pour ouvrir vos fichiers.
 
 <div class="tip">
-<strong>Choisir un seuil :</strong>
+<strong>Combien en choisir :</strong>
 <ul>
-<li><strong>3 personnes, seuil 2 :</strong> La configuration la plus simple</li>
-<li><strong>5 personnes, seuil 3 :</strong> Un bon équilibre</li>
-<li><strong>7 personnes, seuil 4–5 :</strong> Plus sûr, plus de coordination</li>
+<li><strong>2 personnes sur 3 :</strong> La configuration la plus simple</li>
+<li><strong>3 personnes sur 5 :</strong> Un bon équilibre</li>
+<li><strong>4 ou 5 personnes sur 7 :</strong> Plus sûr, plus de coordination</li>
 </ul>
-Assez élevé pour que la collusion soit improbable. Assez bas pour que la récupération reste possible si une ou deux personnes ne sont pas disponibles.
+Assez élevé pour que quelques personnes ne puissent pas ouvrir vos fichiers sans les autres. Assez bas pour que cela fonctionne encore si une ou deux sont injoignables.
 </div>
 
 ### Étape 2 : Ajouter des fichiers {#step2}
@@ -95,7 +97,7 @@ Glissez-déposez les fichiers ou le dossier que vous souhaitez protéger.
 
 ### Étape 3 : Générer les enveloppes {#step3}
 
-Cliquez sur « Créer les enveloppes » pour chiffrer vos fichiers et créer une enveloppe pour chaque personne.
+Cliquez sur « Créer les enveloppes » pour verrouiller vos fichiers et préparer une enveloppe pour chaque personne.
 
 <figure class="screenshot">
 <img src="screenshots/fr/bundles.png" alt="Génération des enveloppes à l'étape 3">
@@ -119,19 +121,25 @@ Si vous envoyez les enveloppes par e-mail ou messagerie, supprimez les messages 
 
 Une fois vos enveloppes prêtes, quelques choses valent la peine d'être faites avant de passer à autre chose :
 
-- Vérifiez que chaque personne a bien reçu son enveloppe et peut ouvrir `recover.html`
+- Demandez à chaque personne d'ouvrir `recover.html` une fois. La page affiche « Votre part est là » quand elle peut lire leur part.
 - Expliquez à chacun ce que c'est, pourquoi il l'a, et qu'il doit le garder en lieu sûr. Seul, il ne peut rien en faire — il devra se coordonner avec d'autres.
-- Gardez une copie de `MANIFEST.age` dans un endroit sûr — ce ne sont que des données chiffrées, inutiles sans suffisamment de parts
+- Enregistrez les fichiers verrouillés avec « Enregistrer les fichiers verrouillés (MANIFEST.age) » et gardez cette copie en lieu sûr. Elle ne contient aucune part : sans assez de parts, elle ne sert à personne.
 - Sauvegardez votre `project.yml` pour pouvoir recréer les enveloppes plus tard
-- Imprimez `README.pdf` comme sauvegarde papier avant d'envoyer l'enveloppe numérique. Le papier n'a besoin ni d'adaptateur, ni d'électricité.
+- Imprimez `LISEZMOI.pdf` comme sauvegarde papier avant d'envoyer l'enveloppe numérique. Le papier n'a besoin ni d'adaptateur, ni d'électricité.
 - Programmez un rappel annuel — voir [Garder les enveloppes à jour](#keeping-current)
 - Envisagez un [exercice de récupération](#recovery-drills) — c'est le seul moyen de savoir si votre plan fonctionne vraiment
 
 ## Récupérer des fichiers {#recovering}
 
-Si vous êtes ici parce qu'une personne qui vous est chère n'est plus disponible — prenez le temps de respirer. Rien ne presse. Les enveloppes n'expirent pas, et le processus est conçu pour être suivi à votre rythme.
+Cette section s'adresse aux amis qui gardent une part. La plupart du temps, un ami n'a rien d'autre à faire que garder son enveloppe en lieu sûr. Un jour, quelqu'un lui demandera peut-être sa part, ou ce sera peut-être lui qui rassemblera les parts.
 
-Si vous n'avez pas encore d'enveloppe, vous pouvez ouvrir [l'outil de récupération](recover.html) directement — vous ajouterez les parts à la main au fur et à mesure.
+Si vous êtes ici parce qu'une personne qui vous est chère ne peut plus être jointe, rien ne presse. Rien ici n'expire. Prenez tout le temps qu'il vous faut — si vous fermez la page de récupération en cours de route, vous ajouterez à nouveau les parts à votre retour.
+
+### Qu'est-ce qu'une part ? {#what-is-a-piece}
+
+Une part est un morceau de la clé qui verrouille les fichiers. À elle seule, elle n'ouvre rien et ne révèle rien.
+
+Votre LISEZMOI contient votre part sous forme de bloc de texte et de 25 mots. Le LISEZMOI.pdf imprimé la contient aussi sous forme de QR code. C'est toujours la même part — n'importe laquelle de ces formes suffit pour la transmettre.
 
 ### Ce que les amis reçoivent {#bundle-contents}
 
@@ -139,200 +147,130 @@ Chaque enveloppe contient :
 
 <div class="bundle-contents">
 <div class="file">
-<span class="file-name">README.txt</span>
-<span class="file-desc">Instructions, votre part, liste de contacts</span>
+<span class="file-name">LISEZMOI.txt</span>
+<span class="file-desc">Ce dont il s'agit, qui d'autre détient une part, et votre part elle-même</span>
 </div>
 <div class="file">
-<span class="file-name">README.pdf</span>
-<span class="file-desc">Le même contenu, mis en page pour l'impression. Inclut un <strong>QR code</strong> pour importer la part.</span>
+<span class="file-name">LISEZMOI.pdf</span>
+<span class="file-desc">La même chose, prête à imprimer. Votre part y figure sous forme de <strong>QR code</strong> et de mots.</span>
 </div>
 <div class="file">
 <span class="file-name">MANIFEST.age</span>
-<span class="file-desc">Vos fichiers chiffrés. Inclus comme fichier séparé pour les archives volumineuses.</span>
+<span class="file-desc">Les fichiers verrouillés. Seulement dans certaines enveloppes — la plupart les contiennent plutôt dans recover.html.</span>
 </div>
 <div class="file">
 <span class="file-name">recover.html</span>
-<span class="file-desc">Outil de récupération (~300 Ko), fonctionne dans n'importe quel navigateur</span>
+<span class="file-desc">La page de récupération. Elle s'ouvre dans n'importe quel navigateur, avec votre part déjà dedans.</span>
 </div>
 </div>
 
 <p style="margin-top: 1rem;">
-Chaque enveloppe est personnalisée — la part de votre ami est déjà chargée, et une liste de contacts indique qui d'autre détient une part. Quand les données chiffrées sont assez petites, elles sont également intégrées.
+Chaque enveloppe est préparée pour un ami : sa part se trouve déjà dans son recover.html, avec les noms des autres et la façon de les joindre.
 </p>
 
-### Voie A : J'ai le ZIP de l'enveloppe {#recovery-bundle}
+### Garder votre enveloppe {#keeping-bundle}
 
-Le chemin le plus simple. Si vous avez le ZIP de l'enveloppe (ou les fichiers qu'il contient) :
+Gardez-la en lieu sûr, ainsi qu'une copie imprimée de LISEZMOI.pdf si vous le pouvez. Il n'y a rien d'autre à faire en attendant le moment venu.
+
+Pour la vérifier, ouvrez recover.html. La page affiche « Votre part est là », la part que vous détenez, combien de parts il faut pour ouvrir les fichiers, et si les fichiers verrouillés sont là aussi.
+
+### Si quelqu'un vous demande votre part {#sharing-piece}
+
+Vérifiez d'abord que la demande est réelle. Si vous le pouvez, renseignez-vous auprès de la personne qui a préparé l'enveloppe. Si vous ne pouvez pas la joindre, renseignez-vous auprès d'un autre ami qui détient une part.
+
+Envoyez-la ensuite de la manière la plus simple pour vous :
+
+- **L'enveloppe entière** (le fichier ZIP) — le plus simple.
+- **Votre LISEZMOI.txt** — il contient votre part à lui seul.
+- **Vos mots de récupération**, lus à voix haute au téléphone.
+- **Votre page imprimée**, par la poste — le QR code qui y figure contient votre part.
+
+### Rassembler les parts {#recovery-bundle}
+
+Une seule personne rassemble les parts. Ce peut être n'importe lequel des amis — celui qui s'en charge.
 
 <div class="step-guide">
 <div class="step-number">1</div>
 <div class="step-content">
-<h4>Extraire le ZIP et ouvrir recover.html</h4>
-<p>Ouvrez-le dans un navigateur moderne. Votre part est déjà chargée.</p>
+<h4>Ouvrir recover.html</h4>
+<p>Double-cliquez sur l'enveloppe pour l'ouvrir, puis double-cliquez sur recover.html. Le fichier s'ouvre dans votre navigateur, comme une page web, avec votre propre part déjà dedans. Si vous n'avez pas d'enveloppe, n'importe quel ami peut vous envoyer son recover.html, ou vous pouvez utiliser la <a href="recover.html">page de récupération</a> de ce site.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">2</div>
 <div class="step-content">
-<h4>Charger l'archive chiffrée</h4>
-<p>Pour les petites archives (10 Mo ou moins), c'est automatique — les données sont déjà intégrées. Sinon, glissez <code>MANIFEST.age</code> de l'enveloppe sur la page.</p>
+<h4>Contacter les autres</h4>
+<p>Si vous avez une enveloppe, son recover.html et son LISEZMOI indiquent qui d'autre détient une part et comment joindre ces personnes — sauf si les enveloppes ont été créées sans noms. Dites-leur ce qui s'est passé et demandez-leur leur part. Certaines voudront d'abord vérifier auprès de vous que la demande est réelle — leurs instructions le leur demandent.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">3</div>
 <div class="step-content">
-<h4>Coordonner avec les autres amis</h4>
-<p>L'outil affiche une liste de contacts avec les noms des autres amis et comment les joindre. Demandez-leur d'envoyer leur <code>README.txt</code>.</p>
+<h4>Ajouter chaque part à son arrivée</h4>
+<p>Glissez leur enveloppe ou leur LISEZMOI.txt sur la page, collez leur texte, saisissez les mots de récupération qu'ils vous lisent, ou scannez le QR code de leur page imprimée. Si des noms sont listés, une coche apparaît à côté de chacun.</p>
 </div>
 </div>
 
 <div class="step-guide">
 <div class="step-number">4</div>
 <div class="step-content">
-<h4>Ajouter les parts des autres amis</h4>
-<p>Pour chaque part : glissez le <code>README.txt</code> de votre ami sur la page, collez le texte, ou scannez le QR code de son PDF. Une coche apparaît à mesure que chaque part est ajoutée.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>La récupération se lance automatiquement</h4>
-<p>Dès que suffisamment de parts sont réunies (par exemple 3 sur 5), la récupération démarre d'elle-même.</p>
+<h4>Les fichiers se déverrouillent d'eux-mêmes</h4>
+<p>Dès qu'il y a assez de parts, la page ouvre les fichiers sans que vous ayez quoi que ce soit à faire. Téléchargez-les et conservez-les dans un endroit privé.</p>
 </div>
 </div>
 
 <div class="tip">
-<strong>Astuce :</strong> Si un ami vous envoie son enveloppe <code>.zip</code> complète, glissez-la sur la page — la part et l'archive sont importées en une seule fois.
+<strong>Si la page demande les fichiers verrouillés :</strong> glissez-y <code>MANIFEST.age</code> depuis l'enveloppe d'un ami — ou, si son enveloppe n'en contient pas, son recover.html. La plupart des enveloppes les contiennent déjà, vous ne verrez donc probablement pas cette étape.
 </div>
 
 <figure class="screenshot">
-<img src="screenshots/fr/recovery-1.png" alt="Interface de récupération - collecte des parts">
-<figcaption>L'outil de récupération montrant les parts collectées et la liste de contacts</figcaption>
+<img src="screenshots/fr/recovery-1.png" alt="Page de récupération avec les parts rassemblées jusqu'ici">
+<figcaption>Les parts rassemblées jusqu'ici, et qui contacter</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/fr/recovery-2.png" alt="Interface de récupération - déchiffrement terminé">
-<figcaption>Quand le seuil est atteint, les fichiers sont déchiffrés et prêts à télécharger</figcaption>
+<img src="screenshots/fr/recovery-2.png" alt="Page de récupération une fois les fichiers déverrouillés">
+<figcaption>Dès qu'il y a assez de parts, les fichiers sont déverrouillés et prêts à être téléchargés</figcaption>
 </figure>
 
-### Voie B : J'ai un PDF imprimé avec des mots {#recovery-words}
+### Saisir les mots de récupération {#recovery-words}
 
-Chaque PDF imprimé contient votre part sous forme de mots numérotés. Saisissez-les dans l'outil de récupération — pas besoin de caméra ni de scanner.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Ouvrir l'outil de récupération</h4>
-<p>Rendez-vous à l'adresse imprimée sur le PDF, ou ouvrez <code>recover.html</code> depuis l'enveloppe d'un ami.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Saisir vos mots de récupération</h4>
-<p>Repérez la liste de mots sur votre PDF et tapez-les dans le champ de texte. Pas besoin des numéros — juste les mots, séparés par des espaces.</p>
-</div>
-</div>
+Chaque page imprimée contient la part sous forme d'une liste de mots numérotés. Si un ami vous lit les siens au téléphone, ou si vous n'avez que le papier, saisissez les mots dans la page de récupération. Appuyez sur « Coller une part ou saisir les mots de récupération » et saisissez-les, séparés par des espaces. Seuls les mots comptent, pas les numéros.
 
 <figure class="screenshot">
-<img src="screenshots/fr/recovery-words-typing.png" alt="Saisie des mots de récupération depuis un PDF imprimé">
-<figcaption>Tapez les mots numérotés de votre PDF imprimé dans le champ de texte</figcaption>
+<img src="screenshots/fr/recovery-words-typing.png" alt="Saisie des mots d'une page imprimée dans la page de récupération">
+<figcaption>Saisissez les mots de la page imprimée</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/fr/recovery-words-recognized.png" alt="L'outil de récupération après la saisie des mots">
-<figcaption>L'outil reconnaît les mots et charge votre part</figcaption>
+<img src="screenshots/fr/recovery-words-recognized.png" alt="La page de récupération après la saisie des mots, montrant que la part a été ajoutée">
+<figcaption>La page reconnaît les mots et ajoute la part</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Charger l'archive chiffrée</h4>
-<p>Vous aurez peut-être besoin du fichier <code>MANIFEST.age</code> — glissez-le sur la page ou cliquez pour le sélectionner. Si vous ne l'avez pas, n'importe quel ami peut vous envoyer le sien. Toutes les enveloppes contiennent la même copie.</p>
-</div>
-</div>
+### Scanner un QR code {#recovery-pdf}
 
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>Rassembler les parts des autres amis</h4>
-<p>Contactez les autres amis et demandez-leur leurs parts. Ils peuvent envoyer leur <code>README.txt</code>, vous lire leurs mots par téléphone, ou vous pouvez scanner leur QR code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">5</div>
-<div class="step-content">
-<h4>La récupération se lance automatiquement</h4>
-<p>Dès que le seuil est atteint, le déchiffrement démarre immédiatement.</p>
-</div>
-</div>
-
-<div class="tip">
-<strong>Astuce :</strong> Les mots sont le moyen le plus simple de partager par téléphone. Si un ami ne peut pas envoyer sa part par voie numérique, il peut lire les mots à voix haute pendant que vous les tapez.
-</div>
-
-### Voie C : J'ai un PDF imprimé avec un QR code {#recovery-pdf}
-
-Si votre appareil a une caméra, scannez le QR code du PDF pour importer votre part directement.
-
-<div class="step-guide">
-<div class="step-number">1</div>
-<div class="step-content">
-<h4>Ouvrir l'outil de récupération</h4>
-<p>Scannez le QR code avec l'appareil photo de votre téléphone — l'outil de récupération s'ouvre avec votre part déjà chargée. Ou rendez-vous à l'adresse du PDF et tapez le code court affiché sous le QR code.</p>
-</div>
-</div>
+Sur un ordinateur ou un téléphone équipé d'une caméra, appuyez sur « Scanner QR » dans la page de récupération et tenez la page imprimée face à la caméra.
 
 <figure class="screenshot">
-<img src="screenshots/qr-camera-permission.png" alt="Le navigateur demande l'accès à la caméra">
-<figcaption>Votre navigateur demandera l'autorisation d'utiliser la caméra</figcaption>
+<img src="screenshots/qr-camera-permission.png" alt="Le navigateur demande l'autorisation d'utiliser la caméra">
+<figcaption>Votre navigateur vous demandera l'accès à la caméra</figcaption>
 </figure>
 
 <figure class="screenshot">
-<img src="screenshots/qr-scanning.png" alt="Scan d'un QR code depuis un PDF imprimé">
-<figcaption>Dirigez votre caméra vers le QR code du PDF imprimé pour importer la part</figcaption>
+<img src="screenshots/qr-scanning.png" alt="Scan d'un QR code depuis une page imprimée">
+<figcaption>Tenez le QR code face à la caméra pour ajouter la part</figcaption>
 </figure>
 
-<div class="step-guide">
-<div class="step-number">2</div>
-<div class="step-content">
-<h4>Charger l'archive chiffrée</h4>
-<p>Vous aurez peut-être besoin du fichier <code>MANIFEST.age</code> — glissez-le sur la page ou cliquez pour le sélectionner. Si vous ne l'avez pas, n'importe quel ami peut vous envoyer le sien. Toutes les enveloppes contiennent la même copie.</p>
-</div>
-</div>
-
-<figure class="screenshot">
-<img src="screenshots/manifest-file-picker.png" alt="Sélection de MANIFEST.age depuis un dossier">
-<figcaption>Sélectionnez le fichier MANIFEST.age depuis l'endroit où vous l'avez enregistré</figcaption>
-</figure>
-
-<div class="step-guide">
-<div class="step-number">3</div>
-<div class="step-content">
-<h4>Rassembler les parts des autres amis</h4>
-<p>Contactez les autres amis et demandez-leur leurs parts. Ils peuvent envoyer leur <code>README.txt</code>, ou vous pouvez scanner leur QR code.</p>
-</div>
-</div>
-
-<div class="step-guide">
-<div class="step-number">4</div>
-<div class="step-content">
-<h4>La récupération se lance automatiquement</h4>
-<p>Dès que le seuil est atteint, le déchiffrement démarre immédiatement.</p>
-</div>
-</div>
+Scanner le QR code avec l'appareil photo d'un téléphone fonctionne aussi : cela ouvre la page de récupération de ce site, avec la part déjà remplie.
 
 <div class="tip">
 <strong>À propos de la récupération :</strong>
 <ul>
-<li>Fonctionne entièrement <span title="Pas besoin d'internet. Les archives avec verrouillage temporel nécessitent une connexion pour vérifier la date de déverrouillage.">hors ligne*</span></li>
-<li>Rien ne quitte le navigateur</li>
-<li>Les amis peuvent être n'importe où — ils ont juste besoin d'envoyer leurs fichiers README.txt</li>
+<li>Fonctionne sans <span title="Les archives avec verrouillage temporel nécessitent une connexion pour vérifier la date de déverrouillage.">connexion internet*</span></li>
+<li>Les parts et les fichiers restent sur votre appareil</li>
+<li>Les amis peuvent être n'importe où — chacun n'a qu'à vous faire parvenir sa part</li>
 </ul>
 </div>
 
@@ -342,26 +280,26 @@ Si votre appareil a une caméra, scannez le QR code du PDF pour importer votre p
 
 - **Durabilité :** Des personnes que vous pourrez joindre dans 5 à 10 ans
 - **Répartition géographique :** Pas tous au même endroit
-- **Compétences techniques :** Peu importe le niveau — l'outil est conçu pour tout le monde
+- **Compétences techniques :** Inutile d'être à l'aise avec la technique. Les instructions guident chacun pas à pas, et un [exercice de récupération](#recovery-drills) vous montrera où quelqu'un bloque.
 - **Relations :** Accepteront-ils de coopérer entre eux ?
 - **Confiance :** Une part seule ne révèle rien, mais vous leur confiez une responsabilité
 
 ### Considérations de sécurité
 
 - Ne gardez pas toutes les enveloppes ensemble — cela irait à l'encontre du principe de répartition
-- Pensez à imprimer `README.pdf` — le papier résiste aux catastrophes numériques
+- Pensez à imprimer `LISEZMOI.pdf` — le papier résiste aux catastrophes numériques
 - Sauvegardez `project.yml` pour pouvoir recréer les enveloppes plus tard
 
 ### Stocker les enveloppes en sécurité {#storing-bundles}
 
 Les enveloppes sont petites (moins de 10 Mo) et conçues pour être conservées dans des endroits ordinaires. Voici ce qui fonctionne bien :
 
-- **L'e-mail** est un choix étonnamment bon. La plupart des gens gardent la même adresse pendant des décennies, et les enveloppes sont assez légères pour être jointes en pièce attachée. Beaucoup de fournisseurs conservent les messages indéfiniment.
+- **L'e-mail** fonctionne bien. La plupart des gens gardent la même adresse pendant des décennies, et les enveloppes sont assez légères pour être jointes en pièce attachée. Beaucoup de fournisseurs conservent les messages indéfiniment.
 - **Le stockage en ligne** (Google Drive, Dropbox, iCloud) convient bien comme copie secondaire.
 - **Les clés USB** peuvent convenir, mais gardez à l'esprit que les connecteurs changent (l'USB-A cède déjà la place à l'USB-C) et que la mémoire flash peut se dégrader après des années sans alimentation. Pas idéal comme seule copie.
-- **Le papier** est l'option la plus durable. Imprimer `README.pdf` offre à vos amis une copie qui n'a besoin ni d'adaptateur, ni d'électricité, ni d'appareil fonctionnel.
+- **Le papier** est l'option la plus durable. Imprimer `LISEZMOI.pdf` offre à vos amis une copie de leur part qui n'a besoin ni d'adaptateur, ni d'électricité, ni d'appareil fonctionnel.
 
-La meilleure approche est la redondance — e-mail et papier, ou cloud et papier. Plus d'une copie, sous plus d'une forme.
+Le papier contient les parts, mais pas les fichiers verrouillés eux-mêmes — ceux-ci n'existent que dans des copies numériques. La meilleure approche est donc la redondance — e-mail et papier, ou cloud et papier. Plus d'une copie, sous plus d'une forme.
 
 ### Garder les enveloppes à jour {#keeping-current}
 
@@ -377,7 +315,7 @@ Pensez-y comme la mise à jour de vos contacts d'urgence. Bref, régulier, utile
 
 ### Exercice de récupération {#recovery-drills}
 
-Personne ne teste son plan de secours. Un exercice de récupération change ça — et il s'avère que c'est essentiellement un escape room.
+Personne ne teste son plan de secours. Un exercice de récupération change ça — et ça se joue un peu comme un escape room.
 
 Créez une enveloppe de test avec un secret anodin (une photo, un message, une recette). Distribuez les parts à vos amis. Ajoutez un [verrouillage temporel](#timelock) si vous voulez un vrai compte à rebours. Puis prenez du recul et laissez-les se débrouiller : se coordonner, rassembler les parts, déverrouiller les fichiers — sans votre aide.
 
@@ -414,7 +352,7 @@ Quand vous créez des enveloppes, votre projet est sauvegardé dans un fichier `
 - Un hash de vérification pour confirmer que les enveloppes correspondent
 - Des sommes de contrôle des parts pour vérifier l'intégrité des enveloppes
 
-Il ne contient **aucun** secret — pas de mot de passe, pas de matériel cryptographique, pas de contenu de fichier. Vous pouvez le garder sans risque avec vos autres fichiers de projet.
+Il ne contient **aucun** secret — pas de mot de passe, pas de matériel cryptographique, pas de contenu de fichier. Vous pouvez le garder sans risque avec vos autres documents.
 
 Avec `project.yml`, vous pouvez recréer les enveloppes, vérifier celles qui existent, et consulter l'état de votre configuration.
 
@@ -459,7 +397,7 @@ Chaque enveloppe liste aussi les sommes de contrôle de ses fichiers, pour que `
 </div>
 <div class="file">
 <span class="file-name">Vous oubliez comment tout cela fonctionne</span>
-<span class="file-desc">Le README.txt de chaque enveloppe explique tout. Vos amis n'ont rien à retenir — tout est écrit pour eux.</span>
+<span class="file-desc">Le LISEZMOI.txt de chaque enveloppe explique tout. Vos amis n'ont rien à retenir — tout est écrit pour eux.</span>
 </div>
 </div>
 

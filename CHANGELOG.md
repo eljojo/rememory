@@ -4,6 +4,13 @@ All notable changes to ReMemory are documented here.
 
 ## Unreleased
 
+- **Written for the friends who'll read it** — The README, the recovery page and the guide now speak to a friend in plain words, without terms like manifest, archive or decryption.
+  - The README starts with what the bundle is and what to do for now: keep it safe. Then it covers the two situations a friend may find themselves in: someone asking for their piece, or being the one who brings the pieces together. Its steps no longer shout, skip the locked-files step when the bundle already carries them, and list every way a piece can arrive. The command-line example now works for every bundle.
+  - When a friend opens their own `recover.html`, the note about their piece now reads true both when they're checking their bundle and when the time has come. It no longer appears for a piece someone else added by hand.
+  - Error messages say what happened and what to try, in everyday words.
+  - The guide's recovery section follows a friend instead of a file format: keeping your bundle, being asked for your piece, and bringing the pieces together.
+- **Keep your own copy of the locked files** — After making bundles in the web maker, "Save the locked files (MANIFEST.age)" saves a copy for you. It holds no piece, so it's safe to keep anywhere. Printed READMEs hold the pieces, but not the files themselves, and the guide now says so.
+
 ## v0.0.22 — 2026-10-27
 
 Most of these changes come from a careful security review of ReMemory by @lyrixx. Thanks @lyrixx!

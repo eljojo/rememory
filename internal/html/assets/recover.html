@@ -1,17 +1,17 @@
     <div class="page-intro">
       <h1 data-i18n="title">Recover Files</h1>
       <p class="subtitle" data-i18n="subtitle">Bring together the pieces your friends kept safe.</p>
-      <p class="summary" data-i18n="page_description">Each friend received a bundle with one piece of the key. Gather enough pieces below, add the encrypted archive, and your files will be decrypted here in the browser. Nothing leaves your device.</p>
+      <p class="summary" data-i18n="page_description">Each friend received one piece. Bring enough of them together here and the files will unlock, right on this device. The pieces and the files stay with you.</p>
     </div>
 
     <!-- Step 1: Collect Shares -->
     <div class="card">
       <h2><span class="step-number">1</span> <span data-i18n="step1_title">Gather the pieces</span></h2>
       <div id="share-drop-zone" class="drop-zone" tabindex="0" aria-label="Share file drop zone">
-        <p data-i18n="step1_drop">Drop README.txt files here, or click to choose them</p>
-        <small data-i18n="step1_hint">Each file holds one person's piece</small>
+        <p data-i18n="step1_drop">Drop a piece here, or click to choose a file</p>
+        <small data-i18n="step1_hint">A friend's README, bundle, or recover.html</small>
       </div>
-      <input type="file" id="share-file-input" accept=".txt,.zip" multiple>
+      <input type="file" id="share-file-input" accept=".txt,.pdf,.zip,.html,.htm" multiple>
 
       <div class="paste-section">
         <button id="paste-toggle-btn" class="btn btn-secondary" type="button">
@@ -21,7 +21,7 @@
           <span>&#128247;</span> <span data-i18n="scan_btn">Scan QR code</span>
         </button>
         <div id="paste-area" class="paste-area hidden">
-          <textarea id="paste-input" placeholder="Paste share text or type your 25 recovery words here..." data-i18n-placeholder="paste_placeholder" rows="6"></textarea>
+          <textarea id="paste-input" placeholder="Paste a piece, or type the recovery words" data-i18n-placeholder="paste_placeholder" rows="6"></textarea>
           <button id="paste-submit-btn" class="btn btn-primary" type="button" data-i18n="paste_submit">Add piece</button>
         </div>
       </div>
@@ -32,8 +32,8 @@
 
       <!-- Contact list for other friends (populated via JS if personalization data exists) -->
       <div id="contact-list-section" class="contact-list-section hidden">
-        <h3 data-i18n="contact_list">Contact the others</h3>
-        <p class="hint" data-i18n="contact_list_hint">Reach out to these friends to gather their pieces</p>
+        <h3 data-i18n="contact_list">The others who hold a piece</h3>
+        <p class="hint" data-i18n="contact_list_hint">When it's time, these are the people to reach out to.</p>
         <div id="contact-list" class="contact-list"></div>
       </div>
 
@@ -42,28 +42,28 @@
 
     <!-- Step 2: Load Manifest -->
     <div class="card">
-      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Add the encrypted archive</span></h2>
+      <h2><span class="step-number">2</span> <span data-i18n="step2_title">Add the locked files</span></h2>
       <div id="manifest-drop-zone" class="drop-zone" tabindex="0" aria-label="Encrypted archive drop zone">
-        <p data-i18n="step2_drop">Drop a recover.html or MANIFEST.age here, or click to choose it</p>
-        <small data-i18n="step2_hint">Use a recover.html from any friend's bundle, or the MANIFEST.age file</small>
+        <p data-i18n="step2_drop">Drop recover.html or MANIFEST.age here, or click to choose it</p>
+        <small data-i18n="step2_hint">MANIFEST.age from a friend's bundle — or, if their bundle has none, their recover.html</small>
       </div>
       <input type="file" id="manifest-file-input" accept=".age,.html,.htm,.zip">
 
       <div id="manifest-status" class="manifest-status hidden">
         <span class="icon">&#128196;</span>
-        <div data-i18n="no_manifest">No archive added yet</div>
+        <div data-i18n="no_manifest">Not added yet</div>
       </div>
     </div>
 
     <!-- Step 3: Recover -->
     <div class="card">
-      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Recover the files</span></h2>
+      <h2><span class="step-number">3</span> <span data-i18n="step3_title">Open the files</span></h2>
 
       {{TLOCK_WAITING_HTML}}
 
       <div id="recover-section" class="recover-section">
         <button id="recover-btn" class="btn btn-primary" disabled>
-          <span>&#128275;</span> <span data-i18n="decrypt_btn">Unlock &amp; Recover</span>
+          <span>&#128275;</span> <span data-i18n="decrypt_btn">Unlock the files</span>
         </button>
 
         <div id="progress-bar" class="progress-bar hidden">
@@ -76,7 +76,7 @@
 
         <div id="download-actions" class="download-actions hidden">
           <button id="download-all-btn" class="btn btn-success">
-            <span>&#128229;</span> <span data-i18n="download_btn">Download archive (.tar.gz)</span>
+            <span>&#128229;</span> <span data-i18n="download_btn">Download the files</span>
           </button>
         </div>
       </div>

@@ -317,43 +317,43 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 
 	// Section: Browser recovery
 	addSection(p, t("recover_browser"))
-	addBody(p, t("recover_step1"))
+	// Steps are numbered here, not in the translations, because some are
+	// skipped depending on the bundle.
+	step := 0
+	addStep := func(text string) {
+		step++
+		addBody(p, fmt.Sprintf("%d. %s", step, text))
+	}
+	recoveryURL := data.RecoveryURL
+	if recoveryURL == "" {
+		recoveryURL = core.DefaultRecoveryURL
+	}
+	addStep(t("recover_step_open"))
 	p.Ln(2)
 	p.SetFont(fontSans, "B", bodySize)
 	p.MultiCell(0, 5, "   "+t("recover_share_loaded"), "", "L", false)
 	p.SetFont(fontSans, "", bodySize)
-	p.MultiCell(0, 5, "   "+t("recover_no_html"), "", "L", false)
-	p.Ln(2)
-	if data.ManifestEmbedded {
-		addBody(p, t("recover_step2_embedded"))
-		addBody(p, "   "+t("recover_step2_embedded_hint"))
-	} else {
-		addBody(p, t("recover_step2"))
-		addBody(p, "   "+t("recover_step2_drag"))
-		addBody(p, "   "+t("recover_step2_click"))
+	p.MultiCell(0, 5, "   "+t("recover_no_html", recoveryURL), "", "L", false)
+	if !data.ManifestEmbedded {
+		p.Ln(2)
+		addStep(t("recover_step_locked_files"))
+	}
+	if !data.Anonymous {
+		p.Ln(2)
+		addStep(t("recover_step_contact"))
 	}
 	p.Ln(2)
-	if data.Anonymous {
-		addBody(p, t("recover_anon_step3"))
-		addBody(p, "   "+t("recover_anon_step3_drag"))
-		addBody(p, "   "+t("recover_anon_step3_paste"))
-		p.Ln(2)
-		addBody(p, t("recover_anon_step4_auto", data.Threshold))
-		p.Ln(2)
-		addBody(p, t("recover_anon_step5"))
-	} else {
-		addBody(p, t("recover_step3_contact"))
-		addBody(p, "   "+t("recover_step3_ask"))
-		p.Ln(2)
-		addBody(p, t("recover_step4"))
-		addBody(p, "   "+t("recover_step4_drag"))
-		addBody(p, "   "+t("recover_step4_paste"))
-		p.Ln(2)
-		addBody(p, t("recover_step5_checkmarks"))
-		addBody(p, "   "+t("recover_step5_auto", data.Threshold))
-		p.Ln(2)
-		addBody(p, t("recover_step6"))
+	addStep(t("recover_step_add"))
+	addBody(p, "   "+t("recover_step_add_file"))
+	addBody(p, "   "+t("recover_step_add_paste"))
+	addBody(p, "   "+t("recover_step_add_scan"))
+	if !data.Anonymous {
+		addBody(p, "   "+t("recover_step_checkmarks"))
 	}
+	p.Ln(2)
+	addStep(t("recover_step_auto", data.Threshold))
+	p.Ln(2)
+	addStep(t("recover_step_download"))
 	p.Ln(2)
 	p.SetFont(fontSans, "I", bodySize)
 	if data.TlockEnabled {
@@ -379,13 +379,13 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	p.SetFont(fontMono, "", monoSize)
 	p.MultiCell(0, 5, data.GitHubReleaseURL, "", "L", false)
 	p.Ln(2)
-	addBody(p, t("recover_cli_usage"))
+	addBody(p, t("recover_cli_usage", data.Threshold))
 	p.Ln(5)
 
 	// Footer: Metadata — keep header with all metadata lines
 	{
-		// header (5) + 7 metadata lines × 4mm = 33
-		metaBlockHeight := 33.0
+		// header (5) + note (4) + 7 metadata lines × 4mm = 37
+		metaBlockHeight := 37.0
 		_, pageHeight := p.GetPageSize()
 		_, _, _, bottomMargin := p.GetMargins()
 		usableBottom := pageHeight - bottomMargin
@@ -395,6 +395,8 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	}
 	p.SetFont(fontSans, "B", smallMono)
 	p.CellFormat(0, 5, "METADATA", "", 1, "L", false, 0, "")
+	p.SetFont(fontSans, "I", smallMono)
+	p.CellFormat(0, 4, t("metadata_note"), "", 1, "L", false, 0, "")
 	p.SetFont(fontMono, "", smallMono)
 	p.SetFillColor(245, 245, 245)
 	addMeta(p, "rememory-version", data.Version)

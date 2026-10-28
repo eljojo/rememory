@@ -1086,9 +1086,7 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
 
       const displayName = resolveShareName(share as UIShare);
 
-      const isHolderShare = (share as UIShare).isHolder ||
-        (personalization && share.holder &&
-         share.holder.toLowerCase() === personalization.holder.toLowerCase());
+      const isHolderShare = isOwnPiece(share as UIShare);
 
       const holderLabel = isHolderShare ? ` (${t('your_share')})` : '';
       const showRemove = !isHolderShare;
@@ -1144,21 +1142,39 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
   // Bundle Verification Status
   // ============================================
 
+  // The piece from this recover.html's own bundle, whether it came
+  // pre-loaded or the holder added their README by hand.
+  function isOwnPiece(share: UIShare): boolean {
+    return share.isHolder === true ||
+      (!!personalization && !!share.holder &&
+       share.holder.toLowerCase() === personalization.holder.toLowerCase());
+  }
+
   function updateVerificationStatus(): void {
     if (!elements.verificationStatus) return;
 
-    // Show verification when we have shares but haven't reached threshold yet
-    const hasShares = state.shares.length > 0;
+    // A friend opens their own recover.html both to check it and on the day
+    // it's needed, so this reads true at either moment. It speaks about
+    // "your piece", so it only shows while that piece is the holder's own.
+    const share = state.shares[0] as UIShare | undefined;
+    const ownPiece = state.shares.length === 1 && !!share && isOwnPiece(share);
     const belowThreshold = state.threshold > 0 && state.shares.length < state.threshold;
     const notRecovering = !state.recovering && !state.recoveryComplete;
 
-    if (hasShares && belowThreshold && notRecovering) {
-      const share = state.shares[0];
+    if (share && ownPiece && belowThreshold && notRecovering) {
       const manifestPresent = state.manifest !== null;
 
       const manifestLine = manifestPresent
         ? t('verification_manifest_ok')
         : t('verification_manifest_missing');
+      // "Nothing else to do" is only true when the locked files are here too.
+      const keepSafeLine = manifestPresent
+        ? `<p>${escapeHtml(t('verification_keep_safe'))}</p>`
+        : '';
+      const hasContactList = (personalization?.otherFriends?.length ?? 0) > 0;
+      const timeComeLine = hasContactList
+        ? t('verification_time_come')
+        : t('verification_time_come_anon');
 
       elements.verificationStatus.innerHTML = `
         <div class="verification-header">
@@ -1170,7 +1186,8 @@ type UIShare = ParsedShare & { isHolder?: boolean; alternatives?: string[] };
           <p>${escapeHtml(manifestLine)}</p>
         </div>
         <div class="verification-note">
-          ${escapeHtml(t('verification_keep_safe'))}
+          ${keepSafeLine}
+          <p>${escapeHtml(timeComeLine)}</p>
         </div>
       `;
       elements.verificationStatus.classList.remove('hidden');
