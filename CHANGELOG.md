@@ -4,6 +4,8 @@ All notable changes to ReMemory are documented here.
 
 ## Unreleased
 
+## v0.0.23 — 2026-10-28
+
 - **Written for the friends who'll read it** — The README, the recovery page and the guide now speak to a friend in plain words, without terms like manifest, archive or decryption.
   - The README starts with what the bundle is and what to do for now: keep it safe. Then it covers the two situations a friend may find themselves in: someone asking for their piece, or being the one who brings the pieces together. Its steps no longer shout, skip the locked-files step when the bundle already carries them, and list every way a piece can arrive. The command-line example now works for every bundle.
   - When a friend opens their own `recover.html`, the note about their piece now reads true both when they're checking their bundle and when the time has come. It no longer appears for a piece someone else added by hand.
