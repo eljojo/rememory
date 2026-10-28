@@ -135,6 +135,12 @@ Esta sección es para los amigos que guardan una parte. Casi siempre, lo único 
 
 Si estás aquí porque ya no puedes contactar a alguien que te importa, no hay prisa. Nada de esto caduca. Puedes tomarte todo el tiempo que necesites — si cierras la página de recuperación a mitad de camino, volverás a agregar las partes cuando regreses.
 
+### ¿Qué es una parte? {#what-is-a-piece}
+
+Una parte es un fragmento de la clave que bloquea los archivos. Por sí sola, no abre nada ni revela nada.
+
+Tu LEEME guarda tu parte como un bloque de texto y como 25 palabras. El LEEME.pdf impreso también la tiene como código QR. Todas son la misma parte — cualquiera de ellas basta para entregarla.
+
 ### Qué reciben los amigos {#bundle-contents}
 
 Cada kit contiene:

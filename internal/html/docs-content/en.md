@@ -135,6 +135,12 @@ This part is for the friends who hold a piece. Most of the time, all a friend do
 
 If you're here because someone you care about can't be reached anymore, there's no hurry. Nothing here expires. You can take as long as you need — if you close the recovery page partway, you'll add the pieces again when you come back.
 
+### What's a Piece? {#what-is-a-piece}
+
+A piece is one part of the key that locks the files. On its own, it opens nothing and reveals nothing.
+
+Your README holds your piece as a block of text and as 25 words. The printed README.pdf also has it as a QR code. These are all the same piece — any one of them is enough to pass on.
+
 ### What Friends Receive {#bundle-contents}
 
 Each bundle contains:

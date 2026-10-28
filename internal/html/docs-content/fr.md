@@ -135,6 +135,12 @@ Cette section s'adresse aux amis qui gardent une part. La plupart du temps, un a
 
 Si vous êtes ici parce qu'une personne qui vous est chère ne peut plus être jointe, rien ne presse. Rien ici n'expire. Prenez tout le temps qu'il vous faut — si vous fermez la page de récupération en cours de route, vous ajouterez à nouveau les parts à votre retour.
 
+### Qu'est-ce qu'une part ? {#what-is-a-piece}
+
+Une part est un morceau de la clé qui verrouille les fichiers. À elle seule, elle n'ouvre rien et ne révèle rien.
+
+Votre LISEZMOI contient votre part sous forme de bloc de texte et de 25 mots. Le LISEZMOI.pdf imprimé la contient aussi sous forme de QR code. C'est toujours la même part — n'importe laquelle de ces formes suffit pour la transmettre.
+
 ### Ce que les amis reçoivent {#bundle-contents}
 
 Chaque enveloppe contient :

@@ -135,6 +135,12 @@ Dieser Abschnitt ist für die Freunde, die einen Teil aufbewahren. Meistens tut 
 
 Wenn du hier bist, weil jemand, der dir wichtig ist, nicht mehr erreichbar ist: Es eilt nicht. Nichts hier läuft ab. Nimm dir so viel Zeit, wie du brauchst — wenn du die Wiederherstellungsseite zwischendurch schließt, fügst du die Teile wieder hinzu, sobald du zurückkommst.
 
+### Was ist ein Teil? {#what-is-a-piece}
+
+Ein Teil ist ein Stück des Schlüssels, der die Dateien verschließt. Für sich allein öffnet er nichts und verrät nichts.
+
+Deine LIESMICH enthält deinen Teil als Textblock und als 25 Wörter. Die ausgedruckte LIESMICH.pdf hat ihn außerdem als QR-Code. Das alles ist derselbe Teil — jede dieser Formen genügt, um ihn weiterzugeben.
+
 ### Was Freunde erhalten {#bundle-contents}
 
 Jedes Paket enthält:
