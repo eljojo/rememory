@@ -281,7 +281,7 @@ Each bundle contains:
   - If the encrypted manifest is 10 MB or less, it's also embedded in `recover.html`—so friends only need to collect shares from others to complete recovery
   - For larger manifests, they'll also need to load the separate `MANIFEST.age` file
 
-The README.txt is written for the friend. It opens with what the bundle is and what to do for now, then covers the two situations a friend may find themselves in. Abridged:
+The README.txt, abridged:
 
 ```
 ================================================================================
