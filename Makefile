@@ -5,6 +5,10 @@ VERSION := $(shell cat VERSION 2>/dev/null || echo "dev")
 BUILD_DATE := $(shell date -u +%Y-%m-%d)
 LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.buildDate=$(BUILD_DATE)"
 
+# Prefer the esbuild (and other npm tools) installed by package.json in
+# node_modules/.bin; fall back to a system-provided one (e.g. Nix devShell).
+export PATH := $(CURDIR)/node_modules/.bin:$(PATH)
+
 # Build WASM module first, then the main binary
 build: wasm
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/rememory
