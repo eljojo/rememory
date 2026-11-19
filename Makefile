@@ -9,6 +9,10 @@ LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.buildDate=$(BUILD_
 # node_modules/.bin; fall back to a system-provided one (e.g. Nix devShell).
 export PATH := $(CURDIR)/node_modules/.bin:$(PATH)
 
+# File opener for the demo targets: xdg-open on Linux, open on macOS.
+# If neither exists, just print the bundle path instead of failing.
+OPEN := $(shell command -v xdg-open || command -v open || echo echo)
+
 # Build WASM module first, then the main binary
 build: wasm
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/rememory
@@ -127,13 +131,13 @@ serve: html
 demo: build
 	rm -rf demo-recovery
 	./$(BINARY) demo --pages
-	open demo-recovery/output/bundles/bundle-alice.zip
+	$(OPEN) demo-recovery/output/bundles/bundle-alice.zip
 
 # Run demo with a 5-minute time lock
 demo-tlock: build
 	rm -rf demo-recovery
 	./$(BINARY) demo --timelock 5min
-	open demo-recovery/output/bundles/bundle-alice.zip
+	$(OPEN) demo-recovery/output/bundles/bundle-alice.zip
 
 # Check that all languages have the same translation keys as English
 check-translations:
